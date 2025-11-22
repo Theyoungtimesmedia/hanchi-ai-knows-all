@@ -1,23 +1,87 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  images?: string[];
 }
 
-export const useChat = (language: string) => {
+export const useChat = (language: string, conversationId: string | null, userId: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (conversationId && userId) {
+      loadMessages(conversationId);
+    } else {
+      setMessages([]);
+    }
+  }, [conversationId, userId]);
+
+  const loadMessages = async (convId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      const loadedMessages: Message[] = data.map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+        images: (msg.metadata as any)?.images || [],
+      }));
+
+      setMessages(loadedMessages);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load conversation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveMessage = async (message: Message, convId: string) => {
+    if (!userId) return;
+
+    try {
+      await supabase.from('messages').insert({
+        conversation_id: convId,
+        role: message.role,
+        content: message.content,
+        metadata: message.images ? { images: message.images } : null,
+      });
+
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', convId);
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
+
   const sendMessage = useCallback(
-    async (content: string) => {
-      const userMessage: Message = { role: "user", content };
+    async (content: string, images?: string[]) => {
+      const userMessage: Message = { role: "user", content, images };
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
 
       try {
+        // Save user message if we have a conversation
+        if (conversationId && userId) {
+          await saveMessage(userMessage, conversationId);
+        }
+
         const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
         
         const response = await fetch(CHAT_URL, {
@@ -29,6 +93,8 @@ export const useChat = (language: string) => {
           body: JSON.stringify({
             messages: [...messages, userMessage],
             language,
+            images: images || [],
+            searchWeb: true,
           }),
         });
 
@@ -95,6 +161,11 @@ export const useChat = (language: string) => {
             }
           }
         }
+
+        // Save assistant message if we have a conversation
+        if (conversationId && userId && assistantContent) {
+          await saveMessage({ role: "assistant", content: assistantContent }, conversationId);
+        }
       } catch (error) {
         console.error("Chat error:", error);
         toast({
@@ -108,7 +179,7 @@ export const useChat = (language: string) => {
         setIsLoading(false);
       }
     },
-    [messages, language, toast]
+    [messages, language, toast, conversationId, userId]
   );
 
   const clearMessages = useCallback(() => {

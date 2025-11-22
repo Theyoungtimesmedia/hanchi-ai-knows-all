@@ -1,126 +1,130 @@
 import { useState, useRef, useEffect } from "react";
+import { useChat } from "@/hooks/useChat";
+import { useConversationHistory } from "@/hooks/useConversationHistory";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { LanguageSelector } from "@/components/LanguageSelector";
-import { useChat } from "@/hooks/useChat";
+import { ConversationSidebar } from "@/components/ConversationSidebar";
+import { Sparkles, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { User } from "@supabase/supabase-js";
 
-const Index = () => {
+export default function Index() {
   const [language, setLanguage] = useState("en");
-  const { messages, isLoading, sendMessage, clearMessages } = useChat(language);
+  const [user, setUser] = useState<User | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
+    useConversationHistory(user?.id || null);
+  const { messages, isLoading, sendMessage } = useChat(language, currentConversationId, user?.id || null);
 
   useEffect(() => {
-    scrollToBottom();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      if (!session?.user) {
+        navigate("/auth");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      if (!session?.user) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleVoiceClick = () => {
-    toast({
-      title: "Voice input",
-      description: "Voice recording feature coming soon!",
-    });
+  const handleNewConversation = async () => {
+    const title = `New chat - ${new Date().toLocaleDateString()}`;
+    const convId = await createConversation(title, language);
+    if (convId) {
+      setCurrentConversationId(convId);
+    }
   };
 
-  const handleImageClick = () => {
-    toast({
-      title: "Image upload",
-      description: "Image analysis feature coming soon!",
-    });
-  };
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div className="flex h-screen bg-background">
+      <ConversationSidebar
+        conversations={conversations}
+        currentConversationId={currentConversationId}
+        onSelectConversation={setCurrentConversationId}
+        onNewConversation={handleNewConversation}
+        onDeleteConversation={deleteConversation}
+        isLoading={loadingHistory}
+      />
+
+      <div className="flex-1 flex flex-col">
+        <header className="bg-card border-b border-border p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-warm">
-              <Sparkles className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Hanchi AI
-              </h1>
-              <p className="text-xs text-muted-foreground">Your intelligent assistant</p>
-            </div>
+            <Sparkles className="w-6 h-6 text-primary" />
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Hanchi AI
+            </h1>
           </div>
-          
           <div className="flex items-center gap-2">
             <LanguageSelector language={language} onLanguageChange={setLanguage} />
-            {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={clearMessages}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" onClick={() => supabase.auth.signOut()}>
+              <LogOut className="w-5 h-5" />
+            </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-4xl flex flex-col">
-        {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-4 animate-in fade-in duration-700">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow mb-6">
-              <Sparkles className="w-10 h-10 text-primary-foreground" />
-            </div>
-            <h2 className="text-3xl font-bold mb-3 bg-gradient-primary bg-clip-text text-transparent">
-              Welcome to Hanchi AI
-            </h2>
-            <p className="text-muted-foreground max-w-md mb-8">
-              Your multilingual AI assistant that "noses out" answers. Ask me anything in English, Hausa, or Pidgin!
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
-              {[
-                "Tell me a joke",
-                "Translate to Hausa",
-                "Help with coding",
-                "Search the web",
-              ].map((suggestion, i) => (
-                <Button
-                  key={i}
-                  variant="outline"
-                  className="justify-start hover:bg-muted hover:shadow-sm transition-all"
-                  onClick={() => sendMessage(suggestion)}
-                >
-                  {suggestion}
-                </Button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto pb-4">
-            {messages.map((message, index) => (
-              <ChatMessage key={index} role={message.role} content={message.content} />
-            ))}
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8">
+          <div className="max-w-4xl mx-auto">
+            {messages.length === 0 ? (
+              <div className="text-center py-12">
+                <Sparkles className="w-16 h-16 mx-auto mb-4 text-primary" />
+                <h2 className="text-2xl font-bold mb-2">Welcome to Hanchi AI</h2>
+                <p className="text-muted-foreground">Start a conversation to begin</p>
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <ChatMessage
+                  key={index}
+                  role={message.role}
+                  content={message.content}
+                  language={language}
+                  images={message.images}
+                />
+              ))
+            )}
             <div ref={messagesEndRef} />
           </div>
-        )}
-
-        {/* Input Area */}
-        <div className="sticky bottom-0 pt-4">
-          <ChatInput
-            onSend={sendMessage}
-            disabled={isLoading}
-            onVoiceClick={handleVoiceClick}
-            onImageClick={handleImageClick}
-          />
         </div>
-      </main>
+
+        <div className="border-t border-border p-4 bg-card">
+          <div className="max-w-4xl mx-auto">
+            <ChatInput
+              onSend={async (content, images) => {
+                if (!currentConversationId) {
+                  const convId = await createConversation(
+                    content.slice(0, 50) + (content.length > 50 ? "..." : ""),
+                    language
+                  );
+                  if (convId) {
+                    setCurrentConversationId(convId);
+                  }
+                }
+                await sendMessage(content, images);
+              }}
+              disabled={isLoading}
+              language={language}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default Index;
+}
