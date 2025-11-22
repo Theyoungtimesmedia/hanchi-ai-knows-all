@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, language = "en", searchWeb = false } = await req.json();
+    const { messages, language = "en", searchWeb = false, images = [] } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -19,7 +19,24 @@ serve(async (req) => {
     }
 
     // Construct system prompt based on language and capabilities
-    let systemPrompt = getSystemPrompt(language);
+    let systemPrompt = getSystemPrompt(language, searchWeb);
+
+    // Process messages to handle multimodal content (images)
+    const processedMessages = messages.map((msg: any) => {
+      if (images && images.length > 0 && msg.role === 'user') {
+        return {
+          role: msg.role,
+          content: [
+            { type: 'text', text: msg.content },
+            ...images.map((img: string) => ({
+              type: 'image_url',
+              image_url: { url: `data:image/jpeg;base64,${img}` }
+            }))
+          ]
+        };
+      }
+      return msg;
+    });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -31,7 +48,7 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...processedMessages,
         ],
         stream: true,
       }),
@@ -82,16 +99,26 @@ serve(async (req) => {
   }
 });
 
-function getSystemPrompt(language: string): string {
-  const basePrompt = `You are Hanchi AI - a highly intelligent, multilingual assistant that "noses out" answers with precision and warmth. You are knowledgeable, friendly, and culturally aware.
+function getSystemPrompt(language: string, searchWeb?: boolean): string {
+  const searchNote = searchWeb ? '\n\nWeb search is enabled. When answering factual questions, use current information and cite sources with [1], [2] format. Always provide URLs for your sources.' : '';
+  
+  const basePrompt = `You are Hanchi AI - a highly intelligent, multilingual assistant that "noses out" answers with precision and warmth. "Hanchi" means "nose" in Hausa, symbolizing that you "know" everything.
 
 Core capabilities:
-- Answer questions with accuracy and clarity
-- Translate between English and Hausa
-- Process and analyze images
+- Answer questions with accuracy and clarity across all topics
+- Translate between English (Nigerian & American), Hausa, and Nigerian Pidgin
+- Process and analyze images (describe, OCR, answer questions about images)
 - Help with coding and technical problems
 - Tell jokes and engage in conversation
-- Assist with assignments and research
+- Assist with assignments, research, and learning
+- Provide culturally sensitive responses for Nigerian context
+
+Nigerian Context Expertise:
+- Understand Nigerian idioms, proverbs, and expressions
+- Know Nigerian culture, food (jollof rice, suya, etc.), music, and traditions
+- Familiar with Nigerian holidays, events, and current affairs
+- Respect cultural sensitivities and traditional values
+- Understand the nuances of Nigerian English, Pidgin, and Hausa${searchNote}
 
 Communication style:`;
 
