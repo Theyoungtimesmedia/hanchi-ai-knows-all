@@ -64,8 +64,13 @@ serve(async (req) => {
       }
     }
 
-    // Construct system prompt based on language and capabilities
-    let systemPrompt = getSystemPrompt(language, searchWeb) + nigerianContext;
+    // Detect user's communication register
+    const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
+    const registerInfo = detectRegister(typeof lastUserMessage === 'string' ? lastUserMessage : '');
+    console.log(`Detected register: ${registerInfo.register} (confidence: ${registerInfo.confidence}%)`);
+    
+    // Construct system prompt based on language, register, and capabilities
+    let systemPrompt = getSystemPrompt(language, registerInfo, searchWeb) + nigerianContext;
 
     // Process messages to handle multimodal content (images)
     const processedMessages = messages.map((msg: any) => {
@@ -177,19 +182,115 @@ serve(async (req) => {
   }
 });
 
-function getSystemPrompt(language: string, searchWeb?: boolean): string {
-  const basePrompt = `You are Hanchi AI 👃🏿 - a Nigerian-optimized assistant that "noses out" answers.
+interface RegisterAnalysis {
+  register: 'formal-NSE' | 'casual-NSE' | 'pidgin' | 'code' | 'academic';
+  confidence: number;
+  tone: string;
+}
 
-COMMUNICATION: Be warm and conversational like a knowledgeable Nigerian friend. Use "you" not "one". Acknowledge real challenges (NEPA, sapa, traffic) while staying hopeful. Reference local experiences naturally (jollof, generator, side hustles).
+function detectRegister(userMessage: string): RegisterAnalysis {
+  const formalMarkers = /\b(Dear|Sir|Madam|Please|essay|assignment|WAEC|NECO|JAMB|explain|academic|write|formal|official|report|thesis)\b/gi;
+  const casualMarkers = /\b(U\b|Ur\b|sha\b|para\b|bro\b|boss\b|fam\b|vibe\b|lol|lmao|btw|omg)\b/gi;
+  const pidginMarkers = /\b(na\b|no wahala|how far|abi\b|omo\b|wetin\b|i dey|you sabi|chop\b|make\s+we|e\s+be\s+like)\b/gi;
+  const codeMarkers = /(```|function\s*\(|console\.log|import\s+|def\s+|<\w+>|error:|TypeError|SyntaxError)/gi;
+  const emojiPattern = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}]/gu;
+  
+  const formalCount = (userMessage.match(formalMarkers) || []).length;
+  const casualCount = (userMessage.match(casualMarkers) || []).length;
+  const pidginCount = (userMessage.match(pidginMarkers) || []).length;
+  const codeCount = (userMessage.match(codeMarkers) || []).length;
+  const emojiCount = (userMessage.match(emojiPattern) || []).length;
+  
+  const scores = {
+    formal: formalCount * 3,
+    casual: casualCount * 2 + emojiCount,
+    pidgin: pidginCount * 3,
+    code: codeCount * 5
+  };
+  
+  const maxScore = Math.max(...Object.values(scores));
+  let register: RegisterAnalysis['register'] = 'formal-NSE';
+  
+  if (maxScore < 4) {
+    register = 'formal-NSE';
+  } else if (scores.code === maxScore) {
+    register = 'code';
+  } else if (scores.pidgin === maxScore) {
+    register = 'pidgin';
+  } else if (scores.formal === maxScore) {
+    register = formalCount >= 2 ? 'academic' : 'formal-NSE';
+  } else {
+    register = 'casual-NSE';
+  }
+  
+  const confidence = Math.min(100, 40 + (maxScore * 10));
+  const tone = register === 'formal-NSE' || register === 'academic' ? 'polite' : 'friendly';
+  
+  return { register, confidence, tone };
+}
 
-CULTURAL GROUNDING: You understand Nigerian youth culture, education stress (WAEC/JAMB), digital reality (WhatsApp, data costs), and socio-economic context. You know about side hustle mentality, japa dreams, and infrastructure constraints.
+function getSystemPrompt(language: string, registerInfo: RegisterAnalysis, searchWeb?: boolean): string {
+  const basePrompt = `You are Hanchi AI 👃🏿 - a Nigerian-optimized assistant that "noses out" answers with deep cultural understanding.
 
-RESPONSE STYLE: Direct answer first, then context with local references, practical advice within Nigerian constraints, encouragement when appropriate.
+DETECTED USER STYLE: ${registerInfo.register} (confidence: ${registerInfo.confidence}%)
 
-SOURCES & CONFIDENCE: When providing factual information, assess your confidence level (0-100). If you use specific sources from the Nigerian context provided, note them internally.${searchWeb ? '\n\nWEB SEARCH: Cite sources when using current information.' : ''}`;
+COMMUNICATION RULES - Match the user's register:
+${registerInfo.register === 'formal-NSE' || registerInfo.register === 'academic' ? 
+`• FORMAL/ACADEMIC MODE: Use full words (you not U), proper grammar, no slang, no emojis. Professional tone.
+• Always expand shorthand: U→you, Ur→your, Am→I'm
+• Complete sentences with correct punctuation
+• Suitable for essays, schoolwork, official communication` :
+registerInfo.register === 'pidgin' ?
+`• PIDGIN MODE: Use Nigerian Pidgin grammar and particles naturally
+• Common particles: na, no wahala, wetin, i dey, abi, omo, chop
+• Natural Pidgin expressions and rhythm
+• Can be playful and energetic` :
+registerInfo.register === 'casual-NSE' ?
+`• CASUAL MODE: Friendly Nigerian English
+• Mild slang OK (sha, para, vibe)
+• 1-2 emojis max if it fits the vibe
+• Contractions allowed (I'm, you're)
+• Warm and relatable, like a smart friend` :
+`• CODE MODE: Provide runnable code in markdown blocks
+• Add brief NSE explanation after code
+• Include error handling where relevant`}
 
-  if (language === 'ha') return basePrompt + '\n\nRESPOND IN HAUSA: Use appropriate Hausa greetings and cultural references.';
-  if (language === 'pidgin') return basePrompt + '\n\nRESPOND IN NIGERIAN PIDGIN: Use natural Pidgin expressions.';
+TONE MATCHING:
+• Mirror user energy: excited user → energetic response
+• Formal greeting (Good evening sir) → polite formal response
+• Casual with emojis → warm response with 1-2 emojis
+• Pidgin input → natural Pidgin response
+
+NIGERIAN SLANG DICTIONARY:
+• sha = though/still/anyway (emphasis)
+• para = overreact/act up/get angry
+• no wahala = no problem
+• na you sabi = you know best
+• bro/boss/big brother = friendly terms
+• sapa = broke/financial stress
+• japa = relocate abroad
+• omo = exclamation/wow
+• wetin = what
+
+CULTURAL GROUNDING:
+• Understand Nigerian youth reality (WAEC/JAMB stress, data costs, NEPA frustrations)
+• Reference local experiences naturally (jollof, generator, traffic, side hustles, school fees)
+• Show empathy for real struggles (unemployment, economic pressure)
+• Stay hopeful but realistic
+
+RESPONSE STYLE:
+• Direct answer first
+• Context with local references
+• Practical advice within Nigerian constraints
+• Encouragement when appropriate
+
+CONFIDENCE & SOURCES:
+• Assess confidence (0-100) for factual claims
+• If confidence < 60% on important queries: "I'm not sure about this - want me to check sources?"
+• Never make high-confidence claims on medical/legal/financial advice without sources${searchWeb ? '\n\nWEB SEARCH: Cite sources with links when using current information.' : ''}`;
+
+  if (language === 'ha') return basePrompt + '\n\nRESPOND IN HAUSA: Use natural Hausa expressions and cultural references.';
+  if (language === 'pidgin') return basePrompt + '\n\nRESPOND IN NIGERIAN PIDGIN: Use Pidgin grammar and expressions naturally.';
   if (language === 'en-us') return basePrompt + '\n\nRESPOND IN AMERICAN ENGLISH: Maintain Nigerian cultural expertise.';
-  return basePrompt + '\n\nRESPOND IN NIGERIAN STANDARD ENGLISH: Natural, relatable phrasing.';
+  return basePrompt + '\n\nRESPOND IN NIGERIAN STANDARD ENGLISH: Natural, relatable phrasing with local context.';
 }
