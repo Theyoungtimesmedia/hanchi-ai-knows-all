@@ -8,88 +8,91 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Warm, welcoming colors inspired by Nigerian heritage */
+    /* Nigerian-inspired color palette: Forest green + Vibrant orange + Gold */
     --background: 0 0% 100%;
-    --foreground: 24 24% 10%;
+    --foreground: 160 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 24 24% 10%;
+    --card-foreground: 160 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 24 24% 10%;
+    --popover-foreground: 160 30% 15%;
 
-    /* Warm amber primary - Nigerian sun */
-    --primary: 38 92% 50%;
+    /* Deep Nigerian green - primary brand color */
+    --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 38 92% 65%;
+    --primary-glow: 160 84% 50%;
 
-    /* Deep emerald secondary - growth & nature */
-    --secondary: 160 84% 39%;
+    /* Vibrant sunset orange - energy & warmth */
+    --secondary: 38 92% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Soft muted tones */
-    --muted: 38 15% 96%;
-    --muted-foreground: 24 20% 40%;
+    /* Soft neutral tones */
+    --muted: 160 10% 96%;
+    --muted-foreground: 160 20% 40%;
 
-    /* Rich blue accent - intelligence */
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 100%;
+    /* Rich gold accent - wisdom & excellence */
+    --accent: 43 96% 56%;
+    --accent-foreground: 160 30% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 38 20% 90%;
-    --input: 38 20% 92%;
-    --ring: 38 92% 50%;
+    --border: 160 15% 90%;
+    --input: 160 10% 95%;
+    --ring: 160 84% 39%;
 
     --radius: 0.75rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 50%));
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%), hsl(38 30% 98%));
+    /* Gradients - Nigerian flag inspired */
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(38 92% 50%), hsl(43 96% 56%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%), hsl(160 10% 98%));
+    --gradient-accent: linear-gradient(90deg, hsl(160 84% 39%), hsl(38 92% 50%), hsl(43 96% 56%));
 
-    /* Shadows */
-    --shadow-warm: 0 10px 30px -10px hsl(38 92% 50% / 0.3);
-    --shadow-glow: 0 0 40px hsl(38 92% 65% / 0.4);
+    /* Shadows - Nigerian green glow */
+    --shadow-warm: 0 10px 30px -10px hsl(160 84% 39% / 0.2);
+    --shadow-glow: 0 0 40px hsl(160 84% 50% / 0.3);
+    --shadow-accent: 0 4px 20px -4px hsl(38 92% 50% / 0.4);
 
     /* Animation */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 24 24% 10%;
-    --foreground: 38 15% 95%;
+    --background: 160 30% 8%;
+    --foreground: 160 10% 95%;
 
-    --card: 24 20% 12%;
-    --card-foreground: 38 15% 95%;
+    --card: 160 25% 10%;
+    --card-foreground: 160 10% 95%;
 
-    --popover: 24 20% 12%;
-    --popover-foreground: 38 15% 95%;
+    --popover: 160 25% 10%;
+    --popover-foreground: 160 10% 95%;
 
-    --primary: 38 92% 50%;
+    --primary: 160 84% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 38 92% 65%;
+    --primary-glow: 160 84% 55%;
 
-    --secondary: 160 84% 39%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 38 92% 55%;
+    --secondary-foreground: 160 30% 10%;
 
-    --muted: 24 20% 16%;
-    --muted-foreground: 38 15% 60%;
+    --muted: 160 20% 15%;
+    --muted-foreground: 160 10% 60%;
 
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 43 96% 60%;
+    --accent-foreground: 160 30% 10%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 24 20% 20%;
-    --input: 24 20% 16%;
-    --ring: 38 92% 50%;
+    --border: 160 20% 20%;
+    --input: 160 20% 15%;
+    --ring: 160 84% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 50%));
-    --gradient-hero: linear-gradient(180deg, hsl(24 24% 10%), hsl(24 20% 12%));
+    --gradient-primary: linear-gradient(135deg, hsl(160 84% 45%), hsl(160 84% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(38 92% 55%), hsl(43 96% 60%));
+    --gradient-hero: linear-gradient(180deg, hsl(160 30% 8%), hsl(160 25% 10%));
+    --gradient-accent: linear-gradient(90deg, hsl(160 84% 45%), hsl(38 92% 55%), hsl(43 96% 60%));
   }
 }
 
