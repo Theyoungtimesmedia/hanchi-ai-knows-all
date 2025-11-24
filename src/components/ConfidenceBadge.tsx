@@ -3,7 +3,6 @@ import { AlertCircle, CheckCircle, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -21,23 +20,21 @@ export const ConfidenceBadge = ({ confidence }: ConfidenceBadgeProps) => {
   const { label, color, icon: Icon } = getConfidenceLevel();
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge variant="outline" className={`gap-1 ${color} border-0`}>
-            <Icon className="w-3 h-3" />
-            <span className="text-xs">{label}</span>
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="text-xs">Confidence: {confidence}%</p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            {confidence >= 80 && "This answer is well-supported by sources"}
-            {confidence >= 50 && confidence < 80 && "This answer has moderate support"}
-            {confidence < 50 && "This answer may need verification"}
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge variant="outline" className={`gap-1 ${color} border-0`}>
+          <Icon className="w-3 h-3" />
+          <span className="text-xs">{label}</span>
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p className="text-xs">Confidence: {confidence}%</p>
+        <p className="text-[10px] text-muted-foreground mt-1">
+          {confidence >= 80 && "This answer is well-supported by sources"}
+          {confidence >= 50 && confidence < 80 && "This answer has moderate support"}
+          {confidence < 50 && "This answer may need verification"}
+        </p>
+      </TooltipContent>
+    </Tooltip>
   );
 };
