@@ -33,7 +33,7 @@ serve(async (req) => {
     }
 
     // Use Lovable AI gateway for transcription
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -44,6 +44,14 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Transcription API error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.');
+      }
+      if (response.status === 402) {
+        throw new Error('Credits exhausted. Please add funds to continue.');
+      }
+      
       throw new Error('Failed to transcribe audio');
     }
 

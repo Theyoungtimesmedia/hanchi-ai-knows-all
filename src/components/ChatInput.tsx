@@ -32,7 +32,7 @@ export const ChatInput = ({ onSend, disabled, language }: ChatInputProps) => {
     if (isRecording) {
       const text = await stopRecording();
       if (text) {
-        setInput(text);
+        setInput(prev => prev + (prev ? " " : "") + text);
       }
     } else {
       await startRecording();

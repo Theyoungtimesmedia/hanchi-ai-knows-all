@@ -80,6 +80,7 @@ export type Database = {
         Row: {
           category: string
           content: string
+          content_search: unknown
           created_at: string | null
           embedding: string | null
           id: string
@@ -92,6 +93,7 @@ export type Database = {
         Insert: {
           category: string
           content: string
+          content_search?: unknown
           created_at?: string | null
           embedding?: string | null
           id?: string
@@ -104,6 +106,7 @@ export type Database = {
         Update: {
           category?: string
           content?: string
+          content_search?: unknown
           created_at?: string | null
           embedding?: string | null
           id?: string
@@ -120,23 +123,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      match_nigerian_knowledge: {
-        Args: {
-          filter_language?: string
-          match_count?: number
-          match_threshold?: number
-          query_embedding: string
-        }
-        Returns: {
-          category: string
-          content: string
-          id: string
-          language: string
-          metadata: Json
-          similarity: number
-          subcategory: string
-        }[]
-      }
+      match_nigerian_knowledge:
+        | {
+            Args: {
+              filter_language?: string
+              match_count?: number
+              search_query: string
+            }
+            Returns: {
+              category: string
+              content: string
+              id: string
+              language: string
+              metadata: Json
+              similarity: number
+              subcategory: string
+            }[]
+          }
+        | {
+            Args: {
+              filter_language?: string
+              match_count?: number
+              match_threshold?: number
+              query_embedding: string
+            }
+            Returns: {
+              category: string
+              content: string
+              id: string
+              language: string
+              metadata: Json
+              similarity: number
+              subcategory: string
+            }[]
+          }
     }
     Enums: {
       [_ in never]: never
