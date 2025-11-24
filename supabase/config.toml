@@ -11,9 +11,3 @@ verify_jwt = false
 
 [functions.translate-voice]
 verify_jwt = false
-
-[functions.analyze-document]
-verify_jwt = false
-
-[functions.parse-task]
-verify_jwt = false

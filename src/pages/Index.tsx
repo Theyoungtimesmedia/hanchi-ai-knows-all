@@ -8,7 +8,7 @@ import { ConversationSidebar } from "@/components/ConversationSidebar";
 import { QuickActionChips } from "@/components/QuickActionChips";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { LogOut, Settings, BookOpen } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -88,9 +88,6 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSelector language={language} onLanguageChange={setLanguage} />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/study")}>
-              <BookOpen className="w-4 h-4" />
-            </Button>
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="w-4 h-4" />
             </Button>
@@ -104,17 +101,36 @@ export default function Index() {
           <div className="max-w-3xl mx-auto">
             {messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
-                <div className="text-center max-w-xl space-y-4">
+                <div className="text-center max-w-2xl space-y-6">
                   <img src={hanchiLogo} alt="Hanchi AI" className="w-24 h-24 mx-auto mb-2" />
-                  <h1 className="text-3xl font-bold">Welcome to Hanchi AI</h1>
-                  <p className="text-base text-muted-foreground">
-                    Your Nigerian AI assistant that "noses out" answers with cultural intelligence
+                  <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    Chat with Hanchi AI 👃🏿
+                  </h1>
+                  <p className="text-lg text-muted-foreground">
+                    Your Nigerian AI assistant for anything
                   </p>
-                  <div className="flex flex-wrap gap-2 justify-center mt-4">
-                    <Badge variant="secondary" className="text-xs">🇳🇬 Nigerian Context</Badge>
-                    <Badge variant="secondary" className="text-xs">🗣️ Multilingual</Badge>
-                    <Badge variant="secondary" className="text-xs">🎤 Voice</Badge>
-                    <Badge variant="secondary" className="text-xs">📸 Vision</Badge>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
+                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
+                      <div className="text-3xl mb-2">✉️</div>
+                      <h3 className="font-semibold text-sm mb-1">Write</h3>
+                      <p className="text-xs text-muted-foreground">Emails, essays, reports</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
+                      <div className="text-3xl mb-2">💻</div>
+                      <h3 className="font-semibold text-sm mb-1">Code</h3>
+                      <p className="text-xs text-muted-foreground">Generate & debug code</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
+                      <div className="text-3xl mb-2">🌍</div>
+                      <h3 className="font-semibold text-sm mb-1">Translate</h3>
+                      <p className="text-xs text-muted-foreground">Any language</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
+                      <div className="text-3xl mb-2">🎨</div>
+                      <h3 className="font-semibold text-sm mb-1">Create</h3>
+                      <p className="text-xs text-muted-foreground">Images & content</p>
+                    </div>
                   </div>
                 </div>
               </div>
