@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AudioPlayer } from "@/utils/AudioPlayer";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +7,50 @@ export const useTextToSpeech = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const playerRef = useRef<AudioPlayer>(new AudioPlayer());
+  const synthRef = useRef<SpeechSynthesis | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+  }, []);
+
+  const speakWithWebAPI = (text: string, language: string) => {
+    if (!synthRef.current) {
+      throw new Error('Web Speech API not supported');
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Map language codes to appropriate voices
+      const langMap: { [key: string]: string } = {
+        'ha': 'en-GB', // Closest available for Hausa
+        'en': 'en-NG', // Try Nigerian English first
+        'pidgin': 'en-NG',
+        'en-us': 'en-US'
+      };
+      
+      utterance.lang = langMap[language] || 'en-US';
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+
+      utterance.onend = () => {
+        setIsPlaying(false);
+        resolve();
+      };
+
+      utterance.onerror = (event) => {
+        setIsPlaying(false);
+        reject(new Error(`Speech synthesis error: ${event.error}`));
+      };
+
+      synthRef.current!.cancel(); // Cancel any ongoing speech
+      synthRef.current!.speak(utterance);
+      setIsPlaying(true);
+    });
+  };
 
   const speak = async (text: string, language: string) => {
     try {
@@ -15,42 +58,50 @@ export const useTextToSpeech = () => {
 
       console.log('Requesting TTS for:', text.substring(0, 50));
 
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text, language },
-      });
-
-      setIsFetching(false);
-
-      if (error) {
-        console.error('TTS error:', error);
-        throw error;
-      }
-
-      if (!data?.audioContent) {
-        throw new Error('No audio content received');
-      }
-
-      console.log('TTS audio received, playing...');
-
-      setIsPlaying(true);
-      playerRef.current.play(data.audioContent, () => {
-        setIsPlaying(false);
-        console.log('Audio playback completed');
-      }, () => {
-        setIsPlaying(false);
-        console.error('Audio playback failed');
-        toast({
-          title: "Playback Error",
-          description: "Failed to play audio. Please try again.",
-          variant: "destructive",
+      // Try ElevenLabs first
+      try {
+        const { data, error } = await supabase.functions.invoke('text-to-speech', {
+          body: { text, language },
         });
-      });
+
+        setIsFetching(false);
+
+        if (error) {
+          // ElevenLabs failed, fall back to Web Speech API
+          console.warn('ElevenLabs TTS failed, using Web Speech API fallback:', error);
+          await speakWithWebAPI(text, language);
+          return;
+        }
+
+        if (!data?.audioContent) {
+          console.warn('No audio content from ElevenLabs, using Web Speech API');
+          await speakWithWebAPI(text, language);
+          return;
+        }
+
+        console.log('ElevenLabs TTS audio received, playing...');
+
+        setIsPlaying(true);
+        playerRef.current.play(data.audioContent, () => {
+          setIsPlaying(false);
+          console.log('Audio playback completed');
+        }, () => {
+          setIsPlaying(false);
+          console.error('Audio playback failed, trying Web Speech API');
+          // Fallback to Web Speech API if playback fails
+          speakWithWebAPI(text, language).catch(console.error);
+        });
+      } catch (elevenLabsError) {
+        setIsFetching(false);
+        console.warn('ElevenLabs error, falling back to Web Speech API:', elevenLabsError);
+        await speakWithWebAPI(text, language);
+      }
     } catch (error) {
       setIsFetching(false);
-      console.error('TTS error:', error);
+      console.error('All TTS methods failed:', error);
       toast({
-        title: "Speech Error",
-        description: error instanceof Error ? error.message : "Failed to generate speech",
+        title: "Speech Unavailable",
+        description: "Text-to-speech is temporarily unavailable. Please try again later.",
         variant: "destructive",
       });
     }
@@ -58,6 +109,9 @@ export const useTextToSpeech = () => {
 
   const stop = () => {
     playerRef.current.stop();
+    if (synthRef.current) {
+      synthRef.current.cancel();
+    }
     setIsPlaying(false);
   };
 

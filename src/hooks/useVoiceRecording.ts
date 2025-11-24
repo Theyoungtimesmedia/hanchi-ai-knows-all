@@ -41,14 +41,25 @@ export const useVoiceRecording = (language: string) => {
 
       setIsTranscribing(false);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Transcription error:', error);
+        if (error.message?.includes('Rate limit')) {
+          throw new Error('Too many requests. Please wait a moment and try again.');
+        }
+        if (error.message?.includes('Credits')) {
+          throw new Error('Service temporarily unavailable. Please try again later.');
+        }
+        throw error;
+      }
 
       return data.text || null;
     } catch (error) {
       setIsTranscribing(false);
+      const errorMessage = error instanceof Error ? error.message : "Failed to transcribe audio";
+      console.error('Transcription failed:', errorMessage);
       toast({
-        title: "Transcription Error",
-        description: error instanceof Error ? error.message : "Failed to transcribe audio",
+        title: "Transcription Failed",
+        description: errorMessage,
         variant: "destructive",
       });
       return null;

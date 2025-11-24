@@ -22,39 +22,31 @@ serve(async (req) => {
 
     console.log(`Chat request - Language: ${language}, Search: ${searchWeb}, Images: ${images.length}`);
 
-    // Get relevant Nigerian context from knowledge base
+    // Get relevant Nigerian context using full-text search
     let nigerianContext = "";
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && messages.length > 0) {
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
-        const lastUserMessage = messages[messages.length - 1];
-        if (lastUserMessage.role === 'user' && typeof lastUserMessage.content === 'string') {
+        const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content;
+        if (lastUserMessage && typeof lastUserMessage === 'string') {
           console.log('Fetching Nigerian context...');
           
-          const contextResponse = await fetch(`${SUPABASE_URL}/functions/v1/semantic-search`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: lastUserMessage.content,
-              language,
-              limit: 3
-            }),
+          const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.3');
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          
+          const { data, error } = await supabase.rpc('match_nigerian_knowledge', {
+            search_query: lastUserMessage,
+            match_count: 5,
+            filter_language: language
           });
 
-          if (contextResponse.ok) {
-            const { results } = await contextResponse.json();
-            if (results && results.length > 0) {
-              nigerianContext = "\n\nRelevant Nigerian Context:\n" + 
-                results.map((r: any) => `- ${r.content}`).join('\n');
-              console.log(`Added ${results.length} context entries`);
-            }
+          if (!error && data && data.length > 0) {
+            nigerianContext = "\n\nRELEVANT NIGERIAN CONTEXT:\n" + 
+              data.map((r: any, i: number) => `${i+1}. [${r.category}] ${r.content}`).join('\n');
+            console.log(`Added ${data.length} context entries`);
           }
         }
       } catch (error) {
         console.error('Failed to fetch Nigerian context:', error);
-        // Continue without context if it fails
       }
     }
 
@@ -140,55 +132,16 @@ serve(async (req) => {
 });
 
 function getSystemPrompt(language: string, searchWeb?: boolean): string {
-  const searchNote = searchWeb ? '\n\nWeb search is enabled. When answering factual questions, use current information and cite sources with [1], [2] format. Always provide URLs for your sources.' : '';
-  
-  const basePrompt = `You are Hanchi AI - a highly intelligent, multilingual assistant that "noses out" answers with precision and warmth. "Hanchi" means "nose" in Hausa, symbolizing that you "know" everything.
+  const basePrompt = `You are Hanchi AI 👃🏿 - a Nigerian-optimized assistant that "noses out" answers.
 
-Core capabilities:
-- Answer questions with accuracy and clarity across all topics
-- Translate between English (Nigerian & American), Hausa, and Nigerian Pidgin
-- Process and analyze images (describe, OCR, answer questions about images)
-- Help with coding and technical problems
-- Tell jokes and engage in conversation
-- Assist with assignments, research, and learning
-- Provide culturally sensitive responses for Nigerian context
+COMMUNICATION: Be warm and conversational like a knowledgeable Nigerian friend. Use "you" not "one". Acknowledge real challenges (NEPA, sapa, traffic) while staying hopeful. Reference local experiences naturally (jollof, generator, side hustles).
 
-Nigerian Context Expertise:
-- Understand Nigerian idioms, proverbs, and expressions
-- Know Nigerian culture, food (jollof rice, suya, etc.), music, and traditions
-- Familiar with Nigerian holidays, events, and current affairs
-- Respect cultural sensitivities and traditional values
-- Understand the nuances of Nigerian English, Pidgin, and Hausa${searchNote}
+CULTURAL GROUNDING: You understand Nigerian youth culture, education stress (WAEC/JAMB), digital reality (WhatsApp, data costs), and socio-economic context. You know about side hustle mentality, japa dreams, and infrastructure constraints.
 
-Communication style:`;
+RESPONSE STYLE: Direct answer first, then context with local references, practical advice within Nigerian constraints, encouragement when appropriate.${searchWeb ? '\n\nWEB SEARCH: Cite sources when using current information.' : ''}`;
 
-  switch (language) {
-    case "ha":
-      return basePrompt + `
-- Respond in Hausa (Nigerian standard)
-- Use culturally appropriate expressions
-- Be respectful and friendly
-- Maintain professionalism while being warm`;
-
-    case "pidgin":
-      return basePrompt + `
-- Respond in Nigerian Pidgin English
-- Use natural pidgin expressions
-- Be friendly and relatable
-- Keep the tone conversational and warm`;
-
-    case "en-us":
-      return basePrompt + `
-- Respond in American English
-- Use clear, standard American expressions
-- Be professional yet friendly
-- Maintain a helpful and approachable tone`;
-
-    default: // Nigerian English
-      return basePrompt + `
-- Respond in Nigerian Standard English
-- Use expressions familiar to Nigerian speakers
-- Be warm, friendly, and culturally aware
-- Balance professionalism with approachability`;
-  }
+  if (language === 'ha') return basePrompt + '\n\nRESPOND IN HAUSA: Use appropriate Hausa greetings and cultural references.';
+  if (language === 'pidgin') return basePrompt + '\n\nRESPOND IN NIGERIAN PIDGIN: Use natural Pidgin expressions.';
+  if (language === 'en-us') return basePrompt + '\n\nRESPOND IN AMERICAN ENGLISH: Maintain Nigerian cultural expertise.';
+  return basePrompt + '\n\nRESPOND IN NIGERIAN STANDARD ENGLISH: Natural, relatable phrasing.';
 }
