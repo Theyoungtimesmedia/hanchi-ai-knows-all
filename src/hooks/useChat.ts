@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { analytics } from "@/utils/analytics";
+import { performanceMonitor } from "@/utils/performance";
 
 interface Source {
   title: string;
@@ -88,6 +90,9 @@ export const useChat = (language: string, conversationId: string | null, userId:
 
   const sendMessage = useCallback(
     async (content: string, images?: string[]) => {
+      analytics.trackChatMessage('user', content.length);
+      performanceMonitor.startTimer('chat_response');
+      
       const userMessage: Message = { role: "user", content, images };
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
@@ -201,7 +206,11 @@ export const useChat = (language: string, conversationId: string | null, userId:
             ...assistantMetadata,
           }, conversationId);
         }
+        
+        performanceMonitor.endTimer('chat_response');
+        analytics.trackChatMessage('assistant', assistantContent.length);
       } catch (error) {
+        analytics.trackError('chat_send_failed', { error: String(error) });
         console.error("Chat error:", error);
         toast({
           title: "Error",

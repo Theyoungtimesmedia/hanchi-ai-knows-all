@@ -7,12 +7,14 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { ConversationSidebar } from "@/components/ConversationSidebar";
 import { QuickActionChips } from "@/components/QuickActionChips";
 import { TypingIndicator } from "@/components/TypingIndicator";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { LogOut, Settings, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
+import { analytics } from "@/utils/analytics";
 import hanchiLogo from "@/assets/hanchi-logo-3.png";
 
 export default function Index() {
@@ -31,6 +33,9 @@ export default function Index() {
       setUser(session?.user || null);
       if (!session?.user) {
         navigate("/auth");
+      } else {
+        analytics.setUserId(session.user.id);
+        analytics.trackPageView('chat');
       }
     });
 
@@ -60,6 +65,7 @@ export default function Index() {
 
   return (
     <div className="flex h-screen bg-background">
+      <OfflineIndicator />
       <ConversationSidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
