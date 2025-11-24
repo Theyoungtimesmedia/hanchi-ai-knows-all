@@ -230,10 +230,39 @@ export const useChat = (language: string, conversationId: string | null, userId:
     setMessages([]);
   }, []);
 
+  const regenerateLastMessage = useCallback(async () => {
+    if (messages.length < 2) return;
+
+    // Remove last assistant message
+    const messagesWithoutLast = messages.slice(0, -1);
+    setMessages(messagesWithoutLast);
+
+    // Get the last user message
+    const lastUserMessage = messagesWithoutLast[messagesWithoutLast.length - 1];
+    if (lastUserMessage.role !== 'user') return;
+
+    // Re-send it
+    await sendMessage(lastUserMessage.content, lastUserMessage.images);
+  }, [messages, sendMessage]);
+
+  const editMessage = useCallback(async (index: number, newContent: string) => {
+    if (index < 0 || index >= messages.length) return;
+    if (messages[index].role !== 'user') return;
+
+    // Remove all messages after the edited one
+    const messagesUpToEdit = messages.slice(0, index);
+    setMessages(messagesUpToEdit);
+
+    // Send the edited message
+    await sendMessage(newContent, messages[index].images);
+  }, [messages, sendMessage]);
+
   return {
     messages,
     isLoading,
     sendMessage,
     clearMessages,
+    regenerateLastMessage,
+    editMessage,
   };
 };

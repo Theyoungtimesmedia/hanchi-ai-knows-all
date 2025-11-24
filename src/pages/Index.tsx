@@ -8,25 +8,39 @@ import { ConversationSidebar } from "@/components/ConversationSidebar";
 import { QuickActionChips } from "@/components/QuickActionChips";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { LogOut, Settings } from "lucide-react";
+import { ModelSelector } from "@/components/ModelSelector";
+import { ShareConversationDialog } from "@/components/ShareConversationDialog";
+import { LogOut, Settings, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 import { analytics } from "@/utils/analytics";
+import { conversationExporter } from "@/utils/conversationExporter";
+import { useToast } from "@/hooks/use-toast";
 import hanchiLogo from "@/assets/hanchi-logo-3.png";
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
     useConversationHistory(user?.id || null);
-  const { messages, isLoading, sendMessage } = useChat(language, currentConversationId, user?.id || null);
+  const { messages, isLoading, sendMessage, regenerateLastMessage, editMessage } = 
+    useChat(language, currentConversationId, user?.id || null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -61,6 +75,38 @@ export default function Index() {
     }
   };
 
+  const handleExport = async (format: 'text' | 'markdown' | 'pdf') => {
+    if (messages.length === 0) return;
+    
+    const conversationTitle = conversations.find(c => c.id === currentConversationId)?.title || 'Hanchi Conversation';
+    
+    try {
+      if (format === 'pdf') {
+        const blob = await conversationExporter.exportAsPDF(messages, conversationTitle);
+        conversationExporter.downloadFile(blob, conversationTitle, 'pdf');
+      } else if (format === 'markdown') {
+        const content = conversationExporter.exportAsMarkdown(messages, conversationTitle);
+        conversationExporter.downloadFile(content, conversationTitle, 'markdown');
+      } else {
+        const content = conversationExporter.exportAsText(messages, conversationTitle);
+        conversationExporter.downloadFile(content, conversationTitle, 'text');
+      }
+      
+      toast({
+        title: "Export successful",
+        description: `Conversation exported as ${format.toUpperCase()}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to export conversation",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const currentConversationTitle = conversations.find(c => c.id === currentConversationId)?.title || 'New Conversation';
+
   if (!user) return null;
 
   return (
@@ -87,6 +133,36 @@ export default function Index() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {currentConversationId && messages.length > 0 && (
+              <>
+                <ModelSelector />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Download className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleExport('text')}>
+                      Export as Text
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('markdown')}>
+                      Export as Markdown
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                      Export as PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShareDialogOpen(true)}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </>
+            )}
             <LanguageSelector language={language} onLanguageChange={setLanguage} />
             <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
               <Settings className="w-4 h-4" />
@@ -145,6 +221,38 @@ export default function Index() {
                 images={message.images}
                 confidence={message.confidence}
                 sources={message.sources}
+                onRegenerate={
+                  message.role === 'assistant' && index === messages.length - 1
+                    ? regenerateLastMessage
+                    : undefined
+                }
+                onSuggestionClick={
+                  message.role === 'assistant' && index === messages.length - 1
+                    ? async (suggestion) => {
+                        if (!currentConversationId) {
+                          const convId = await createConversation(suggestion.slice(0, 50), language);
+                          if (convId) setCurrentConversationId(convId);
+                        }
+                        await sendMessage(suggestion);
+                      }
+                    : undefined
+                }
+                onIteration={
+                  message.role === 'assistant' && index === messages.length - 1
+                    ? async (instruction) => {
+                        if (!currentConversationId) {
+                          const convId = await createConversation(instruction.slice(0, 50), language);
+                          if (convId) setCurrentConversationId(convId);
+                        }
+                        await sendMessage(instruction);
+                      }
+                    : undefined
+                }
+                onEdit={
+                  message.role === 'user'
+                    ? () => setEditingMessageIndex(index)
+                    : undefined
+                }
               />
             ))}
                 {isLoading && <TypingIndicator />}
@@ -192,6 +300,15 @@ export default function Index() {
           </div>
         </div>
       </div>
+
+      {currentConversationId && (
+        <ShareConversationDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          conversationId={currentConversationId}
+          conversationTitle={currentConversationTitle}
+        />
+      )}
     </div>
   );
 }
