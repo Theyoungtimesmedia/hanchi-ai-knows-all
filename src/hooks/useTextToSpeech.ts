@@ -52,34 +52,33 @@ export const useTextToSpeech = () => {
     });
   };
 
-  const speak = async (text: string, language: string) => {
+  const speak = async (text: string, language: string, register?: string) => {
     try {
       setIsFetching(true);
 
-      console.log('Requesting TTS for:', text.substring(0, 50));
+      console.log('Requesting TTS for:', text.substring(0, 50), 'Language:', language, 'Register:', register);
 
-      // Try ElevenLabs first
+      // Try YarnGPT first (primary Nigerian voice provider)
       try {
-        const { data, error } = await supabase.functions.invoke('text-to-speech', {
-          body: { text, language },
+        const { data, error } = await supabase.functions.invoke('yarngpt-tts', {
+          body: { text, language, register: register || 'casual' },
         });
 
         setIsFetching(false);
 
         if (error) {
-          // ElevenLabs failed, fall back to Web Speech API
-          console.warn('ElevenLabs TTS failed, using Web Speech API fallback:', error);
+          console.warn('YarnGPT TTS failed, using Web Speech API fallback:', error);
           await speakWithWebAPI(text, language);
           return;
         }
 
         if (!data?.audioContent) {
-          console.warn('No audio content from ElevenLabs, using Web Speech API');
+          console.warn('No audio content from YarnGPT, using Web Speech API');
           await speakWithWebAPI(text, language);
           return;
         }
 
-        console.log('ElevenLabs TTS audio received, playing...');
+        console.log('YarnGPT TTS audio received, playing...');
 
         setIsPlaying(true);
         playerRef.current.play(data.audioContent, () => {
@@ -88,12 +87,11 @@ export const useTextToSpeech = () => {
         }, () => {
           setIsPlaying(false);
           console.error('Audio playback failed, trying Web Speech API');
-          // Fallback to Web Speech API if playback fails
           speakWithWebAPI(text, language).catch(console.error);
         });
-      } catch (elevenLabsError) {
+      } catch (yarngptError) {
         setIsFetching(false);
-        console.warn('ElevenLabs error, falling back to Web Speech API:', elevenLabsError);
+        console.warn('YarnGPT error, falling back to Web Speech API:', yarngptError);
         await speakWithWebAPI(text, language);
       }
     } catch (error) {
