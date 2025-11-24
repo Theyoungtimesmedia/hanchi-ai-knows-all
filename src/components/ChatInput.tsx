@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image as ImageIcon, Loader2, X } from "lucide-react";
+import { Send, Mic, Plus, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -66,7 +65,7 @@ export const ChatInput = ({ onSend, disabled, language }: ChatInputProps) => {
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute -top-2 -right-2 bg-background rounded-full"
+            className="absolute -top-2 -right-2 bg-background rounded-full shadow-md"
             onClick={clearImage}
           >
             <X className="w-4 h-4" />
@@ -74,7 +73,7 @@ export const ChatInput = ({ onSend, disabled, language }: ChatInputProps) => {
         </div>
       )}
       
-      <div className="relative flex items-end gap-2 p-4 bg-card border border-border rounded-2xl shadow-warm">
+      <div className="flex items-center gap-3 max-w-3xl mx-auto">
         <input
           ref={fileInputRef}
           type="file"
@@ -83,54 +82,54 @@ export const ChatInput = ({ onSend, disabled, language }: ChatInputProps) => {
           className="hidden"
         />
         
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="flex-shrink-0 hover:bg-muted"
-            onClick={handleImageClick}
-            disabled={disabled}
-          >
-            <ImageIcon className="w-5 h-5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "flex-shrink-0 hover:bg-muted",
-              isRecording && "text-destructive animate-pulse"
-            )}
-            onClick={handleVoiceClick}
-            disabled={disabled || isTranscribing}
-          >
-            <Mic className="w-5 h-5" />
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="flex-shrink-0 hover:bg-muted rounded-full"
+          onClick={handleImageClick}
+          disabled={disabled}
+        >
+          <Plus className="w-5 h-5" />
+        </Button>
 
-        <Textarea
+        <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isTranscribing ? "Transcribing..." : "Ask Hanchi anything..."}
-          className="flex-1 min-h-[44px] max-h-32 resize-none border-0 focus-visible:ring-0 bg-transparent"
+          placeholder={isTranscribing ? "Transcribing..." : "Ask Hanchi AI"}
+          className="flex-1 bg-input rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring border-0"
           disabled={disabled || isTranscribing}
         />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "flex-shrink-0 hover:bg-muted rounded-full",
+            isRecording && "text-destructive animate-pulse"
+          )}
+          onClick={handleVoiceClick}
+          disabled={disabled || isTranscribing}
+        >
+          <Mic className="w-5 h-5" />
+        </Button>
 
         <Button
           type="submit"
           size="icon"
           className={cn(
-            "flex-shrink-0 bg-gradient-primary hover:opacity-90 transition-all",
+            "flex-shrink-0 bg-primary hover:bg-primary/90 rounded-full",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           disabled={(!input.trim() && !imageBase64) || disabled || isTranscribing}
         >
           {disabled || isTranscribing ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-primary-foreground" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4 text-primary-foreground" />
           )}
         </Button>
       </div>

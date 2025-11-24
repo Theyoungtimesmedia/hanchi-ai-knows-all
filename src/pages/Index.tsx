@@ -5,12 +5,11 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ConversationSidebar } from "@/components/ConversationSidebar";
-import { QuickActionChips } from "@/components/QuickActionChips";
+import { SimpleQuickActions } from "@/components/SimpleQuickActions";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { ModelSelector } from "@/components/ModelSelector";
 import { ShareConversationDialog } from "@/components/ShareConversationDialog";
-import { LogOut, Settings, Download, Share2 } from "lucide-react";
+import { Menu, Camera, User as UserIcon, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,14 +24,15 @@ import { Badge } from "@/components/ui/badge";
 import { analytics } from "@/utils/analytics";
 import { conversationExporter } from "@/utils/conversationExporter";
 import { useToast } from "@/hooks/use-toast";
-import hanchiLogo from "@/assets/hanchi-logo-3.png";
+import hanchiLogo from "@/assets/hanchi-logo-new.png";
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [editingMessageIndex, setEditingMessageIndex] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -110,105 +110,104 @@ export default function Index() {
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       <OfflineIndicator />
-      <ConversationSidebar
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        onSelectConversation={setCurrentConversationId}
-        onNewConversation={handleNewConversation}
-        onDeleteConversation={deleteConversation}
-        isLoading={loadingHistory}
-      />
+      
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-50 transition-transform duration-200`}>
+        <ConversationSidebar
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          onSelectConversation={(id) => {
+            setCurrentConversationId(id);
+            setSidebarOpen(false);
+          }}
+          onNewConversation={() => {
+            handleNewConversation();
+            setSidebarOpen(false);
+          }}
+          onDeleteConversation={deleteConversation}
+          isLoading={loadingHistory}
+        />
+      </div>
 
-      <div className="flex-1 flex flex-col">
-        <header className="bg-gradient-hero border-b border-border p-3 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-3">
-            <img src={hanchiLogo} alt="Hanchi AI" className="w-10 h-10" />
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Hanchi AI
-              </h1>
-              <p className="text-[10px] text-muted-foreground">Your Nigerian AI Assistant</p>
-            </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Clean ChatGPT-style Header */}
+        <header className="fixed md:relative top-0 left-0 right-0 z-30 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden"
+          >
+            <Menu className="w-6 h-6" />
+          </Button>
+          
+          <div className="flex items-center gap-2 flex-1 justify-center md:justify-start">
+            <span className="font-semibold text-lg">Hanchi AI 👃🏿</span>
           </div>
+          
           <div className="flex items-center gap-2">
-            {currentConversationId && messages.length > 0 && (
-              <>
-                <ModelSelector />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => handleExport('text')}>
-                      Export as Text
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('markdown')}>
-                      Export as Markdown
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                      Export as PDF
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShareDialogOpen(true)}
-                >
-                  <Share2 className="w-4 h-4" />
+            <Button variant="ghost" size="icon">
+              <Camera className="w-5 h-5" />
+            </Button>
+            
+            <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <UserIcon className="w-5 h-5" />
                 </Button>
-              </>
-            )}
-            <LanguageSelector language={language} onLanguageChange={setLanguage} />
-            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => supabase.auth.signOut()}>
-              <LogOut className="w-4 h-4" />
-            </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gradient-hero">
-          <div className="max-w-3xl mx-auto">
+        <div className="flex-1 overflow-y-auto pt-16 md:pt-0">
+          <div className="max-w-3xl mx-auto px-4">
             {messages.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
-                <div className="text-center max-w-2xl space-y-6">
-                  <img src={hanchiLogo} alt="Hanchi AI" className="w-24 h-24 mx-auto mb-2" />
-                  <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    Chat with Hanchi AI 👃🏿
-                  </h1>
-                  <p className="text-lg text-muted-foreground">
-                    Your Nigerian AI assistant for anything
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
-                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
-                      <div className="text-3xl mb-2">✉️</div>
-                      <h3 className="font-semibold text-sm mb-1">Write</h3>
-                      <p className="text-xs text-muted-foreground">Emails, essays, reports</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
-                      <div className="text-3xl mb-2">💻</div>
-                      <h3 className="font-semibold text-sm mb-1">Code</h3>
-                      <p className="text-xs text-muted-foreground">Generate & debug code</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
-                      <div className="text-3xl mb-2">🌍</div>
-                      <h3 className="font-semibold text-sm mb-1">Translate</h3>
-                      <p className="text-xs text-muted-foreground">Any language</p>
-                    </div>
-                    <div className="p-4 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-shadow">
-                      <div className="text-3xl mb-2">🎨</div>
-                      <h3 className="font-semibold text-sm mb-1">Create</h3>
-                      <p className="text-xs text-muted-foreground">Images & content</p>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex flex-col items-center justify-center min-h-[70vh] py-8">
+                <h1 className="text-3xl md:text-4xl font-semibold text-center mb-8">
+                  What can I help with?
+                </h1>
+                
+                <SimpleQuickActions
+                  onAction={async (prompt) => {
+                    if (prompt === "more_options") {
+                      // Show more options in future
+                      toast({ title: "More options coming soon!" });
+                      return;
+                    }
+                    if (!currentConversationId) {
+                      const convId = await createConversation(
+                        prompt.slice(0, 50) + "...",
+                        language
+                      );
+                      if (convId) {
+                        setCurrentConversationId(convId);
+                      }
+                    }
+                    await sendMessage(prompt);
+                  }}
+                  disabled={isLoading}
+                />
               </div>
             ) : (
               <>
@@ -250,7 +249,10 @@ export default function Index() {
                 }
                 onEdit={
                   message.role === 'user'
-                    ? () => setEditingMessageIndex(index)
+                    ? () => {
+                        // Edit functionality to be implemented
+                        toast({ title: "Edit feature coming soon!" });
+                      }
                     : undefined
                 }
               />
@@ -262,42 +264,23 @@ export default function Index() {
           </div>
         </div>
 
-        <div className="border-t border-border p-3 bg-card shadow-warm">
-          <div className="max-w-3xl mx-auto">
-            {messages.length === 0 && (
-              <QuickActionChips
-                onAction={async (prompt) => {
-                  if (!currentConversationId) {
-                    const convId = await createConversation(
-                      prompt.slice(0, 50) + "...",
-                      language
-                    );
-                    if (convId) {
-                      setCurrentConversationId(convId);
-                    }
-                  }
-                  await sendMessage(prompt);
-                }}
-                disabled={isLoading}
-              />
-            )}
-            <ChatInput
-              onSend={async (content, images) => {
-                if (!currentConversationId) {
-                  const convId = await createConversation(
-                    content.slice(0, 50) + (content.length > 50 ? "..." : ""),
-                    language
-                  );
-                  if (convId) {
-                    setCurrentConversationId(convId);
-                  }
+        <div className="fixed md:relative bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-3">
+          <ChatInput
+            onSend={async (content, images) => {
+              if (!currentConversationId) {
+                const convId = await createConversation(
+                  content.slice(0, 50) + (content.length > 50 ? "..." : ""),
+                  language
+                );
+                if (convId) {
+                  setCurrentConversationId(convId);
                 }
-                await sendMessage(content, images);
-              }}
-              disabled={isLoading}
-              language={language}
-            />
-          </div>
+              }
+              await sendMessage(content, images);
+            }}
+            disabled={isLoading}
+            language={language}
+          />
         </div>
       </div>
 
