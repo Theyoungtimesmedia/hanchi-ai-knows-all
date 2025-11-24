@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
+import { Badge } from "@/components/ui/badge";
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
@@ -68,7 +69,7 @@ export default function Index() {
       <div className="flex-1 flex flex-col">
         <header className="bg-card border-b border-border p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-primary" />
+            <span className="text-3xl">👃🏿</span>
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Hanchi AI
             </h1>
@@ -84,10 +85,21 @@ export default function Index() {
         <div className="flex-1 overflow-y-auto p-4 lg:p-8">
           <div className="max-w-4xl mx-auto">
             {messages.length === 0 ? (
-              <div className="text-center py-12">
-                <Sparkles className="w-16 h-16 mx-auto mb-4 text-primary" />
-                <h2 className="text-2xl font-bold mb-2">Welcome to Hanchi AI</h2>
-                <p className="text-muted-foreground">Start a conversation to begin</p>
+              <div className="flex-1 flex items-center justify-center p-4">
+                <div className="text-center max-w-2xl space-y-6">
+                  <div className="text-6xl mb-4">👃🏿</div>
+                  <h1 className="text-4xl font-bold mb-4">Welcome to Hanchi AI</h1>
+                  <p className="text-lg text-muted-foreground">
+                    Your multilingual AI assistant that "noses out" answers with precision and warmth
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center mt-6">
+                    <Badge variant="secondary">🇳🇬 Nigerian Context</Badge>
+                    <Badge variant="secondary">🗣️ Pidgin, Hausa, English</Badge>
+                    <Badge variant="secondary">🎤 Voice Support</Badge>
+                    <Badge variant="secondary">📸 Image Analysis</Badge>
+                    <Badge variant="secondary">🔍 Web Search</Badge>
+                  </div>
+                </div>
               </div>
             ) : (
               messages.map((message, index) => (

@@ -22,19 +22,26 @@ serve(async (req) => {
     const { text, language } = await req.json();
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
 
+    console.log(`TTS request - Language: ${language}, Text length: ${text?.length || 0}`);
+
     if (!ELEVENLABS_API_KEY) {
+      console.error('ELEVENLABS_API_KEY is not configured');
       throw new Error('ELEVENLABS_API_KEY is not configured');
     }
 
-    if (!text) {
+    if (!text || text.trim().length === 0) {
+      console.error('No text provided for TTS');
       throw new Error('Text is required');
     }
 
     const voiceName = VOICE_MAPPING[language] || 'Aria';
+    const voiceId = getVoiceId(voiceName);
+    
+    console.log(`Using voice: ${voiceName} (${voiceId})`);
 
-    // Call ElevenLabs API
+    // Call ElevenLabs API with improved error handling
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${getVoiceId(voiceName)}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
         method: 'POST',
         headers: {
@@ -42,7 +49,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text,
+          text: text.trim(),
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
             stability: 0.5,
@@ -55,23 +62,52 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('ElevenLabs API error:', response.status, errorText);
-      throw new Error('Failed to generate speech');
+      
+      // Provide more specific error messages
+      if (response.status === 401) {
+        throw new Error('Invalid ElevenLabs API key');
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      } else if (response.status === 400) {
+        throw new Error('Invalid request to ElevenLabs API');
+      }
+      
+      throw new Error(`ElevenLabs API error: ${response.status}`);
     }
 
-    // Convert audio to base64
+    console.log('ElevenLabs API response received, processing audio...');
+
+    // Convert audio to base64 with chunked processing for large files
     const arrayBuffer = await response.arrayBuffer();
-    const base64Audio = btoa(
-      String.fromCharCode(...new Uint8Array(arrayBuffer))
-    );
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    // Process in chunks to avoid memory issues
+    const chunkSize = 32768;
+    let base64Audio = '';
+    
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      base64Audio += btoa(String.fromCharCode(...chunk));
+    }
+
+    console.log(`Audio generated successfully. Size: ${base64Audio.length} bytes`);
 
     return new Response(
-      JSON.stringify({ audioContent: base64Audio }),
+      JSON.stringify({ 
+        audioContent: base64Audio,
+        contentType: 'audio/mpeg',
+        language: language,
+        voice: voiceName
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error in text-to-speech function:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
