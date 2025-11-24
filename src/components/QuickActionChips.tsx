@@ -1,4 +1,4 @@
-import { MessageSquare, Languages, Code, FileText, Calculator, Search } from "lucide-react";
+import { Mail, Code, FileText, Languages, PenTool, Lightbulb, BookOpen, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface QuickActionChipsProps {
@@ -8,12 +8,14 @@ interface QuickActionChipsProps {
 
 export const QuickActionChips = ({ onAction, disabled }: QuickActionChipsProps) => {
   const actions = [
+    { icon: Mail, label: "Write Email", prompt: "Help me write a professional email" },
+    { icon: Briefcase, label: "Draft CV", prompt: "Help me create a CV" },
+    { icon: FileText, label: "Summarize", prompt: "Summarize this article for me" },
     { icon: Languages, label: "Translate", prompt: "Help me translate this text" },
-    { icon: Calculator, label: "Math Help", prompt: "Help me solve this math problem" },
-    { icon: FileText, label: "Summarize", prompt: "Summarize this document for me" },
-    { icon: Code, label: "Code Help", prompt: "Help me with this code" },
-    { icon: MessageSquare, label: "Explain", prompt: "Explain this concept to me" },
-    { icon: Search, label: "Research", prompt: "Research this topic for me" },
+    { icon: Code, label: "Code Help", prompt: "Help me write code" },
+    { icon: BookOpen, label: "Lesson Plan", prompt: "Help me create a lesson plan" },
+    { icon: PenTool, label: "Write Essay", prompt: "Help me write an essay" },
+    { icon: Lightbulb, label: "Brainstorm", prompt: "Help me brainstorm ideas" },
   ];
 
   return (
