@@ -6,6 +6,7 @@ import { ChatInput } from "@/components/ChatInput";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ConversationSidebar } from "@/components/ConversationSidebar";
 import { SimpleQuickActions } from "@/components/SimpleQuickActions";
+import { MoreOptionsMenu } from "@/components/MoreOptionsMenu";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ShareConversationDialog } from "@/components/ShareConversationDialog";
@@ -31,6 +32,7 @@ export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -191,8 +193,7 @@ export default function Index() {
                 <SimpleQuickActions
                   onAction={async (prompt) => {
                     if (prompt === "more_options") {
-                      // Show more options in future
-                      toast({ title: "More options coming soon!" });
+                      setMoreOptionsOpen(true);
                       return;
                     }
                     if (!currentConversationId) {
@@ -207,6 +208,23 @@ export default function Index() {
                     await sendMessage(prompt);
                   }}
                   disabled={isLoading}
+                />
+                
+                <MoreOptionsMenu
+                  open={moreOptionsOpen}
+                  onOpenChange={setMoreOptionsOpen}
+                  onSelectOption={async (prompt) => {
+                    if (!currentConversationId) {
+                      const convId = await createConversation(
+                        prompt.slice(0, 50) + "...",
+                        language
+                      );
+                      if (convId) {
+                        setCurrentConversationId(convId);
+                      }
+                    }
+                    await sendMessage(prompt);
+                  }}
                 />
               </div>
             ) : (
