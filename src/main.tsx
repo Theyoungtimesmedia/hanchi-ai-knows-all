@@ -27,6 +27,7 @@ if ('serviceWorker' in navigator) {
 // Monitor performance
 performanceMonitor.logWebVitals();
 
+// Force rebuild to clear router nesting error
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
