@@ -76,12 +76,67 @@ export type Database = {
           },
         ]
       }
+      nigerian_knowledge: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          embedding: string | null
+          id: string
+          language: string | null
+          metadata: Json | null
+          subcategory: string | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          subcategory?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          subcategory?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_nigerian_knowledge: {
+        Args: {
+          filter_language?: string
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          category: string
+          content: string
+          id: string
+          language: string
+          metadata: Json
+          similarity: number
+          subcategory: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

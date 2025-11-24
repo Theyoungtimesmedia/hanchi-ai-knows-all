@@ -13,13 +13,53 @@ serve(async (req) => {
   try {
     const { messages, language = "en", searchWeb = false, images = [] } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    console.log(`Chat request - Language: ${language}, Search: ${searchWeb}, Images: ${images.length}`);
+
+    // Get relevant Nigerian context from knowledge base
+    let nigerianContext = "";
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && messages.length > 0) {
+      try {
+        const lastUserMessage = messages[messages.length - 1];
+        if (lastUserMessage.role === 'user' && typeof lastUserMessage.content === 'string') {
+          console.log('Fetching Nigerian context...');
+          
+          const contextResponse = await fetch(`${SUPABASE_URL}/functions/v1/semantic-search`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: lastUserMessage.content,
+              language,
+              limit: 3
+            }),
+          });
+
+          if (contextResponse.ok) {
+            const { results } = await contextResponse.json();
+            if (results && results.length > 0) {
+              nigerianContext = "\n\nRelevant Nigerian Context:\n" + 
+                results.map((r: any) => `- ${r.content}`).join('\n');
+              console.log(`Added ${results.length} context entries`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch Nigerian context:', error);
+        // Continue without context if it fails
+      }
+    }
+
     // Construct system prompt based on language and capabilities
-    let systemPrompt = getSystemPrompt(language, searchWeb);
+    let systemPrompt = getSystemPrompt(language, searchWeb) + nigerianContext;
 
     // Process messages to handle multimodal content (images)
     const processedMessages = messages.map((msg: any) => {
