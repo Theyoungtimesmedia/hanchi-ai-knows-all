@@ -68,12 +68,12 @@ export const ChatMessage = ({
   return (
     <div
       className={cn(
-        "group flex gap-3 mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300",
+        "group flex gap-3 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300",
         isAssistant ? "justify-start" : "justify-end"
       )}
     >
       {isAssistant && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shadow-sm">
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center">
           <Bot className="w-4 h-4 text-primary-foreground" />
         </div>
       )}
@@ -96,10 +96,10 @@ export const ChatMessage = ({
           <div className="flex items-start gap-2">
             <div
               className={cn(
-                "rounded-2xl px-4 py-3 flex-1",
+                "rounded-2xl px-4 py-3 flex-1 max-w-[85%]",
                 isAssistant
-                  ? "bg-card border border-border shadow-sm"
-                  : "bg-gradient-secondary text-secondary-foreground shadow-accent"
+                  ? "bg-muted/40 text-foreground"
+                  : "bg-primary/10 text-foreground"
               )}
             >
               <div className="space-y-2">
@@ -156,8 +156,8 @@ export const ChatMessage = ({
       </div>
 
       {!isAssistant && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-secondary flex items-center justify-center shadow-accent">
-          <User className="w-4 h-4 text-secondary-foreground" />
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center">
+          <User className="w-4 h-4 text-primary-foreground" />
         </div>
       )}
     </div>
