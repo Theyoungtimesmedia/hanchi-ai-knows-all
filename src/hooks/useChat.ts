@@ -2,10 +2,19 @@ import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Source {
+  title: string;
+  url?: string;
+  snippet?: string;
+  timestamp?: string;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
   images?: string[];
+  confidence?: number;
+  sources?: Source[];
 }
 
 export const useChat = (language: string, conversationId: string | null, userId: string | null) => {
@@ -36,6 +45,8 @@ export const useChat = (language: string, conversationId: string | null, userId:
         role: msg.role as "user" | "assistant",
         content: msg.content,
         images: (msg.metadata as any)?.images || [],
+        confidence: (msg.metadata as any)?.confidence,
+        sources: (msg.metadata as any)?.sources || [],
       }));
 
       setMessages(loadedMessages);
@@ -53,11 +64,16 @@ export const useChat = (language: string, conversationId: string | null, userId:
     if (!userId) return;
 
     try {
+      const metadata: any = {};
+      if (message.images) metadata.images = message.images;
+      if (message.confidence) metadata.confidence = message.confidence;
+      if (message.sources) metadata.sources = message.sources;
+
       await supabase.from('messages').insert({
         conversation_id: convId,
         role: message.role,
         content: message.content,
-        metadata: message.images ? { images: message.images } : null,
+        metadata: Object.keys(metadata).length > 0 ? metadata : null,
       });
 
       // Update conversation timestamp
@@ -125,6 +141,7 @@ export const useChat = (language: string, conversationId: string | null, userId:
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let assistantContent = "";
+        let assistantMetadata: { confidence?: number; sources?: Source[] } = {};
 
         // Add assistant message placeholder
         setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
@@ -144,17 +161,31 @@ export const useChat = (language: string, conversationId: string | null, userId:
               try {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
+                const metadata = parsed.metadata;
+                
                 if (content) {
                   assistantContent += content;
-                  setMessages((prev) => {
-                    const newMessages = [...prev];
-                    newMessages[newMessages.length - 1] = {
-                      role: "assistant",
-                      content: assistantContent,
-                    };
-                    return newMessages;
-                  });
                 }
+                
+                // Update metadata if present
+                if (metadata) {
+                  if (metadata.confidence !== undefined) {
+                    assistantMetadata.confidence = metadata.confidence;
+                  }
+                  if (metadata.sources) {
+                    assistantMetadata.sources = metadata.sources;
+                  }
+                }
+                
+                setMessages((prev) => {
+                  const newMessages = [...prev];
+                  newMessages[newMessages.length - 1] = {
+                    role: "assistant",
+                    content: assistantContent,
+                    ...assistantMetadata,
+                  };
+                  return newMessages;
+                });
               } catch (e) {
                 // Skip invalid JSON
               }
@@ -164,7 +195,11 @@ export const useChat = (language: string, conversationId: string | null, userId:
 
         // Save assistant message if we have a conversation
         if (conversationId && userId && assistantContent) {
-          await saveMessage({ role: "assistant", content: assistantContent }, conversationId);
+          await saveMessage({ 
+            role: "assistant", 
+            content: assistantContent,
+            ...assistantMetadata,
+          }, conversationId);
         }
       } catch (error) {
         console.error("Chat error:", error);

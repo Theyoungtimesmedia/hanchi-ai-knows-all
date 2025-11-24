@@ -24,6 +24,9 @@ serve(async (req) => {
 
     // Get relevant Nigerian context using full-text search
     let nigerianContext = "";
+    let contextSources: any[] = [];
+    let confidence = 70; // Default confidence
+    
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
         const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content;
@@ -42,7 +45,18 @@ serve(async (req) => {
           if (!error && data && data.length > 0) {
             nigerianContext = "\n\nRELEVANT NIGERIAN CONTEXT:\n" + 
               data.map((r: any, i: number) => `${i+1}. [${r.category}] ${r.content}`).join('\n');
-            console.log(`Added ${data.length} context entries`);
+            
+            // Store sources for later
+            contextSources = data.slice(0, 3).map((r: any) => ({
+              title: `${r.category}: ${r.subcategory || 'General'}`,
+              snippet: r.content.substring(0, 150) + '...',
+              timestamp: r.updated_at || r.created_at,
+            }));
+            
+            // Increase confidence if we found relevant context
+            confidence = Math.min(85, 70 + (data.length * 3));
+            
+            console.log(`Added ${data.length} context entries, confidence: ${confidence}%`);
           }
         }
       } catch (error) {
@@ -116,7 +130,39 @@ serve(async (req) => {
       );
     }
 
-    return new Response(response.body, {
+    // Create a TransformStream to inject metadata at the end
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const reader = response.body!.getReader();
+    
+    // Stream the response and add metadata at the end
+    (async () => {
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            // Inject metadata before [DONE]
+            const metadataEvent = `data: ${JSON.stringify({
+              choices: [{ delta: {} }],
+              metadata: {
+                confidence,
+                sources: contextSources,
+              }
+            })}\n\n`;
+            await writer.write(new TextEncoder().encode(metadataEvent));
+            await writer.write(new TextEncoder().encode("data: [DONE]\n\n"));
+            break;
+          }
+          await writer.write(value);
+        }
+      } catch (error) {
+        console.error('Streaming error:', error);
+      } finally {
+        writer.close();
+      }
+    })();
+
+    return new Response(readable, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
@@ -138,7 +184,9 @@ COMMUNICATION: Be warm and conversational like a knowledgeable Nigerian friend. 
 
 CULTURAL GROUNDING: You understand Nigerian youth culture, education stress (WAEC/JAMB), digital reality (WhatsApp, data costs), and socio-economic context. You know about side hustle mentality, japa dreams, and infrastructure constraints.
 
-RESPONSE STYLE: Direct answer first, then context with local references, practical advice within Nigerian constraints, encouragement when appropriate.${searchWeb ? '\n\nWEB SEARCH: Cite sources when using current information.' : ''}`;
+RESPONSE STYLE: Direct answer first, then context with local references, practical advice within Nigerian constraints, encouragement when appropriate.
+
+SOURCES & CONFIDENCE: When providing factual information, assess your confidence level (0-100). If you use specific sources from the Nigerian context provided, note them internally.${searchWeb ? '\n\nWEB SEARCH: Cite sources when using current information.' : ''}`;
 
   if (language === 'ha') return basePrompt + '\n\nRESPOND IN HAUSA: Use appropriate Hausa greetings and cultural references.';
   if (language === 'pidgin') return basePrompt + '\n\nRESPOND IN NIGERIAN PIDGIN: Use natural Pidgin expressions.';

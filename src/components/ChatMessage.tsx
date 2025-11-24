@@ -2,16 +2,35 @@ import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { MessageActions } from "./MessageActions";
+import { SourcesDisplay } from "./SourcesDisplay";
+import { ConfidenceBadge } from "./ConfidenceBadge";
+
+interface Source {
+  title: string;
+  url?: string;
+  snippet?: string;
+  timestamp?: string;
+}
 
 interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   language: string;
   images?: string[];
+  confidence?: number;
+  sources?: Source[];
   onRegenerate?: () => void;
 }
 
-export const ChatMessage = ({ role, content, language, images, onRegenerate }: ChatMessageProps) => {
+export const ChatMessage = ({ 
+  role, 
+  content, 
+  language, 
+  images, 
+  confidence,
+  sources,
+  onRegenerate 
+}: ChatMessageProps) => {
   const isAssistant = role === "assistant";
   const { isPlaying, speak, stop } = useTextToSpeech();
 
@@ -50,25 +69,40 @@ export const ChatMessage = ({ role, content, language, images, onRegenerate }: C
           </div>
         )}
         
-        <div className="flex items-start gap-2">
-          <div
-            className={cn(
-              "rounded-2xl px-4 py-3",
-              isAssistant
-                ? "bg-card border border-border shadow-sm"
-                : "bg-gradient-secondary text-secondary-foreground shadow-accent"
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            <div
+              className={cn(
+                "rounded-2xl px-4 py-3 flex-1",
+                isAssistant
+                  ? "bg-card border border-border shadow-sm"
+                  : "bg-gradient-secondary text-secondary-foreground shadow-accent"
+              )}
+            >
+              <div className="space-y-2">
+                {isAssistant && confidence && (
+                  <div className="flex items-center justify-between mb-2">
+                    <ConfidenceBadge confidence={confidence} />
+                  </div>
+                )}
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+              </div>
+            </div>
+
+            {isAssistant && (
+              <MessageActions
+                content={content}
+                onSpeak={handleSpeakClick}
+                onRegenerate={onRegenerate}
+                isAssistant={true}
+              />
             )}
-          >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
           </div>
 
-          {isAssistant && (
-            <MessageActions
-              content={content}
-              onSpeak={handleSpeakClick}
-              onRegenerate={onRegenerate}
-              isAssistant={true}
-            />
+          {isAssistant && sources && sources.length > 0 && (
+            <div className="ml-11">
+              <SourcesDisplay sources={sources} />
+            </div>
           )}
         </div>
       </div>

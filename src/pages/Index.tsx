@@ -7,7 +7,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { ConversationSidebar } from "@/components/ConversationSidebar";
 import { QuickActionChips } from "@/components/QuickActionChips";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -82,6 +82,9 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-2">
             <LanguageSelector language={language} onLanguageChange={setLanguage} />
+            <Button variant="ghost" size="icon" onClick={() => navigate("/settings")}>
+              <Settings className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={() => supabase.auth.signOut()}>
               <LogOut className="w-4 h-4" />
             </Button>
@@ -108,15 +111,17 @@ export default function Index() {
               </div>
             ) : (
               <>
-                {messages.map((message, index) => (
-                  <ChatMessage
-                    key={index}
-                    role={message.role}
-                    content={message.content}
-                    language={language}
-                    images={message.images}
-                  />
-                ))}
+            {messages.map((message, index) => (
+              <ChatMessage
+                key={index}
+                role={message.role}
+                content={message.content}
+                language={language}
+                images={message.images}
+                confidence={message.confidence}
+                sources={message.sources}
+              />
+            ))}
                 {isLoading && <TypingIndicator />}
               </>
             )}

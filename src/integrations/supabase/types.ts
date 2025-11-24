@@ -41,6 +41,47 @@ export type Database = {
         }
         Relationships: []
       }
+      message_sources: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string
+          relevance_score: number | null
+          source_snippet: string | null
+          source_timestamp: string | null
+          source_title: string
+          source_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id: string
+          relevance_score?: number | null
+          source_snippet?: string | null
+          source_timestamp?: string | null
+          source_title: string
+          source_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string
+          relevance_score?: number | null
+          source_snippet?: string | null
+          source_timestamp?: string | null
+          source_title?: string
+          source_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_sources_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -115,6 +156,86 @@ export type Database = {
           subcategory?: string | null
           updated_at?: string | null
           usage_count?: number | null
+        }
+        Relationships: []
+      }
+      user_memory: {
+        Row: {
+          category: string | null
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          memory_key: string
+          memory_value: string
+          source_conversation_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          memory_key: string
+          memory_value: string
+          source_conversation_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          memory_key?: string
+          memory_value?: string
+          source_conversation_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_memory_source_conversation_id_fkey"
+            columns: ["source_conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          learning_goals: string[] | null
+          notification_settings: Json | null
+          preferred_language: string | null
+          study_mode: boolean | null
+          updated_at: string | null
+          user_id: string
+          voice_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          learning_goals?: string[] | null
+          notification_settings?: Json | null
+          preferred_language?: string | null
+          study_mode?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          voice_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          learning_goals?: string[] | null
+          notification_settings?: Json | null
+          preferred_language?: string | null
+          study_mode?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          voice_enabled?: boolean | null
         }
         Relationships: []
       }
