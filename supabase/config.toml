@@ -9,5 +9,8 @@ verify_jwt = false
 [functions.text-to-speech]
 verify_jwt = false
 
+[functions.yarngpt-tts]
+verify_jwt = false
+
 [functions.translate-voice]
 verify_jwt = false
