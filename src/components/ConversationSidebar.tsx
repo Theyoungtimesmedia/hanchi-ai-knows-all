@@ -1,6 +1,7 @@
-import { MessageSquarePlus, Trash2, Menu, X } from "lucide-react";
+import { MessageSquarePlus, Trash2, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { Conversation } from "@/hooks/useConversationHistory";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -23,10 +24,15 @@ export const ConversationSidebar = ({
   isLoading,
 }: ConversationSidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredConversations = conversations.filter((conv) =>
+    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-card border-r border-border">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border space-y-3">
         <Button
           onClick={onNewConversation}
           className="w-full bg-gradient-primary hover:opacity-90"
@@ -34,16 +40,28 @@ export const ConversationSidebar = ({
           <MessageSquarePlus className="w-4 h-4 mr-2" />
           New Chat
         </Button>
+        
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
           {isLoading ? (
             <p className="text-sm text-muted-foreground p-4">Loading...</p>
-          ) : conversations.length === 0 ? (
-            <p className="text-sm text-muted-foreground p-4">No conversations yet</p>
+          ) : filteredConversations.length === 0 ? (
+            <p className="text-sm text-muted-foreground p-4">
+              {searchQuery ? "No conversations found" : "No conversations yet"}
+            </p>
           ) : (
-            conversations.map((conv) => (
+            filteredConversations.map((conv) => (
               <div
                 key={conv.id}
                 className={cn(

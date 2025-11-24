@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_templates: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          sample_messages: Json | null
+          system_prompt: string
+          title: string
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          sample_messages?: Json | null
+          system_prompt: string
+          title: string
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          sample_messages?: Json | null
+          system_prompt?: string
+          title?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string | null
@@ -84,6 +120,82 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_images: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          image_base64: string | null
+          image_url: string | null
+          metadata: Json | null
+          prompt: string
+          style: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          image_base64?: string | null
+          image_url?: string | null
+          metadata?: Json | null
+          prompt: string
+          style?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          image_base64?: string | null
+          image_url?: string | null
+          metadata?: Json | null
+          prompt?: string
+          style?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_images_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string | null
+          reaction_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          reaction_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          reaction_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
             referencedColumns: ["id"]
           },
         ]
@@ -205,6 +317,97 @@ export type Database = {
           usage_count?: number | null
         }
         Relationships: []
+      }
+      shared_conversations: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_public: boolean | null
+          share_token: string
+          view_count: number | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          share_token?: string
+          view_count?: number | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          share_token?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_conversations_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uploaded_documents: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          extracted_text: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          summary: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          extracted_text?: string | null
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          extracted_text?: string | null
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uploaded_documents_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_memory: {
         Row: {

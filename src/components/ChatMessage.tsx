@@ -4,6 +4,9 @@ import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { MessageActions } from "./MessageActions";
 import { SourcesDisplay } from "./SourcesDisplay";
 import { ConfidenceBadge } from "./ConfidenceBadge";
+import { MarkdownMessage } from "./MarkdownMessage";
+import { SmartReplySuggestions } from "./SmartReplySuggestions";
+import { IterationControls } from "./IterationControls";
 
 interface Source {
   title: string;
@@ -20,6 +23,9 @@ interface ChatMessageProps {
   confidence?: number;
   sources?: Source[];
   onRegenerate?: () => void;
+  onSuggestionClick?: (suggestion: string) => void;
+  onIteration?: (instruction: string) => void;
+  onEdit?: () => void;
 }
 
 export const ChatMessage = ({ 
@@ -29,7 +35,10 @@ export const ChatMessage = ({
   images, 
   confidence,
   sources,
-  onRegenerate 
+  onRegenerate,
+  onSuggestionClick,
+  onIteration,
+  onEdit,
 }: ChatMessageProps) => {
   const isAssistant = role === "assistant";
   const { isPlaying, speak, stop } = useTextToSpeech();
@@ -40,6 +49,20 @@ export const ChatMessage = ({
     } else {
       speak(content, language);
     }
+  };
+
+  // Detect message type for smart suggestions
+  const detectMessageType = (): 'code' | 'text' | 'list' | 'table' | 'explanation' => {
+    if (content.includes('```') || content.includes('function') || content.includes('const ')) {
+      return 'code';
+    }
+    if (content.includes('|') && content.split('\n').filter(line => line.includes('|')).length > 2) {
+      return 'table';
+    }
+    if (content.match(/^\d+\.|^[-*•]/m)) {
+      return 'list';
+    }
+    return 'explanation';
   };
 
   return (
@@ -85,7 +108,13 @@ export const ChatMessage = ({
                     <ConfidenceBadge confidence={confidence} />
                   </div>
                 )}
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+                <div className="text-sm">
+                  {isAssistant ? (
+                    <MarkdownMessage content={content} />
+                  ) : (
+                    <p className="leading-relaxed whitespace-pre-wrap">{content}</p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -97,12 +126,31 @@ export const ChatMessage = ({
                 isAssistant={true}
               />
             )}
+            {!isAssistant && onEdit && (
+              <MessageActions
+                content={content}
+                onEdit={onEdit}
+                isAssistant={false}
+              />
+            )}
           </div>
+
+          {isAssistant && onIteration && (
+            <IterationControls onIteration={onIteration} />
+          )}
 
           {isAssistant && sources && sources.length > 0 && (
             <div className="ml-11">
               <SourcesDisplay sources={sources} />
             </div>
+          )}
+
+          {isAssistant && onSuggestionClick && (
+            <SmartReplySuggestions
+              lastMessage={content}
+              messageType={detectMessageType()}
+              onSuggestionClick={onSuggestionClick}
+            />
           )}
         </div>
       </div>

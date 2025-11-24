@@ -1,4 +1,4 @@
-import { Copy, Volume2, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
+import { Copy, Volume2, ThumbsUp, ThumbsDown, RotateCcw, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -7,10 +7,11 @@ interface MessageActionsProps {
   content: string;
   onRegenerate?: () => void;
   onSpeak?: () => void;
+  onEdit?: () => void;
   isAssistant: boolean;
 }
 
-export const MessageActions = ({ content, onRegenerate, onSpeak, isAssistant }: MessageActionsProps) => {
+export const MessageActions = ({ content, onRegenerate, onSpeak, onEdit, isAssistant }: MessageActionsProps) => {
   const { toast } = useToast();
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
 
@@ -85,6 +86,17 @@ export const MessageActions = ({ content, onRegenerate, onSpeak, isAssistant }: 
             </Button>
           )}
         </>
+      )}
+
+      {!isAssistant && onEdit && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={onEdit}
+        >
+          <Edit className="w-3 h-3" />
+        </Button>
       )}
     </div>
   );
