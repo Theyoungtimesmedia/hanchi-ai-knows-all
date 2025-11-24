@@ -41,6 +41,53 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          extracted_text: string | null
+          file_size: number | null
+          file_type: string
+          id: string
+          metadata: Json | null
+          summary: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          extracted_text?: string | null
+          file_size?: number | null
+          file_type: string
+          id?: string
+          metadata?: Json | null
+          summary?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          extracted_text?: string | null
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          metadata?: Json | null
+          summary?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_sources: {
         Row: {
           created_at: string | null
@@ -159,6 +206,93 @@ export type Database = {
         }
         Relationships: []
       }
+      study_materials: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          difficulty: string | null
+          exam_type: string
+          explanation: string | null
+          id: string
+          options: Json
+          question: string
+          subject: string
+          topic: string
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          difficulty?: string | null
+          exam_type: string
+          explanation?: string | null
+          id?: string
+          options: Json
+          question: string
+          subject: string
+          topic: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          difficulty?: string | null
+          exam_type?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          question?: string
+          subject?: string
+          topic?: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          category: string | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_memory: {
         Row: {
           category: string | null
@@ -239,11 +373,96 @@ export type Database = {
         }
         Relationships: []
       }
+      user_progress: {
+        Row: {
+          created_at: string | null
+          exam_type: string
+          id: string
+          last_practice: string | null
+          questions_attempted: number | null
+          questions_correct: number | null
+          subject: string
+          topic: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          exam_type: string
+          id?: string
+          last_practice?: string | null
+          questions_attempted?: number | null
+          questions_correct?: number | null
+          subject: string
+          topic: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          exam_type?: string
+          id?: string
+          last_practice?: string | null
+          questions_attempted?: number | null
+          questions_correct?: number | null
+          subject?: string
+          topic?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          achievements: Json | null
+          badges: Json | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          level: number | null
+          longest_streak: number | null
+          total_xp: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievements?: Json | null
+          badges?: Json | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievements?: Json | null
+          badges?: Json | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      award_xp: {
+        Args: { p_user_id: string; p_xp_amount: number }
+        Returns: undefined
+      }
       match_nigerian_knowledge:
         | {
             Args: {
@@ -278,6 +497,16 @@ export type Database = {
               subcategory: string
             }[]
           }
+      upsert_user_progress: {
+        Args: {
+          p_exam_type: string
+          p_is_correct: boolean
+          p_subject: string
+          p_topic: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
