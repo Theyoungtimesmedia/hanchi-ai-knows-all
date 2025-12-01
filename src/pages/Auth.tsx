@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,6 +37,9 @@ export default function Auth() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              full_name: fullName,
+            },
           },
         });
 
@@ -63,67 +63,90 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/20 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Hanchi AI
-            </h1>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="bg-card w-full max-w-md rounded-[2.5rem] shadow-xl overflow-hidden p-8 md:p-12 border border-border animate-scale-in">
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <div className="w-16 h-16 rounded-full bg-gradient-primary shadow-lg flex items-center justify-center text-primary-foreground">
+            <Sparkles size={32} />
           </div>
-          <CardTitle>{isLogin ? "Welcome back" : "Create an account"}</CardTitle>
-          <CardDescription>
-            {isLogin
-              ? "Sign in to access your conversations"
-              : "Sign up to start chatting with Hanchi"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full bg-gradient-primary hover:opacity-90"
-              disabled={isLoading}
-            >
-              {isLoading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
-            </Button>
-          </form>
+        </div>
+        
+        <h2 className="text-3xl font-bold text-center text-foreground mb-2">
+          {isLogin ? "Welcome Back" : "Join Hanchi"}
+        </h2>
+        <p className="text-center text-muted-foreground mb-8">
+          {isLogin ? "Continue your AI journey" : "Create your account to start"}
+        </p>
 
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
+        <form onSubmit={handleAuth} className="space-y-4">
+          {/* Full Name (Sign Up only) */}
+          {!isLogin && (
+            <div className="bg-muted rounded-2xl px-4 py-3 border border-transparent focus-within:border-primary focus-within:bg-card transition-all">
+              <label className="text-xs text-muted-foreground block ml-1">Full Name</label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full bg-transparent outline-none text-foreground font-medium"
+                placeholder="Ibrahim Musa"
+              />
+            </div>
+          )}
+          
+          {/* Email */}
+          <div className="bg-muted rounded-2xl px-4 py-3 border border-transparent focus-within:border-primary focus-within:bg-card transition-all">
+            <label className="text-xs text-muted-foreground block ml-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-transparent outline-none text-foreground font-medium"
+              placeholder="name@example.com"
+              required
+            />
           </div>
-        </CardContent>
-      </Card>
+          
+          {/* Password */}
+          <div className="bg-muted rounded-2xl px-4 py-3 border border-transparent focus-within:border-primary focus-within:bg-card transition-all">
+            <label className="text-xs text-muted-foreground block ml-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-transparent outline-none text-foreground font-medium"
+              placeholder="••••••••"
+              required
+              minLength={6}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 transition-transform active:scale-95 mt-4 flex items-center justify-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Loading...
+              </>
+            ) : (
+              isLogin ? "Sign In" : "Create Account"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-8 text-center">
+          <button 
+            type="button"
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-muted-foreground hover:text-primary font-medium transition-colors"
+          >
+            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

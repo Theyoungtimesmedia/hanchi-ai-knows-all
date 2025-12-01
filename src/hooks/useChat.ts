@@ -17,6 +17,7 @@ interface Message {
   images?: string[];
   confidence?: number;
   sources?: Source[];
+  thought?: string;
 }
 
 export const useChat = (language: string, conversationId: string | null, userId: string | null) => {
@@ -24,7 +25,6 @@ export const useChat = (language: string, conversationId: string | null, userId:
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Load messages when conversation changes
   useEffect(() => {
     if (conversationId && userId) {
       loadMessages(conversationId);
@@ -49,6 +49,7 @@ export const useChat = (language: string, conversationId: string | null, userId:
         images: (msg.metadata as any)?.images || [],
         confidence: (msg.metadata as any)?.confidence,
         sources: (msg.metadata as any)?.sources || [],
+        thought: (msg.metadata as any)?.thought,
       }));
 
       setMessages(loadedMessages);
@@ -70,6 +71,7 @@ export const useChat = (language: string, conversationId: string | null, userId:
       if (message.images) metadata.images = message.images;
       if (message.confidence) metadata.confidence = message.confidence;
       if (message.sources) metadata.sources = message.sources;
+      if (message.thought) metadata.thought = message.thought;
 
       await supabase.from('messages').insert({
         conversation_id: convId,
@@ -78,7 +80,6 @@ export const useChat = (language: string, conversationId: string | null, userId:
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
       });
 
-      // Update conversation timestamp
       await supabase
         .from('conversations')
         .update({ updated_at: new Date().toISOString() })
@@ -98,7 +99,6 @@ export const useChat = (language: string, conversationId: string | null, userId:
       setIsLoading(true);
 
       try {
-        // Save user message if we have a conversation
         if (conversationId && userId) {
           await saveMessage(userMessage, conversationId);
         }
@@ -146,9 +146,8 @@ export const useChat = (language: string, conversationId: string | null, userId:
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let assistantContent = "";
-        let assistantMetadata: { confidence?: number; sources?: Source[] } = {};
+        let assistantMetadata: { confidence?: number; sources?: Source[]; thought?: string } = {};
 
-        // Add assistant message placeholder
         setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
         while (true) {
@@ -172,13 +171,15 @@ export const useChat = (language: string, conversationId: string | null, userId:
                   assistantContent += content;
                 }
                 
-                // Update metadata if present
                 if (metadata) {
                   if (metadata.confidence !== undefined) {
                     assistantMetadata.confidence = metadata.confidence;
                   }
                   if (metadata.sources) {
                     assistantMetadata.sources = metadata.sources;
+                  }
+                  if (metadata.thought) {
+                    assistantMetadata.thought = metadata.thought;
                   }
                 }
                 
@@ -198,7 +199,6 @@ export const useChat = (language: string, conversationId: string | null, userId:
           }
         }
 
-        // Save assistant message if we have a conversation
         if (conversationId && userId && assistantContent) {
           await saveMessage({ 
             role: "assistant", 
@@ -217,7 +217,6 @@ export const useChat = (language: string, conversationId: string | null, userId:
           description: "Failed to send message. Please try again.",
           variant: "destructive",
         });
-        // Remove the failed message attempt
         setMessages((prev) => prev.slice(0, -1));
       } finally {
         setIsLoading(false);
@@ -233,15 +232,12 @@ export const useChat = (language: string, conversationId: string | null, userId:
   const regenerateLastMessage = useCallback(async () => {
     if (messages.length < 2) return;
 
-    // Remove last assistant message
     const messagesWithoutLast = messages.slice(0, -1);
     setMessages(messagesWithoutLast);
 
-    // Get the last user message
     const lastUserMessage = messagesWithoutLast[messagesWithoutLast.length - 1];
     if (lastUserMessage.role !== 'user') return;
 
-    // Re-send it
     await sendMessage(lastUserMessage.content, lastUserMessage.images);
   }, [messages, sendMessage]);
 
@@ -249,11 +245,9 @@ export const useChat = (language: string, conversationId: string | null, userId:
     if (index < 0 || index >= messages.length) return;
     if (messages[index].role !== 'user') return;
 
-    // Remove all messages after the edited one
     const messagesUpToEdit = messages.slice(0, index);
     setMessages(messagesUpToEdit);
 
-    // Send the edited message
     await sendMessage(newContent, messages[index].images);
   }, [messages, sendMessage]);
 

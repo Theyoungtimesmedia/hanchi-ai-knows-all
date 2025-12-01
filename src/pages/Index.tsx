@@ -1,47 +1,39 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useConversationHistory } from "@/hooks/useConversationHistory";
-import { ChatMessage } from "@/components/ChatMessage";
-import { ChatInput } from "@/components/ChatInput";
-import { LanguageSelector } from "@/components/LanguageSelector";
-import { ConversationSidebar } from "@/components/ConversationSidebar";
-import { SimpleQuickActions } from "@/components/SimpleQuickActions";
-import { MoreOptionsMenu } from "@/components/MoreOptionsMenu";
-import { TypingIndicator } from "@/components/TypingIndicator";
+import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
+import { FloatingInput } from "@/components/FloatingInput";
+import { AppSidebar } from "@/components/AppSidebar";
+import { BreathingSphere } from "@/components/BreathingSphere";
+import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { ShareConversationDialog } from "@/components/ShareConversationDialog";
-import { Menu, Camera, User as UserIcon, Settings, LogOut } from "lucide-react";
+import { Menu, Bell, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
-import { Badge } from "@/components/ui/badge";
 import { analytics } from "@/utils/analytics";
-import { conversationExporter } from "@/utils/conversationExporter";
 import { useToast } from "@/hooks/use-toast";
-import hanchiLogo from "@/assets/hanchi-logo-new.png";
+import { Image as ImageIcon, Code, Sparkles } from "lucide-react";
+
+const QUICK_SUGGESTIONS = [
+  { icon: <ImageIcon size={16} />, text: "Analyze dashboard screenshot" },
+  { icon: <Code size={16} />, text: "Write React button component" },
+  { icon: <Globe size={16} />, text: "Translate proverb to Hausa" },
+];
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
     useConversationHistory(user?.id || null);
-  const { messages, isLoading, sendMessage, regenerateLastMessage, editMessage } = 
+  const { messages, isLoading, sendMessage, regenerateLastMessage } = 
     useChat(language, currentConversationId, user?.id || null);
 
   useEffect(() => {
@@ -77,37 +69,23 @@ export default function Index() {
     }
   };
 
-  const handleExport = async (format: 'text' | 'markdown' | 'pdf') => {
-    if (messages.length === 0) return;
-    
-    const conversationTitle = conversations.find(c => c.id === currentConversationId)?.title || 'Hanchi Conversation';
-    
-    try {
-      if (format === 'pdf') {
-        const blob = await conversationExporter.exportAsPDF(messages, conversationTitle);
-        conversationExporter.downloadFile(blob, conversationTitle, 'pdf');
-      } else if (format === 'markdown') {
-        const content = conversationExporter.exportAsMarkdown(messages, conversationTitle);
-        conversationExporter.downloadFile(content, conversationTitle, 'markdown');
-      } else {
-        const content = conversationExporter.exportAsText(messages, conversationTitle);
-        conversationExporter.downloadFile(content, conversationTitle, 'text');
+  const handleSend = async (content: string, images?: string[]) => {
+    if (!currentConversationId) {
+      const convId = await createConversation(
+        content.slice(0, 50) + (content.length > 50 ? "..." : ""),
+        language
+      );
+      if (convId) {
+        setCurrentConversationId(convId);
       }
-      
-      toast({
-        title: "Export successful",
-        description: `Conversation exported as ${format.toUpperCase()}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "Failed to export conversation",
-        variant: "destructive",
-      });
     }
+    await sendMessage(content, images);
   };
 
-  const currentConversationTitle = conversations.find(c => c.id === currentConversationId)?.title || 'New Conversation';
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
   if (!user) return null;
 
@@ -124,192 +102,118 @@ export default function Index() {
       )}
       
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-50 transition-transform duration-200`}>
-        <ConversationSidebar
-          conversations={conversations}
-          currentConversationId={currentConversationId}
-          onSelectConversation={(id) => {
-            setCurrentConversationId(id);
-            setSidebarOpen(false);
-          }}
-          onNewConversation={() => {
-            handleNewConversation();
-            setSidebarOpen(false);
-          }}
-          onDeleteConversation={deleteConversation}
-          isLoading={loadingHistory}
-        />
-      </div>
+      <AppSidebar
+        conversations={conversations}
+        currentConversationId={currentConversationId}
+        onSelectConversation={(id) => {
+          setCurrentConversationId(id);
+          setSidebarOpen(false);
+        }}
+        onNewConversation={() => {
+          handleNewConversation();
+          setSidebarOpen(false);
+        }}
+        onDeleteConversation={deleteConversation}
+        onOpenSettings={() => navigate("/settings")}
+        onSignOut={handleSignOut}
+        onClose={() => setSidebarOpen(false)}
+        isOpen={sidebarOpen}
+        user={user}
+      />
 
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Clean ChatGPT-style Header */}
-        <header className="fixed md:relative top-0 left-0 right-0 z-30 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setSidebarOpen(true)}
-            className="md:hidden"
-          >
-            <Menu className="w-6 h-6" />
-          </Button>
-          
-          <div className="flex items-center gap-2 flex-1 justify-center md:justify-start">
-            <span className="font-semibold text-lg">Hanchi AI 👃🏿</span>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative w-full max-w-full">
+        {/* Header */}
+        <header className="h-20 flex items-center justify-between px-6 md:px-10 z-20 bg-background">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden rounded-xl bg-card shadow-sm"
+            >
+              <Menu size={20} />
+            </Button>
+            <div className="md:hidden font-bold text-xl text-foreground">Hanchi</div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon">
-              <Camera className="w-5 h-5" />
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2 bg-card px-4 py-2 rounded-full shadow-sm border border-border">
+              <Globe size={16} className="text-primary" />
+              <span className="text-sm font-medium text-muted-foreground">
+                {language === 'en' ? 'English (NG)' : language === 'ha' ? 'Hausa' : 'Pidgin'}
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full bg-card shadow-sm"
+            >
+              <Bell size={20} />
             </Button>
-            
-            <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <UserIcon className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto pt-16 md:pt-0">
-          <div className="max-w-3xl mx-auto px-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-[70vh] py-8">
-                <h1 className="text-3xl md:text-4xl font-semibold text-center mb-8">
-                  What can I help with?
-                </h1>
-                
-                <SimpleQuickActions
-                  onAction={async (prompt) => {
-                    if (prompt === "more_options") {
-                      setMoreOptionsOpen(true);
-                      return;
-                    }
-                    if (!currentConversationId) {
-                      const convId = await createConversation(
-                        prompt.slice(0, 50) + "...",
-                        language
-                      );
-                      if (convId) {
-                        setCurrentConversationId(convId);
-                      }
-                    }
-                    await sendMessage(prompt);
-                  }}
-                  disabled={isLoading}
-                />
-                
-                <MoreOptionsMenu
-                  open={moreOptionsOpen}
-                  onOpenChange={setMoreOptionsOpen}
-                  onSelectOption={async (prompt) => {
-                    if (!currentConversationId) {
-                      const convId = await createConversation(
-                        prompt.slice(0, 50) + "...",
-                        language
-                      );
-                      if (convId) {
-                        setCurrentConversationId(convId);
-                      }
-                    }
-                    await sendMessage(prompt);
-                  }}
-                />
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-40 scrollbar-thin">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center animate-fade-in">
+              <BreathingSphere />
+              
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 text-center">
+                Design your thoughts.
+              </h2>
+              <p className="text-muted-foreground text-center max-w-md mb-8">
+                Hanchi noses out answers with 100% precision. Multilingual, multimodal, and mindful.
+              </p>
+              
+              <div className="flex flex-wrap justify-center gap-3">
+                {QUICK_SUGGESTIONS.map((suggestion, i) => (
+                  <button 
+                    key={i} 
+                    onClick={() => handleSend(suggestion.text)}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-card rounded-full text-sm font-medium text-muted-foreground shadow-sm border border-border hover:border-primary/50 hover:text-primary transition-all hover:-translate-y-0.5"
+                  >
+                    {suggestion.icon}
+                    {suggestion.text}
+                  </button>
+                ))}
               </div>
-            ) : (
-              <>
-            {messages.map((message, index) => (
-              <ChatMessage
-                key={index}
-                role={message.role}
-                content={message.content}
-                language={language}
-                images={message.images}
-                confidence={message.confidence}
-                sources={message.sources}
-                onRegenerate={
-                  message.role === 'assistant' && index === messages.length - 1
-                    ? regenerateLastMessage
-                    : undefined
-                }
-                onSuggestionClick={
-                  message.role === 'assistant' && index === messages.length - 1
-                    ? async (suggestion) => {
-                        if (!currentConversationId) {
-                          const convId = await createConversation(suggestion.slice(0, 50), language);
-                          if (convId) setCurrentConversationId(convId);
-                        }
-                        await sendMessage(suggestion);
-                      }
-                    : undefined
-                }
-                onIteration={
-                  message.role === 'assistant' && index === messages.length - 1
-                    ? async (instruction) => {
-                        if (!currentConversationId) {
-                          const convId = await createConversation(instruction.slice(0, 50), language);
-                          if (convId) setCurrentConversationId(convId);
-                        }
-                        await sendMessage(instruction);
-                      }
-                    : undefined
-                }
-                onEdit={
-                  message.role === 'user'
-                    ? () => {
-                        // Edit functionality to be implemented
-                        toast({ title: "Edit feature coming soon!" });
-                      }
-                    : undefined
-                }
-              />
-            ))}
-                {isLoading && <TypingIndicator />}
-              </>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+            </div>
+          ) : (
+            <div className="max-w-3xl mx-auto pt-4">
+              {messages.map((msg, index) => (
+                <MessageBubbleV2
+                  key={index}
+                  role={msg.role}
+                  content={msg.content}
+                  images={msg.images}
+                  confidence={msg.confidence}
+                  sources={msg.sources}
+                  language={language}
+                  onRegenerate={
+                    msg.role === 'assistant' && index === messages.length - 1
+                      ? regenerateLastMessage
+                      : undefined
+                  }
+                />
+              ))}
+              {isLoading && <ThinkingIndicatorV2 />}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
 
-        <div className="fixed md:relative bottom-0 left-0 right-0 bg-background border-t border-border px-4 py-3">
-          <ChatInput
-            onSend={async (content, images) => {
-              if (!currentConversationId) {
-                const convId = await createConversation(
-                  content.slice(0, 50) + (content.length > 50 ? "..." : ""),
-                  language
-                );
-                if (convId) {
-                  setCurrentConversationId(convId);
-                }
-              }
-              await sendMessage(content, images);
-            }}
+        {/* Floating Input */}
+        <div className="absolute bottom-6 left-0 right-0 px-4 md:px-10 flex justify-center z-20">
+          <FloatingInput
+            onSend={handleSend}
             disabled={isLoading}
             language={language}
           />
         </div>
       </div>
-
-      {currentConversationId && (
-        <ShareConversationDialog
-          open={shareDialogOpen}
-          onOpenChange={setShareDialogOpen}
-          conversationId={currentConversationId}
-          conversationTitle={currentConversationTitle}
-        />
-      )}
     </div>
   );
 }
