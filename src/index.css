@@ -2,97 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* DesignSense-inspired theme - Soft blues, clean whites, premium feel */
 
 @layer base {
   :root {
-    /* ChatGPT-inspired clean design with Nigerian accent colors */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    /* Light theme - DesignSense inspired */
+    --background: 220 20% 97%;
+    --foreground: 229 53% 23%;
 
-    --card: 0 0% 97%;
-    --card-foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 229 53% 23%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover-foreground: 229 53% 23%;
 
-    /* ChatGPT green as primary */
-    --primary: 160 84% 39%;
+    /* Vibrant blue primary */
+    --primary: 224 100% 59%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 160 84% 50%;
+    --primary-glow: 224 100% 70%;
 
-    /* Neutral secondary */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
+    /* Light blue secondary */
+    --secondary: 220 60% 96%;
+    --secondary-foreground: 229 53% 23%;
 
-    /* Muted neutrals */
-    --muted: 0 0% 93%;
-    --muted-foreground: 0 0% 45%;
+    /* Muted greys */
+    --muted: 220 20% 93%;
+    --muted-foreground: 222 22% 66%;
 
-    /* Nigerian gold accent */
-    --accent: 43 96% 56%;
-    --accent-foreground: 0 0% 9%;
+    /* Light blue accent */
+    --accent: 220 100% 96%;
+    --accent-foreground: 224 100% 59%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 82%;
-    --input: 0 0% 93%;
-    --ring: 160 84% 39%;
+    --border: 220 20% 90%;
+    --input: 220 20% 93%;
+    --ring: 224 100% 59%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Simplified gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 50%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 96%), hsl(0 0% 100%));
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-accent: linear-gradient(90deg, hsl(160 84% 39%), hsl(43 96% 56%));
+    /* Premium gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(224 100% 59%), hsl(190 100% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 60% 96%), hsl(0 0% 100%));
+    --gradient-hero: linear-gradient(180deg, hsl(220 20% 97%), hsl(220 60% 96%));
+    --gradient-sphere: linear-gradient(135deg, hsl(224 100% 59%), hsl(190 100% 50%));
 
-    /* Subtle shadows */
-    --shadow-warm: 0 1px 3px 0 hsl(0 0% 0% / 0.1);
-    --shadow-glow: 0 0 20px hsl(160 84% 50% / 0.15);
-    --shadow-accent: 0 2px 10px -2px hsl(43 96% 56% / 0.2);
+    /* Premium shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(229 53% 23% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(229 53% 23% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(229 53% 23% / 0.1);
+    --shadow-xl: 0 20px 25px -5px hsl(229 53% 23% / 0.1);
+    --shadow-glow: 0 0 40px hsl(224 100% 59% / 0.2);
+    --shadow-sphere: 0 20px 50px hsl(224 100% 40% / 0.5);
 
     /* Animation */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 0 0% 13%;
-    --foreground: 0 0% 93%;
+    --background: 229 53% 10%;
+    --foreground: 220 20% 95%;
 
-    --card: 0 0% 18%;
-    --card-foreground: 0 0% 93%;
+    --card: 229 53% 14%;
+    --card-foreground: 220 20% 95%;
 
-    --popover: 0 0% 18%;
-    --popover-foreground: 0 0% 93%;
+    --popover: 229 53% 14%;
+    --popover-foreground: 220 20% 95%;
 
-    --primary: 160 84% 45%;
+    --primary: 224 100% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 160 84% 55%;
+    --primary-glow: 224 100% 75%;
 
-    --secondary: 0 0% 24%;
-    --secondary-foreground: 0 0% 93%;
+    --secondary: 229 53% 18%;
+    --secondary-foreground: 220 20% 95%;
 
-    --muted: 0 0% 24%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 229 53% 18%;
+    --muted-foreground: 222 22% 60%;
 
-    --accent: 43 96% 60%;
-    --accent-foreground: 0 0% 93%;
+    --accent: 224 100% 20%;
+    --accent-foreground: 224 100% 65%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 24%;
-    --input: 0 0% 24%;
-    --ring: 160 84% 45%;
+    --border: 229 53% 22%;
+    --input: 229 53% 18%;
+    --ring: 224 100% 65%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(160 84% 45%), hsl(160 84% 55%));
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 18%), hsl(0 0% 24%));
-    --gradient-hero: linear-gradient(180deg, hsl(0 0% 13%), hsl(0 0% 18%));
-    --gradient-accent: linear-gradient(90deg, hsl(160 84% 45%), hsl(43 96% 60%));
+    --gradient-primary: linear-gradient(135deg, hsl(224 100% 65%), hsl(190 100% 55%));
+    --gradient-secondary: linear-gradient(135deg, hsl(229 53% 14%), hsl(229 53% 18%));
+    --gradient-hero: linear-gradient(180deg, hsl(229 53% 10%), hsl(229 53% 14%));
+    --gradient-sphere: linear-gradient(135deg, hsl(224 100% 65%), hsl(190 100% 55%));
+
+    --shadow-sphere: 0 20px 50px hsl(224 100% 50% / 0.4);
   }
 }
 
@@ -103,5 +106,68 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  /* Breathing animation for sphere */
+  @keyframes breathe {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 0.2;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scale(1.1);
+    }
+  }
+
+  .animate-breathe {
+    animation: breathe 4s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  /* Custom scrollbar */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
   }
 }

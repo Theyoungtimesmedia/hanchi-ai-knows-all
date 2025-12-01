@@ -25,7 +25,8 @@ serve(async (req) => {
     // Get relevant Nigerian context using full-text search
     let nigerianContext = "";
     let contextSources: any[] = [];
-    let confidence = 70; // Default confidence
+    let confidence = 70;
+    let thoughtProcess = "";
     
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
@@ -46,21 +47,32 @@ serve(async (req) => {
             nigerianContext = "\n\nRELEVANT NIGERIAN CONTEXT:\n" + 
               data.map((r: any, i: number) => `${i+1}. [${r.category}] ${r.content}`).join('\n');
             
-            // Store sources for later
             contextSources = data.slice(0, 3).map((r: any) => ({
               title: `${r.category}: ${r.subcategory || 'General'}`,
               snippet: r.content.substring(0, 150) + '...',
               timestamp: r.updated_at || r.created_at,
             }));
             
-            // Increase confidence if we found relevant context
-            confidence = Math.min(85, 70 + (data.length * 3));
+            confidence = Math.min(90, 70 + (data.length * 4));
+            
+            // Generate thought process
+            thoughtProcess = `Analyzing query: "${lastUserMessage.substring(0, 50)}..."
+• Found ${data.length} relevant context entries from Nigerian knowledge base
+• Categories: ${[...new Set(data.map((r: any) => r.category))].join(', ')}
+• Confidence level: ${confidence}%
+• Language mode: ${language}`;
             
             console.log(`Added ${data.length} context entries, confidence: ${confidence}%`);
+          } else {
+            thoughtProcess = `Analyzing query: "${lastUserMessage.substring(0, 50)}..."
+• No specific Nigerian context found in knowledge base
+• Using general AI knowledge with Nigerian cultural grounding
+• Confidence level: ${confidence}%`;
           }
         }
       } catch (error) {
         console.error('Failed to fetch Nigerian context:', error);
+        thoughtProcess = "Using general AI knowledge (context lookup unavailable)";
       }
     }
 
@@ -69,7 +81,9 @@ serve(async (req) => {
     const registerInfo = detectRegister(typeof lastUserMessage === 'string' ? lastUserMessage : '');
     console.log(`Detected register: ${registerInfo.register} (confidence: ${registerInfo.confidence}%)`);
     
-    // Construct system prompt based on language, register, and capabilities
+    thoughtProcess += `\n• Detected register: ${registerInfo.register} (${registerInfo.confidence}% confidence)`;
+    
+    // Construct system prompt
     let systemPrompt = getSystemPrompt(language, registerInfo, searchWeb) + nigerianContext;
 
     // Process messages to handle multimodal content (images)
@@ -109,29 +123,20 @@ serve(async (req) => {
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "Payment required, please add funds to continue." }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
       return new Response(
         JSON.stringify({ error: "AI service error" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -140,7 +145,6 @@ serve(async (req) => {
     const writer = writable.getWriter();
     const reader = response.body!.getReader();
     
-    // Stream the response and add metadata at the end
     (async () => {
       try {
         while (true) {
@@ -152,6 +156,7 @@ serve(async (req) => {
               metadata: {
                 confidence,
                 sources: contextSources,
+                thought: thoughtProcess,
               }
             })}\n\n`;
             await writer.write(new TextEncoder().encode(metadataEvent));
@@ -174,10 +179,7 @@ serve(async (req) => {
     console.error("Chat error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
