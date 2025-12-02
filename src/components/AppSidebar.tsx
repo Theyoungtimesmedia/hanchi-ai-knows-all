@@ -1,6 +1,7 @@
-import { MessageSquare, Settings, LogOut, Sparkles, X, Plus } from "lucide-react";
+import { MessageSquare, Settings, LogOut, Sparkles, X, Plus, User } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+import { useNavigate } from "react-router-dom";
 
 interface Conversation {
   id: string;
@@ -39,8 +40,14 @@ export const AppSidebar = ({
   isOpen,
   user,
 }: AppSidebarProps) => {
+  const navigate = useNavigate();
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const userAvatar = user?.user_metadata?.avatar_url;
+
+  const handleViewProfile = () => {
+    navigate("/profile");
+    onClose();
+  };
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-card shadow-xl transform transition-transform duration-300 ${
@@ -110,7 +117,10 @@ export const AppSidebar = ({
 
       {/* User Section */}
       <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted transition-colors cursor-pointer">
+        <button 
+          onClick={handleViewProfile}
+          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted transition-colors cursor-pointer"
+        >
           {userAvatar ? (
             <img src={userAvatar} alt="Profile" className="w-10 h-10 rounded-full" />
           ) : (
@@ -118,11 +128,13 @@ export const AppSidebar = ({
               {userName.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-left">
             <div className="text-sm font-bold text-foreground truncate">{userName}</div>
-            <div className="text-xs text-muted-foreground">View Profile</div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+              <User size={10} /> View Profile
+            </div>
           </div>
-        </div>
+        </button>
         
         <div className="grid grid-cols-2 gap-2 mt-4">
           <Button

@@ -2,9 +2,21 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield, Bell, LogOut, ChevronRight } from "lucide-react";
+import { ArrowLeft, Shield, Bell, LogOut, ChevronRight, Brain, Trash2, MessageSquare, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserMemory } from "@/hooks/useUserMemory";
 import { User } from "@supabase/supabase-js";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface UserStats {
   chatCount: number;
@@ -17,6 +29,8 @@ export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<UserStats>({ chatCount: 0, messageCount: 0 });
   const [loading, setLoading] = useState(true);
+  
+  const { memories, deleteMemory, loading: memoriesLoading } = useUserMemory(user?.id || null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -31,13 +45,11 @@ export default function Profile() {
 
   const loadUserStats = async (userId: string) => {
     try {
-      // Count conversations
       const { count: chatCount } = await supabase
         .from("conversations")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId);
 
-      // Count messages (via conversations)
       const { data: conversations } = await supabase
         .from("conversations")
         .select("id")
@@ -66,6 +78,10 @@ export default function Profile() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
+  };
+
+  const handleDeleteMemory = async (memoryId: string) => {
+    await deleteMemory(memoryId);
   };
 
   if (loading) {
@@ -118,12 +134,72 @@ export default function Profile() {
         {/* Stats Grid */}
         <div className="mt-8 grid grid-cols-2 gap-4">
           <div className="bg-card p-6 rounded-3xl shadow-sm text-center border border-border">
+            <MessageSquare className="w-6 h-6 mx-auto mb-2 text-primary" />
             <span className="text-3xl font-bold text-foreground block">{stats.chatCount}</span>
             <span className="text-muted-foreground text-sm">Chats nosed</span>
           </div>
           <div className="bg-card p-6 rounded-3xl shadow-sm text-center border border-border">
+            <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" />
             <span className="text-3xl font-bold text-foreground block">{stats.messageCount}</span>
             <span className="text-muted-foreground text-sm">Messages sent</span>
+          </div>
+        </div>
+
+        {/* Hanchi's Memory Section */}
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Brain className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Hanchi's Memory</h2>
+          </div>
+          <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+            {memoriesLoading ? (
+              <div className="p-6 text-center text-muted-foreground">
+                Loading memories...
+              </div>
+            ) : memories.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">
+                <Brain className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>Hanchi hasn't learned anything about you yet.</p>
+                <p className="text-sm">As you chat, Hanchi will remember important details.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {memories.map((memory) => (
+                  <div key={memory.id} className="p-4 flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">{memory.memory_key}</p>
+                      <p className="text-sm text-muted-foreground truncate">{memory.memory_value}</p>
+                      {memory.category && (
+                        <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {memory.category}
+                        </span>
+                      )}
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive">
+                          <Trash2 size={16} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this memory?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Hanchi will forget "{memory.memory_key}". This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteMemory(memory.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -141,7 +217,7 @@ export default function Profile() {
             className="w-full p-4 flex items-center justify-between hover:bg-muted transition-colors border-b border-border"
           >
             <div className="flex items-center gap-3 text-foreground font-medium">
-              <Bell size={20} className="text-primary" /> Notifications
+              <Bell size={20} className="text-primary" /> Settings
             </div>
             <ChevronRight size={18} className="text-muted-foreground" />
           </button>

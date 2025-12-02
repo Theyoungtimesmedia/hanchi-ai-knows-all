@@ -1,26 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useConversationHistory } from "@/hooks/useConversationHistory";
+import { useUserMemory } from "@/hooks/useUserMemory";
 import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
 import { FloatingInput } from "@/components/FloatingInput";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BreathingSphere } from "@/components/BreathingSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { Menu, Bell, Globe } from "lucide-react";
+import { SimpleQuickActions } from "@/components/SimpleQuickActions";
+import { ExpandedQuickActions } from "@/components/ExpandedQuickActions";
+import { ImageGenerationModal } from "@/components/ImageGenerationModal";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { analytics } from "@/utils/analytics";
 import { useToast } from "@/hooks/use-toast";
-import { Image as ImageIcon, Code, Sparkles } from "lucide-react";
-
-const QUICK_SUGGESTIONS = [
-  { icon: <ImageIcon size={16} />, text: "Analyze dashboard screenshot" },
-  { icon: <Code size={16} />, text: "Write React button component" },
-  { icon: <Globe size={16} />, text: "Translate proverb to Hausa" },
-];
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
@@ -35,6 +32,7 @@ export default function Index() {
     useConversationHistory(user?.id || null);
   const { messages, isLoading, sendMessage, regenerateLastMessage } = 
     useChat(language, currentConversationId, user?.id || null);
+  const { getMemoryContext } = useUserMemory(user?.id || null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -80,6 +78,11 @@ export default function Index() {
       }
     }
     await sendMessage(content, images);
+  };
+
+  const handleQuickAction = (prompt: string) => {
+    if (prompt === "more_options") return;
+    handleSend(prompt);
   };
 
   const handleSignOut = async () => {
@@ -144,6 +147,13 @@ export default function Index() {
                 {language === 'en' ? 'English (NG)' : language === 'ha' ? 'Hausa' : 'Pidgin'}
               </span>
             </div>
+            <ImageGenerationModal 
+              trigger={
+                <Button variant="ghost" size="icon" className="rounded-full bg-card shadow-sm">
+                  <ImagePlus size={20} />
+                </Button>
+              }
+            />
             <Button
               variant="ghost"
               size="icon"
@@ -161,24 +171,42 @@ export default function Index() {
               <BreathingSphere />
               
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 text-center">
-                Design your thoughts.
+                What can I help with?
               </h2>
               <p className="text-muted-foreground text-center max-w-md mb-8">
-                Hanchi noses out answers with 100% precision. Multilingual, multimodal, and mindful.
+                Hanchi noses out answers with precision. Multilingual, multimodal, and mindful.
               </p>
               
-              <div className="flex flex-wrap justify-center gap-3">
-                {QUICK_SUGGESTIONS.map((suggestion, i) => (
-                  <button 
-                    key={i} 
-                    onClick={() => handleSend(suggestion.text)}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-card rounded-full text-sm font-medium text-muted-foreground shadow-sm border border-border hover:border-primary/50 hover:text-primary transition-all hover:-translate-y-0.5"
-                  >
-                    {suggestion.icon}
-                    {suggestion.text}
-                  </button>
-                ))}
+              {/* Quick Action Grid */}
+              <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto mb-6">
+                <Button
+                  variant="outline"
+                  onClick={() => handleSend("Generate an image of...")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
+                >
+                  <ImagePlus className="w-5 h-5 text-green-500" />
+                  <span className="text-sm font-medium text-foreground">Create image</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSend("Tell me something interesting about Nigeria")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
+                >
+                  <Sparkles className="w-5 h-5 text-blue-500" />
+                  <span className="text-sm font-medium text-foreground">Surprise me</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSend("Help me write...")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
+                >
+                  <PenLine className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm font-medium text-foreground">Help me write</span>
+                </Button>
+                <ExpandedQuickActions onAction={handleQuickAction} disabled={isLoading} />
               </div>
             </div>
           ) : (

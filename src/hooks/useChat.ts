@@ -111,12 +111,13 @@ export const useChat = (language: string, conversationId: string | null, userId:
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-          body: JSON.stringify({
-            messages: [...messages, userMessage],
-            language,
-            images: images || [],
-            searchWeb: true,
-          }),
+      body: JSON.stringify({
+        messages: [...messages, userMessage],
+        language,
+        images: images || [],
+        searchWeb: true,
+        userMemory: "", // Memory context will be fetched by backend if needed
+      }),
         });
 
         if (!response.ok) {
