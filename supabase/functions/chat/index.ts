@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, language = "en", searchWeb = false, images = [] } = await req.json();
+    const { messages, language = "en", searchWeb = false, images = [], userMemory = "" } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -25,7 +25,7 @@ serve(async (req) => {
     // Get relevant Nigerian context using full-text search
     let nigerianContext = "";
     let contextSources: any[] = [];
-    let confidence = 70;
+    let confidence = 75;
     let thoughtProcess = "";
     
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
@@ -53,10 +53,9 @@ serve(async (req) => {
               timestamp: r.updated_at || r.created_at,
             }));
             
-            confidence = Math.min(90, 70 + (data.length * 4));
+            confidence = Math.min(95, 75 + (data.length * 4));
             
-            // Generate thought process
-            thoughtProcess = `Analyzing query: "${lastUserMessage.substring(0, 50)}..."
+            thoughtProcess = `🧠 Analyzing query: "${lastUserMessage.substring(0, 50)}..."
 • Found ${data.length} relevant context entries from Nigerian knowledge base
 • Categories: ${[...new Set(data.map((r: any) => r.category))].join(', ')}
 • Confidence level: ${confidence}%
@@ -64,15 +63,15 @@ serve(async (req) => {
             
             console.log(`Added ${data.length} context entries, confidence: ${confidence}%`);
           } else {
-            thoughtProcess = `Analyzing query: "${lastUserMessage.substring(0, 50)}..."
+            thoughtProcess = `🧠 Analyzing query: "${lastUserMessage.substring(0, 50)}..."
 • No specific Nigerian context found in knowledge base
-• Using general AI knowledge with Nigerian cultural grounding
+• Using advanced AI reasoning with Nigerian cultural grounding
 • Confidence level: ${confidence}%`;
           }
         }
       } catch (error) {
         console.error('Failed to fetch Nigerian context:', error);
-        thoughtProcess = "Using general AI knowledge (context lookup unavailable)";
+        thoughtProcess = "Using advanced AI knowledge (context lookup unavailable)";
       }
     }
 
@@ -83,8 +82,16 @@ serve(async (req) => {
     
     thoughtProcess += `\n• Detected register: ${registerInfo.register} (${registerInfo.confidence}% confidence)`;
     
-    // Construct system prompt
+    // Add user memory context if available
+    if (userMemory && userMemory.trim()) {
+      thoughtProcess += `\n• Using personalized context from user memory`;
+    }
+    
+    // Construct system prompt with user memory
     let systemPrompt = getSystemPrompt(language, registerInfo, searchWeb) + nigerianContext;
+    if (userMemory) {
+      systemPrompt += userMemory;
+    }
 
     // Process messages to handle multimodal content (images)
     const processedMessages = messages.map((msg: any) => {
@@ -103,6 +110,7 @@ serve(async (req) => {
       return msg;
     });
 
+    // Use google/gemini-2.5-pro for more powerful reasoning
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -110,7 +118,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           ...processedMessages,
@@ -233,6 +241,7 @@ function detectRegister(userMessage: string): RegisterAnalysis {
 
 function getSystemPrompt(language: string, registerInfo: RegisterAnalysis, searchWeb?: boolean): string {
   const basePrompt = `You are Hanchi AI 👃🏿 - a Nigerian-optimized assistant that "noses out" answers with deep cultural understanding.
+You are powered by advanced AI (Gemini Pro) - capable of complex reasoning, creative tasks, and deep analysis.
 
 DETECTED USER STYLE: ${registerInfo.register} (confidence: ${registerInfo.confidence}%)
 
@@ -269,6 +278,9 @@ You can help with:
 - Solving math problems with step-by-step solutions
 - Explaining complex concepts simply
 - Image analysis and description (when images are provided)
+- Creative writing, poetry, stories
+- Research and fact-finding
+- Study help for WAEC, NECO, JAMB
 
 ITERATION SUPPORT:
 Always allow users to refine outputs with requests like:
