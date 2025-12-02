@@ -188,6 +188,7 @@ export default function Index() {
                   key={index}
                   role={msg.role}
                   content={msg.content}
+                  thought={msg.thought}
                   images={msg.images}
                   confidence={msg.confidence}
                   sources={msg.sources}
