@@ -16,7 +16,7 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecording(language);
-  const { imagePreview, imageBase64, handleImageUpload, clearImage } = useImageUpload();
+  const { imagePreview, imageBase64, isUploading, handleImageUpload, clearImage } = useImageUpload();
 
   const handleSubmit = () => {
     if (!input.trim() && !imageBase64) return;
