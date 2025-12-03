@@ -134,12 +134,12 @@ export default function Profile() {
         {/* Stats Grid */}
         <div className="mt-8 grid grid-cols-2 gap-4">
           <div className="bg-card p-6 rounded-3xl shadow-sm text-center border border-border">
-            <MessageSquare className="w-6 h-6 mx-auto mb-2 text-primary" />
+            <span className="text-2xl block mb-2">👃🏿</span>
             <span className="text-3xl font-bold text-foreground block">{stats.chatCount}</span>
             <span className="text-muted-foreground text-sm">Chats nosed</span>
           </div>
           <div className="bg-card p-6 rounded-3xl shadow-sm text-center border border-border">
-            <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" />
+            <span className="text-2xl block mb-2">💬</span>
             <span className="text-3xl font-bold text-foreground block">{stats.messageCount}</span>
             <span className="text-muted-foreground text-sm">Messages sent</span>
           </div>
@@ -148,8 +148,8 @@ export default function Profile() {
         {/* Hanchi's Memory Section */}
         <div className="mt-6">
           <div className="flex items-center gap-2 mb-3">
-            <Brain className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Hanchi's Memory</h2>
+            <span className="text-xl">👃🏿</span>
+            <h2 className="text-lg font-semibold text-foreground">What Hanchi Nosed Out</h2>
           </div>
           <div className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
             {memoriesLoading ? (
@@ -158,9 +158,9 @@ export default function Profile() {
               </div>
             ) : memories.length === 0 ? (
               <div className="p-6 text-center text-muted-foreground">
-                <Brain className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Hanchi hasn't learned anything about you yet.</p>
-                <p className="text-sm">As you chat, Hanchi will remember important details.</p>
+                <span className="text-4xl block mb-2">👃🏿</span>
+                <p>Hanchi hasn't nosed out anything about you yet.</p>
+                <p className="text-sm">As you chat, I'll remember important details.</p>
               </div>
             ) : (
               <div className="divide-y divide-border">

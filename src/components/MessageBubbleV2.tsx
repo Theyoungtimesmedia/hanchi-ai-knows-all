@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Sparkles, Cpu, Copy, Check, RefreshCw, Volume2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Check, RefreshCw, Volume2 } from "lucide-react";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { Button } from "./ui/button";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
@@ -58,6 +58,12 @@ export const MessageBubbleV2 = ({
     minute: '2-digit' 
   });
 
+  const getNoseConfidence = (conf: number) => {
+    if (conf >= 80) return { text: "Hanchi's nose is sure 👃✓", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
+    if (conf >= 60) return { text: "Nose is sniffing 👃~", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" };
+    return { text: "Still nosing around 👃?", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" };
+  };
+
   return (
     <div className={`flex w-full mb-6 ${isAI ? 'justify-start' : 'justify-end'} animate-fade-in`}>
       <div className={`flex flex-col max-w-[85%] md:max-w-[70%] ${isAI ? 'items-start' : 'items-end'}`}>
@@ -69,15 +75,15 @@ export const MessageBubbleV2 = ({
               onClick={() => setShowThought(!showThought)}
               className="flex items-center gap-2 text-xs font-semibold text-primary/70 hover:text-primary transition-colors bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10"
             >
-              <Sparkles size={12} />
-              {showThought ? "Hide Thought Process" : "View Reasoning"}
+              <span>👃🏿</span>
+              {showThought ? "Hide Hanchi's Thinking" : "See How Hanchi Nosed It Out"}
               {showThought ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
             </button>
             
             {showThought && (
               <div className="mt-2 p-4 bg-card rounded-xl border border-primary/10 shadow-sm text-sm text-muted-foreground animate-scale-in">
                 <div className="flex items-center gap-2 mb-2 text-primary text-xs font-bold uppercase tracking-wider">
-                  <Cpu size={14} /> Chain of Thought
+                  <span>👃🏿</span> Hanchi's Thought Process
                 </div>
                 <p className="whitespace-pre-wrap">{thought}</p>
               </div>
@@ -115,12 +121,8 @@ export const MessageBubbleV2 = ({
           {/* Confidence badge */}
           {isAI && confidence && (
             <div className="mt-3 flex items-center gap-2">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${
-                confidence >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                confidence >= 60 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              }`}>
-                {confidence}% confidence
+              <span className={`text-xs px-2 py-0.5 rounded-full ${getNoseConfidence(confidence).color}`}>
+                {getNoseConfidence(confidence).text}
               </span>
             </div>
           )}
@@ -156,6 +158,7 @@ export const MessageBubbleV2 = ({
                   size="icon"
                   className="h-6 w-6"
                   onClick={onRegenerate}
+                  title="Nose it out again"
                 >
                   <RefreshCw size={12} />
                 </Button>
@@ -167,7 +170,7 @@ export const MessageBubbleV2 = ({
         {/* Sources */}
         {isAI && sources && sources.length > 0 && (
           <div className="mt-2 px-2 space-y-1">
-            <span className="text-[10px] text-muted-foreground font-medium">Sources:</span>
+            <span className="text-[10px] text-muted-foreground font-medium">👃 What Hanchi sniffed out:</span>
             {sources.slice(0, 3).map((source, i) => (
               <div key={i} className="text-[10px] text-muted-foreground">
                 {source.url ? (

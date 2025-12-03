@@ -67,8 +67,8 @@ export default function Auth() {
       <div className="bg-card w-full max-w-md rounded-[2.5rem] shadow-xl overflow-hidden p-8 md:p-12 border border-border animate-scale-in">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-gradient-primary shadow-lg flex items-center justify-center text-primary-foreground">
-            <Sparkles size={32} />
+          <div className="w-16 h-16 rounded-full bg-gradient-primary shadow-lg flex items-center justify-center">
+            <span className="text-4xl">👃🏿</span>
           </div>
         </div>
         
@@ -76,7 +76,7 @@ export default function Auth() {
           {isLogin ? "Welcome Back" : "Join Hanchi"}
         </h2>
         <p className="text-center text-muted-foreground mb-8">
-          {isLogin ? "Continue your AI journey" : "Create your account to start"}
+          {isLogin ? "Continue nosing out answers 👃" : "Start your AI journey with Hanchi"}
         </p>
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -129,10 +129,13 @@ export default function Auth() {
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
-                Loading...
+                Nosing in...
               </>
             ) : (
-              isLogin ? "Sign In" : "Create Account"
+              <>
+                <span>👃</span>
+                {isLogin ? "Nose In" : "Start Nosing"}
+              </>
             )}
           </button>
         </form>

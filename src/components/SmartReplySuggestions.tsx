@@ -1,5 +1,4 @@
 import { Button } from "./ui/button";
-import { Sparkles } from "lucide-react";
 
 interface SmartReplySuggestionsProps {
   lastMessage: string;
@@ -57,8 +56,8 @@ export const SmartReplySuggestions = ({
   return (
     <div className="flex flex-wrap gap-2 mt-3">
       <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-        <Sparkles className="w-3 h-3" />
-        <span>Quick replies:</span>
+        <span>👃</span>
+        <span>Nose deeper:</span>
       </div>
       {suggestions.map((suggestion, index) => (
         <Button

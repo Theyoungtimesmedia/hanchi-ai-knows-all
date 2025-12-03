@@ -1,7 +1,7 @@
 {
-  "name": "Hanchi AI - Nigerian AI Assistant",
+  "name": "Hanchi AI 👃🏿 - The AI That Noses All",
   "short_name": "Hanchi AI",
-  "description": "Nigerian-optimized multilingual AI assistant that knows all 👃🏿",
+  "description": "Nigerian-optimized AI assistant that noses out answers in English, Hausa, and Pidgin",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0F172A",
@@ -27,15 +27,15 @@
     {
       "name": "New Chat",
       "short_name": "Chat",
-      "description": "Start a new conversation",
+      "description": "Start a new conversation with Hanchi",
       "url": "/",
       "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
     },
     {
-      "name": "Study Mode",
-      "short_name": "Study",
-      "description": "Practice JAMB/WAEC questions",
-      "url": "/study",
+      "name": "Profile",
+      "short_name": "Profile",
+      "description": "View your Hanchi profile and memories",
+      "url": "/profile",
       "icons": [{ "src": "/favicon.png", "sizes": "192x192" }]
     }
   ]

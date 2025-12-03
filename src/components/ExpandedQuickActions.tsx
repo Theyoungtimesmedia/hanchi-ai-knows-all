@@ -78,8 +78,8 @@ export const ExpandedQuickActions = ({ onAction, disabled }: ExpandedQuickAction
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="text-primary" size={20} />
-            What can Hanchi help with?
+            <span className="text-2xl">👃🏿</span>
+            What should Hanchi nose out?
           </DialogTitle>
         </DialogHeader>
         

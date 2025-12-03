@@ -5,12 +5,12 @@ import { useUserMemory } from "@/hooks/useUserMemory";
 import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
 import { FloatingInput } from "@/components/FloatingInput";
 import { AppSidebar } from "@/components/AppSidebar";
-import { BreathingSphere } from "@/components/BreathingSphere";
+import { NoseSphere } from "@/components/NoseSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { SimpleQuickActions } from "@/components/SimpleQuickActions";
 import { ExpandedQuickActions } from "@/components/ExpandedQuickActions";
 import { ImageGenerationModal } from "@/components/ImageGenerationModal";
+import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
 import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,7 +90,26 @@ export default function Index() {
     navigate("/auth");
   };
 
+  const detectMessageType = (content: string): 'code' | 'text' | 'list' | 'table' | 'explanation' => {
+    if (content.includes('```')) return 'code';
+    if (content.includes('|') && content.includes('---')) return 'table';
+    if ((content.match(/^\s*[-*•]\s/gm) || []).length >= 3) return 'list';
+    if (content.length > 500) return 'explanation';
+    return 'text';
+  };
+
+  const getLastAIMessage = () => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'assistant') {
+        return messages[i].content;
+      }
+    }
+    return '';
+  };
+
   if (!user) return null;
+
+  const lastAIMessage = getLastAIMessage();
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -137,7 +156,10 @@ export default function Index() {
             >
               <Menu size={20} />
             </Button>
-            <div className="md:hidden font-bold text-xl text-foreground">Hanchi</div>
+            <div className="md:hidden font-bold text-xl text-foreground flex items-center gap-2">
+              <span className="text-2xl">👃🏿</span>
+              <span>Hanchi</span>
+            </div>
           </div>
           
           <div className="flex items-center gap-4">
@@ -149,7 +171,7 @@ export default function Index() {
             </div>
             <ImageGenerationModal 
               trigger={
-                <Button variant="ghost" size="icon" className="rounded-full bg-card shadow-sm">
+                <Button variant="ghost" size="icon" className="rounded-full bg-card shadow-sm" title="Sniff out an image">
                   <ImagePlus size={20} />
                 </Button>
               }
@@ -168,10 +190,10 @@ export default function Index() {
         <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-40 scrollbar-thin">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center animate-fade-in">
-              <BreathingSphere />
+              <NoseSphere />
               
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 text-center">
-                What can I help with?
+                What should I nose out? 👃🏿
               </h2>
               <p className="text-muted-foreground text-center max-w-md mb-8">
                 Hanchi noses out answers with precision. Multilingual, multimodal, and mindful.
@@ -186,7 +208,7 @@ export default function Index() {
                   className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
                 >
                   <ImagePlus className="w-5 h-5 text-green-500" />
-                  <span className="text-sm font-medium text-foreground">Create image</span>
+                  <span className="text-sm font-medium text-foreground">Sniff out an image</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -229,6 +251,16 @@ export default function Index() {
                 />
               ))}
               {isLoading && <ThinkingIndicatorV2 />}
+              
+              {/* Smart Reply Suggestions */}
+              {!isLoading && lastAIMessage && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+                <SmartReplySuggestions
+                  lastMessage={lastAIMessage}
+                  messageType={detectMessageType(lastAIMessage)}
+                  onSuggestionClick={handleSend}
+                />
+              )}
+              
               <div ref={messagesEndRef} />
             </div>
           )}
