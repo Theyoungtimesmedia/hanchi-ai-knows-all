@@ -1,11 +1,7 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Copy, Check } from 'lucide-react';
-import { Button } from './ui/button';
-import { useState } from 'react';
+import { CodeBlock } from './CodeBlock';
 
 interface MarkdownMessageProps {
   content: string;
@@ -19,43 +15,10 @@ export const MarkdownMessage = ({ content }: MarkdownMessageProps) => {
       components={{
         code({ node, inline, className, children, ...props }: any) {
           const match = /language-(\w+)/.exec(className || '');
-          const [copied, setCopied] = useState(false);
-          
-          const handleCopy = async () => {
-            await navigator.clipboard.writeText(String(children).replace(/\n$/, ''));
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          };
+          const codeString = String(children).replace(/\n$/, '');
 
           return !inline && match ? (
-            <div className="relative group my-4">
-              <div className="flex items-center justify-between bg-muted px-4 py-2 rounded-t-lg border border-border">
-                <span className="text-xs font-medium text-muted-foreground uppercase">
-                  {match[1]}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2"
-                  onClick={handleCopy}
-                >
-                  {copied ? (
-                    <Check className="w-3 h-3" />
-                  ) : (
-                    <Copy className="w-3 h-3" />
-                  )}
-                </Button>
-              </div>
-              <SyntaxHighlighter
-                style={oneDark}
-                language={match[1]}
-                PreTag="div"
-                className="!mt-0 !rounded-t-none"
-                {...props}
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            </div>
+            <CodeBlock language={match[1]}>{codeString}</CodeBlock>
           ) : (
             <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
               {children}

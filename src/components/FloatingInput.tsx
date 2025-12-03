@@ -1,5 +1,5 @@
 import { useState, useRef, KeyboardEvent } from "react";
-import { Send, Mic, Image as ImageIcon, Search, Plus, Loader2 } from "lucide-react";
+import { Mic, Image as ImageIcon, Search, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -101,7 +101,7 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
               adjustTextareaHeight();
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Describe your idea..."
+            placeholder="What should I nose out? 👃"
             disabled={disabled}
             className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none py-4 px-3 text-foreground placeholder-muted-foreground text-base max-h-32 scrollbar-thin"
             rows={1}
@@ -121,7 +121,7 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
             {disabled ? (
               <Loader2 size={20} className="animate-spin" />
             ) : (
-              <Send size={20} />
+              <span className="text-lg">👃</span>
             )}
           </Button>
         </div>
@@ -180,7 +180,7 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
           </div>
           
           <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide uppercase">
-            Hanchi AI 2.0
+            Hanchi AI 👃🏿
           </span>
         </div>
       </div>

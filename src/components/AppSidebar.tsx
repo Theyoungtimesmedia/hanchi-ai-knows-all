@@ -56,10 +56,8 @@ export const AppSidebar = ({
       {/* Header */}
       <div className="p-6 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-          <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground">
-            <Sparkles size={16} />
-          </div>
-          Hanchi
+          <span className="text-2xl">👃🏿</span>
+          Hanchi AI
         </div>
         <Button 
           variant="ghost" 
