@@ -27,16 +27,16 @@ export default function Auth() {
         if (error) throw error;
 
         toast({
-          title: "Welcome back!",
-          description: "Successfully signed in",
+          title: "Welcome back! 👃",
+          description: "Successfully nosed in",
         });
-        navigate("/");
+        navigate("/chat");
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}/chat`,
             data: {
               full_name: fullName,
             },
@@ -46,10 +46,10 @@ export default function Auth() {
         if (error) throw error;
 
         toast({
-          title: "Account created!",
-          description: "Successfully signed up. You can now start chatting.",
+          title: "Account created! 👃",
+          description: "Successfully signed up. Start nosing out answers!",
         });
-        navigate("/");
+        navigate("/chat");
       }
     } catch (error: any) {
       toast({

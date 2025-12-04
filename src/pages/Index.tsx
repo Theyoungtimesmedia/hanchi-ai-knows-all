@@ -11,6 +11,7 @@ import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ExpandedQuickActions } from "@/components/ExpandedQuickActions";
 import { ImageGenerationModal } from "@/components/ImageGenerationModal";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
+import { ThinkBeforeTalkToggle } from "@/components/ThinkBeforeTalkToggle";
 import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [thinkModeEnabled, setThinkModeEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -266,8 +268,15 @@ export default function Index() {
           )}
         </div>
 
-        {/* Floating Input */}
-        <div className="absolute bottom-6 left-0 right-0 px-4 md:px-10 flex justify-center z-20">
+        {/* Think Before Talk Toggle & Floating Input */}
+        <div className="absolute bottom-6 left-0 right-0 px-4 md:px-10 flex flex-col items-center z-20">
+          {messages.length === 0 && (
+            <ThinkBeforeTalkToggle
+              enabled={thinkModeEnabled}
+              onToggle={setThinkModeEnabled}
+              isThinking={isLoading}
+            />
+          )}
           <FloatingInput
             onSend={handleSend}
             disabled={isLoading}
