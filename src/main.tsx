@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import App from "./App.tsx";
+import App from "./App";
 import "./index.css";
 import { initializePlugins } from './plugins';
 import { performanceMonitor } from './utils/performance';
@@ -26,14 +26,18 @@ if ('serviceWorker' in navigator) {
 // Monitor performance
 performanceMonitor.logWebVitals();
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Toaster />
-        <Sonner />
-        <App />
-      </BrowserRouter>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const container = document.getElementById("root");
+if (container) {
+  const root = createRoot(container);
+  root.render(
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
