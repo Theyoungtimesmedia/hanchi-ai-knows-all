@@ -1,9 +1,9 @@
 import { useState, useRef, KeyboardEvent } from "react";
-import { Mic, Send, Loader2 } from "lucide-react";
+import { Mic, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { PlusMenu } from "./PlusMenu";
+import { FeatureToggles } from "./FeatureToggles";
 
 interface FloatingInputProps {
   onSend: (message: string, images?: string[]) => void;
@@ -15,7 +15,6 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecording(language);
   const { imagePreview, imageBase64, isUploading, handleImageUpload, clearImage } = useImageUpload();
@@ -29,7 +28,7 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
     clearImage();
     
     if (textareaRef.current) {
-      textareaRef.current.style.height = "48px";
+      textareaRef.current.style.height = "56px";
     }
   };
 
@@ -51,6 +50,10 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
     }
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -58,34 +61,10 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
     }
   };
 
-  const handleMenuAction = (action: string) => {
-    switch (action) {
-      case "thinking":
-        setInput("Think step by step: ");
-        textareaRef.current?.focus();
-        break;
-      case "deep_research":
-        setInput("Research in detail: ");
-        textareaRef.current?.focus();
-        break;
-      case "web_search":
-        setInput("Search the web for: ");
-        textareaRef.current?.focus();
-        break;
-      case "study":
-        setInput("Help me learn about: ");
-        textareaRef.current?.focus();
-        break;
-      case "add_files":
-        fileInputRef.current?.click();
-        break;
-    }
-  };
-
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "48px";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
+      textareaRef.current.style.height = "56px";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 128) + "px";
     }
   };
 
@@ -93,49 +72,28 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-card rounded-full shadow-lg border border-border flex items-center px-2 py-1">
-        {/* Hidden file inputs */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".pdf,.doc,.docx,.txt,.csv"
-          className="hidden"
-        />
-        <input
-          type="file"
-          ref={imageInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          className="hidden"
-        />
-
-        {/* + Button with Menu */}
-        <PlusMenu
-          onCameraClick={() => imageInputRef.current?.click()}
-          onPhotosClick={() => imageInputRef.current?.click()}
-          onFilesClick={() => fileInputRef.current?.click()}
-          onAction={handleMenuAction}
-          disabled={disabled}
-        />
-
-        {/* Input Field */}
-        <div className="flex-1 flex items-center">
-          {imagePreview && (
-            <div className="relative mr-2">
+      <div className="bg-card rounded-[2rem] shadow-xl border border-border/50 p-2 flex flex-col">
+        {/* Image Preview */}
+        {imagePreview && (
+          <div className="px-4 pt-2 pb-1">
+            <div className="relative inline-block">
               <img 
                 src={imagePreview}
                 alt="Upload preview" 
-                className="h-10 w-10 rounded-lg object-cover"
+                className="h-20 rounded-xl object-cover"
               />
               <button
                 onClick={clearImage}
-                className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px]"
+                className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs"
               >
                 ×
               </button>
             </div>
-          )}
+          </div>
+        )}
+
+        {/* Input Field */}
+        <div className="flex items-end gap-2 px-2">
           <textarea
             ref={textareaRef}
             value={input}
@@ -144,50 +102,70 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
               adjustTextareaHeight();
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Hanchi"
+            placeholder="What should I nose out? 👃"
             disabled={disabled}
-            className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none py-3 px-2 text-foreground placeholder-muted-foreground text-base max-h-28 scrollbar-thin"
+            className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none py-4 px-3 text-foreground placeholder-muted-foreground text-base max-h-32 scrollbar-thin"
             rows={1}
-            style={{ minHeight: '48px' }}
+            style={{ minHeight: '56px' }}
           />
+          
+          <Button
+            onClick={handleSubmit}
+            disabled={disabled || !hasContent}
+            size="icon"
+            className={`mb-2 rounded-full transition-all duration-300 ${
+              hasContent 
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:scale-105' 
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            {disabled ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <span className="text-lg">👃</span>
+            )}
+          </Button>
         </div>
 
-        {/* Voice Recording Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`h-10 w-10 rounded-full transition-colors ${
-            isRecording 
-              ? 'text-destructive bg-destructive/10 animate-pulse' 
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          }`}
-          onClick={handleVoiceClick}
-          disabled={isTranscribing || disabled}
-        >
-          {isTranscribing ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : (
-            <Mic size={20} />
-          )}
-        </Button>
-        
-        {/* Send Button */}
-        <Button
-          onClick={handleSubmit}
-          disabled={disabled || !hasContent}
-          size="icon"
-          className={`h-10 w-10 rounded-full transition-all ${
-            hasContent 
-              ? 'bg-primary text-primary-foreground' 
-              : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          {disabled ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : (
-            <Send size={18} />
-          )}
-        </Button>
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 pb-2 pt-1 border-t border-border/50">
+          <div className="flex items-center gap-1">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*,audio/*"
+              className="hidden"
+            />
+            
+            {/* Feature Toggles - Image, Translation, Search */}
+            <FeatureToggles disabled={disabled} />
+            
+            {/* Voice Recording Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-9 w-9 rounded-full transition-colors ${
+                isRecording 
+                  ? 'text-destructive bg-destructive/10 animate-pulse' 
+                  : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+              }`}
+              onClick={handleVoiceClick}
+              disabled={isTranscribing || disabled}
+              title={isRecording ? "Stop recording" : "Start voice input"}
+            >
+              {isTranscribing ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <Mic size={18} />
+              )}
+            </Button>
+          </div>
+          
+          <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide uppercase">
+            Hanchi AI 👃🏿
+          </span>
+        </div>
       </div>
     </div>
   );
