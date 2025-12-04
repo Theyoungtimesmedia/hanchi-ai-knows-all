@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Brain, Globe, Mic, Image as ImageIcon, Search, Sparkles } from "lucide-react";
-import hanchiLogo from "@/assets/hanchi-nose-logo.png";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -9,7 +8,7 @@ export default function Landing() {
   const features = [
     {
       icon: <Brain className="w-8 h-8 text-primary" />,
-      title: "Nose Out Answers",
+      title: "Smart Answers",
       description: "AI that thinks before it talks, delivering accurate and thoughtful responses"
     },
     {
@@ -40,15 +39,12 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <img src={hanchiLogo} alt="Hanchi" className="w-10 h-10 rounded-full" />
-              <span className="text-xl font-bold text-foreground">Hanchi AI</span>
-            </div>
+            <span className="text-xl font-bold text-foreground">Hanchi AI</span>
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
@@ -71,12 +67,8 @@ export default function Landing() {
       {/* Hero Section */}
       <main className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-8 animate-bounce-slow">
-            <span className="text-8xl">👃🏿</span>
-          </div>
-          
           <h1 className="text-4xl sm:text-6xl font-bold text-foreground mb-6 leading-tight">
-            The AI That <span className="text-primary">Noses Out</span> Everything
+            Your Smart <span className="text-primary">AI Assistant</span>
           </h1>
           
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -90,7 +82,7 @@ export default function Landing() {
               onClick={() => navigate("/auth")}
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-6 text-lg shadow-lg shadow-primary/30"
             >
-              Start Nosing 👃 <ArrowRight className="ml-2 w-5 h-5" />
+              Get Started <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
               size="lg"
@@ -121,15 +113,15 @@ export default function Landing() {
                 <div className="flex justify-start">
                   <div className="bg-muted px-4 py-3 rounded-2xl rounded-tl-md max-w-sm">
                     <p className="text-sm text-foreground">
-                      <span className="text-primary font-semibold">👃 Nosed it!</span> In Hausa, you say "<strong>Sannu</strong>" (pronounced sah-noo). 
-                      It's a warm greeting used throughout Northern Nigeria! 🇳🇬
+                      In Hausa, you say "<strong>Sannu</strong>" (pronounced sah-noo). 
+                      It's a warm greeting used throughout Northern Nigeria!
                     </p>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Floating badges */}
+            {/* Floating badge */}
             <div className="absolute -top-4 -right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
               Free to use!
             </div>
@@ -139,7 +131,7 @@ export default function Landing() {
         {/* Features Grid */}
         <div className="max-w-6xl mx-auto mt-32">
           <h2 className="text-3xl font-bold text-center text-foreground mb-12">
-            What Can Hanchi Nose Out? 👃
+            What Can Hanchi Do?
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -158,9 +150,9 @@ export default function Landing() {
 
         {/* CTA Section */}
         <div className="max-w-4xl mx-auto mt-32 text-center">
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-orange-500/10 rounded-3xl p-8 sm:p-12 border border-border">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 rounded-3xl p-8 sm:p-12 border border-border">
             <h2 className="text-3xl font-bold text-foreground mb-4">
-              Ready to Start Nosing? 👃🏿
+              Ready to Get Started?
             </h2>
             <p className="text-muted-foreground mb-8">
               Join thousands of Nigerians using Hanchi to learn, create, and communicate better.
@@ -179,12 +171,9 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">👃🏿</span>
-            <span className="font-semibold text-foreground">Hanchi AI</span>
-          </div>
+          <span className="font-semibold text-foreground">Hanchi AI</span>
           <p className="text-sm text-muted-foreground">
-            © 2024 Hanchi AI. The AI that noses out everything.
+            © 2024 Hanchi AI. Your smart AI assistant.
           </p>
         </div>
       </footer>
