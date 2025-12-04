@@ -1,8 +1,9 @@
 import { useState, useRef, KeyboardEvent } from "react";
-import { Mic, Image as ImageIcon, Search, Loader2 } from "lucide-react";
+import { Mic, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { FeatureToggles } from "./FeatureToggles";
 
 interface FloatingInputProps {
   onSend: (message: string, images?: string[]) => void;
@@ -133,49 +134,31 @@ export const FloatingInput = ({ onSend, disabled, language = "en" }: FloatingInp
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept="image/*"
+              accept="image/*,audio/*"
               className="hidden"
             />
             
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
-              onClick={handleImageClick}
-              disabled={isUploading || disabled}
-            >
-              {isUploading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <ImageIcon size={18} />
-              )}
-            </Button>
+            {/* Feature Toggles - Image, Translation, Search */}
+            <FeatureToggles disabled={disabled} />
             
+            {/* Voice Recording Button */}
             <Button
               variant="ghost"
               size="icon"
               className={`h-9 w-9 rounded-full transition-colors ${
                 isRecording 
-                  ? 'text-destructive bg-destructive/10' 
+                  ? 'text-destructive bg-destructive/10 animate-pulse' 
                   : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
               }`}
               onClick={handleVoiceClick}
               disabled={isTranscribing || disabled}
+              title={isRecording ? "Stop recording" : "Start voice input"}
             >
               {isTranscribing ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
                 <Mic size={18} />
               )}
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10"
-              disabled={disabled}
-            >
-              <Search size={18} />
             </Button>
           </div>
           

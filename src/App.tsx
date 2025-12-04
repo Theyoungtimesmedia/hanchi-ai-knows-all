@@ -3,11 +3,13 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
   <Routes>
-    <Route path="/" element={<Index />} />
+    <Route path="/" element={<Landing />} />
+    <Route path="/chat" element={<Index />} />
     <Route path="/auth" element={<Auth />} />
     <Route path="/settings" element={<Settings />} />
     <Route path="/profile" element={<Profile />} />
