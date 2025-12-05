@@ -30,7 +30,7 @@ serve(async (req) => {
     if (style === "nigerian") {
       enhancedPrompt = `${prompt}, Nigerian style, vibrant colors, African aesthetic, Nigerian cultural elements, high quality`;
     } else if (style === "nigerian_sticker" || (isSticker && style === "sticker")) {
-      // Nigerian WhatsApp sticker generation - enhanced for quality
+      // Nigerian WhatsApp sticker generation - enhanced for authentic Nigerian memes
       const isPepeStyle = stickerType === "pepe" || 
         (stickerType === "auto" && (
           prompt.toLowerCase().includes("pepe") || 
@@ -39,28 +39,47 @@ serve(async (req) => {
         ));
       
       if (isPepeStyle) {
-        // Pepe the Frog Nigerian meme style
-        enhancedPrompt = `Create a high-quality WhatsApp sticker featuring Pepe the Frog (green cartoon frog character) in a Nigerian meme style. The frog should be expressive with the following characteristics:
-- Green face with distinctive Pepe features (wide mouth, bulging eyes)
-- The frog head should be placed on a human body wearing Nigerian-style clothing
-- Expression matching: "${prompt}"
-- Bold white text at bottom with the phrase in the image
-- Simple clean background (white or transparent)
-- Cartoon/meme style with bold outlines
-- Size: 512x512 pixels, suitable for WhatsApp sticker
-- Style reference: Nigerian WhatsApp Pepe meme format like "Comrade why??" memes
-- High contrast, readable text, expressive facial features`;
+        // Nigerian Pepe the Frog meme style - based on viral Nigerian WhatsApp stickers
+        enhancedPrompt = `Create a high-quality Nigerian WhatsApp meme sticker in the "Comrade Pepe" style:
+
+VISUAL STYLE:
+- Pepe the Frog character (green cartoon frog with distinctive bulging eyes and wide mouth)
+- Human body wearing Nigerian attire (agbada, dashiki, or casual Nigerian outfit)
+- Expressive exaggerated facial expression matching: "${prompt}"
+- Bold, readable Impact or Arial Black font text overlay
+- Clean white or solid color background (not transparent)
+- 512x512 pixel sticker format
+
+EXPRESSION/MOOD:
+- Nigerian meme humor style - relatable, ironic, self-deprecating
+- Reference Nigerian internet culture: "Comrade why??", "God when?", "Sapa"
+- Expression should be dramatic and exaggerated like Nollywood reactions
+
+TECHNICAL:
+- High contrast, clear outlines
+- Bold black text with white outline for readability
+- Professional meme quality like popular Nigerian WhatsApp stickers`;
       } else {
-        // Regular Nigerian meme sticker style
-        enhancedPrompt = `Create a high-quality Nigerian WhatsApp sticker meme with:
-- A realistic Nigerian person's face/expression matching: "${prompt}"
-- Bold Impact font text overlay with the phrase
-- Nigerian meme aesthetic (like viral Nigerian Twitter/WhatsApp memes)
-- Simple white or transparent background
-- 512x512 pixels, optimized for WhatsApp sticker
-- High contrast, expressive, relatable Nigerian humor style
-- Reference style: Nigerian reaction memes like "Hoo my God", "Ur mata tire me"
-- Clear, readable text, authentic Nigerian expression`;
+        // Authentic Nigerian meme sticker style
+        enhancedPrompt = `Create an authentic Nigerian WhatsApp meme sticker:
+
+VISUAL STYLE:
+- Feature a realistic Nigerian person OR expressive cartoon character
+- Dramatic, exaggerated facial expression matching: "${prompt}"
+- Style reference: Nollywood reaction memes, Nigerian Twitter memes
+- Bold Impact font text overlay with the phrase/caption
+
+CULTURAL ELEMENTS:
+- Use authentic Nigerian expressions: "No wahala", "E choke", "Ehen!", "Na wa o", "Sapa", "Mumu"
+- Relatable Nigerian scenarios (NEPA, fuel scarcity, Lagos traffic, sapa season)
+- Nigerian humor style: ironic, self-deprecating, witty commentary
+
+TECHNICAL REQUIREMENTS:
+- 512x512 pixel WhatsApp sticker format
+- Clean background (white or solid color)
+- High contrast, readable text with black font + white outline
+- Professional quality like viral Nigerian memes
+- Expressive, relatable, shareable design`;
       }
     } else if (style === "sticker" || isSticker) {
       enhancedPrompt = `${prompt}, WhatsApp sticker format, cartoon style, simple clean design, bold outlines, expressive, transparent background, 512x512 pixels, high quality, vibrant colors`;

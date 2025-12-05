@@ -1,5 +1,6 @@
 import { ImagePlus, Sparkles, PenLine, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ExpandedQuickActions } from "./ExpandedQuickActions";
 
 interface SimpleQuickActionsProps {
   onAction: (prompt: string) => void;
@@ -11,26 +12,20 @@ export const SimpleQuickActions = ({ onAction, disabled }: SimpleQuickActionsPro
     { 
       icon: ImagePlus, 
       label: "Create image", 
-      prompt: "Generate an image of...",
+      prompt: "Generate an image for me. Describe what you'd like to visualize.",
       color: "text-green-600"
     },
     { 
       icon: Sparkles, 
       label: "Surprise me", 
-      prompt: "Tell me something interesting about Nigeria",
+      prompt: "Tell me something interesting and fun about Nigeria that most people don't know!",
       color: "text-blue-600"
     },
     { 
       icon: PenLine, 
       label: "Help me write", 
-      prompt: "Help me write...",
+      prompt: "I need help with writing. What would you like me to help you write? (Email, essay, CV, social post, etc.)",
       color: "text-purple-600"
-    },
-    { 
-      icon: MoreHorizontal, 
-      label: "More", 
-      prompt: "more_options",
-      color: "text-foreground"
     },
   ];
 
@@ -48,6 +43,9 @@ export const SimpleQuickActions = ({ onAction, disabled }: SimpleQuickActionsPro
           <span className="text-sm font-medium text-foreground">{action.label}</span>
         </Button>
       ))}
+      
+      {/* More button - uses ExpandedQuickActions which has its own trigger */}
+      <ExpandedQuickActions onAction={onAction} disabled={disabled} />
     </div>
   );
 };
