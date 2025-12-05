@@ -9,9 +9,7 @@ import { NoseSphere } from "@/components/NoseSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { ExpandedQuickActions } from "@/components/ExpandedQuickActions";
-import { ImageGenerationModal } from "@/components/ImageGenerationModal";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
-import { ThinkBeforeTalkToggle } from "@/components/ThinkBeforeTalkToggle";
 import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +23,16 @@ export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [thinkModeEnabled, setThinkModeEnabled] = useState(true);
+  const [thinkModeEnabled, setThinkModeEnabled] = useState(() => {
+    // Persist thinking mode preference
+    const saved = localStorage.getItem('hanchi_think_mode');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [jailbreakEnabled, setJailbreakEnabled] = useState(() => {
+    const saved = localStorage.getItem('hanchi_jailbreak_mode');
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [isInitialized, setIsInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -36,26 +43,53 @@ export default function Index() {
     useChat(language, currentConversationId, user?.id || null);
   const { getMemoryContext } = useUserMemory(user?.id || null);
 
+  // Handle auth state - persist session
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user || null);
-      if (!session?.user) {
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          setUser(session.user);
+          analytics.setUserId(session.user.id);
+          analytics.trackPageView('chat');
+        } else {
+          // No session, redirect to auth
+          navigate("/auth");
+          return;
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
         navigate("/auth");
-      } else {
-        analytics.setUserId(session.user.id);
-        analytics.trackPageView('chat');
+        return;
       }
-    });
+      
+      setIsInitialized(true);
+    };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
-      if (!session?.user) {
+    initAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        setUser(null);
         navigate("/auth");
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session.user);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Persist feature preferences
+  useEffect(() => {
+    localStorage.setItem('hanchi_think_mode', JSON.stringify(thinkModeEnabled));
+  }, [thinkModeEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('hanchi_jailbreak_mode', JSON.stringify(jailbreakEnabled));
+  }, [jailbreakEnabled]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,6 +126,23 @@ export default function Index() {
     navigate("/auth");
   };
 
+  const handleToggleThinking = (enabled: boolean) => {
+    setThinkModeEnabled(enabled);
+    toast({
+      title: enabled ? "Thinking Mode ON 💭" : "Thinking Mode OFF",
+      description: enabled ? "Hanchi will think deeper before responding" : "Quick responses enabled",
+    });
+  };
+
+  const handleToggleJailbreak = (enabled: boolean) => {
+    setJailbreakEnabled(enabled);
+    toast({
+      title: enabled ? "Unrestricted Mode ON ⚠️" : "Unrestricted Mode OFF",
+      description: enabled ? "Content restrictions removed" : "Standard safety filters active",
+      variant: enabled ? "destructive" : "default",
+    });
+  };
+
   const detectMessageType = (content: string): 'code' | 'text' | 'list' | 'table' | 'explanation' => {
     if (content.includes('```')) return 'code';
     if (content.includes('|') && content.includes('---')) return 'table';
@@ -108,6 +159,18 @@ export default function Index() {
     }
     return '';
   };
+
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-bounce">👃🏿</div>
+          <p className="text-muted-foreground">Loading Hanchi...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) return null;
 
@@ -148,87 +211,80 @@ export default function Index() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative w-full max-w-full">
         {/* Header */}
-        <header className="h-20 flex items-center justify-between px-6 md:px-10 z-20 bg-background">
+        <header className="h-16 flex items-center justify-between px-4 md:px-8 z-20 bg-background border-b border-border/30">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden rounded-xl bg-card shadow-sm"
+              className="md:hidden rounded-xl"
             >
               <Menu size={20} />
             </Button>
-            <div className="md:hidden font-bold text-xl text-foreground flex items-center gap-2">
+            <div className="font-bold text-xl text-foreground flex items-center gap-2">
               <span className="text-2xl">👃🏿</span>
-              <span>Hanchi</span>
+              <span className="hidden sm:inline">Hanchi</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 bg-card px-4 py-2 rounded-full shadow-sm border border-border">
-              <Globe size={16} className="text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">
-                {language === 'en' ? 'English (NG)' : language === 'ha' ? 'Hausa' : 'Pidgin'}
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2 bg-muted px-3 py-1.5 rounded-full text-sm">
+              <Globe size={14} className="text-primary" />
+              <span className="text-muted-foreground">
+                {language === 'en' ? 'EN' : language === 'ha' ? 'HA' : 'PID'}
               </span>
             </div>
-            <ImageGenerationModal 
-              trigger={
-                <Button variant="ghost" size="icon" className="rounded-full bg-card shadow-sm" title="Sniff out an image">
-                  <ImagePlus size={20} />
-                </Button>
-              }
-            />
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-full bg-card shadow-sm"
+              className="rounded-full"
             >
-              <Bell size={20} />
+              <Bell size={18} />
             </Button>
           </div>
         </header>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-40 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 pb-36 scrollbar-thin">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center animate-fade-in">
+            <div className="h-full flex flex-col items-center justify-center animate-fade-in pt-8">
               <NoseSphere />
               
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3 text-center">
-                What should I nose out? 👃🏿
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2 text-center">
+                What should I nose out?
               </h2>
-              <p className="text-muted-foreground text-center max-w-md mb-8">
-                Hanchi noses out answers with precision. Multilingual, multimodal, and mindful.
+              <p className="text-muted-foreground text-center text-sm max-w-md mb-8">
+                Ask me anything. I nose out answers with precision.
               </p>
               
               {/* Quick Action Grid */}
-              <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto mb-6">
+              <div className="grid grid-cols-2 gap-3 w-full max-w-sm mx-auto">
                 <Button
                   variant="outline"
                   onClick={() => handleSend("Generate an image of...")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1.5 bg-card hover:bg-muted border-border rounded-xl"
                 >
-                  <ImagePlus className="w-5 h-5 text-green-500" />
-                  <span className="text-sm font-medium text-foreground">Sniff out an image</span>
+                  <ImagePlus className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm font-medium">Create image</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleSend("Tell me something interesting about Nigeria")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1.5 bg-card hover:bg-muted border-border rounded-xl"
                 >
                   <Sparkles className="w-5 h-5 text-blue-500" />
-                  <span className="text-sm font-medium text-foreground">Surprise me</span>
+                  <span className="text-sm font-medium">Surprise me</span>
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleSend("Help me write...")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-2 bg-card hover:bg-muted border-border rounded-xl transition-colors"
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1.5 bg-card hover:bg-muted border-border rounded-xl"
                 >
-                  <PenLine className="w-5 h-5 text-purple-500" />
-                  <span className="text-sm font-medium text-foreground">Help me write</span>
+                  <PenLine className="w-5 h-5 text-green-500" />
+                  <span className="text-sm font-medium">Help me write</span>
                 </Button>
                 <ExpandedQuickActions onAction={handleQuickAction} disabled={isLoading} />
               </div>
@@ -268,19 +324,18 @@ export default function Index() {
           )}
         </div>
 
-        {/* Think Before Talk Toggle & Floating Input */}
-        <div className="absolute bottom-6 left-0 right-0 px-4 md:px-10 flex flex-col items-center z-20">
-          {messages.length === 0 && (
-            <ThinkBeforeTalkToggle
-              enabled={thinkModeEnabled}
-              onToggle={setThinkModeEnabled}
-              isThinking={isLoading}
-            />
-          )}
+        {/* Floating Input */}
+        <div className="absolute bottom-4 left-0 right-0 px-4 md:px-8 z-20">
           <FloatingInput
             onSend={handleSend}
             disabled={isLoading}
             language={language}
+            activeFeatures={{
+              thinking: thinkModeEnabled,
+              jailbreak: jailbreakEnabled,
+            }}
+            onToggleThinking={handleToggleThinking}
+            onToggleJailbreak={handleToggleJailbreak}
           />
         </div>
       </div>
