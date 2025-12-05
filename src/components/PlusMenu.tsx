@@ -4,10 +4,17 @@ import {
   Search, Globe, BookOpen, Sticker, Shield, Mic 
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Dialog, DialogContent } from "./ui/dialog";
 import { ImageGenerationModal } from "./ImageGenerationModal";
 import { VoiceTranslationPanel } from "./VoiceTranslationPanel";
 import { cn } from "@/lib/utils";
+import { Textarea } from "./ui/textarea";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Loader2, Download, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface PlusMenuProps {
   onAction?: (action: string, data?: any) => void;
@@ -45,7 +52,6 @@ export const PlusMenu = ({
   const [showTranslation, setShowTranslation] = useState(false);
   const [showImageGen, setShowImageGen] = useState(false);
   const [showStickerGen, setShowStickerGen] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
 
   const quickActions: { icon: React.ReactNode; label: string; onClick: () => void }[] = [
     { icon: <Camera size={20} />, label: "Camera", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
@@ -145,9 +151,9 @@ export const PlusMenu = ({
 
   return (
     <>
-      {/* Plus Button */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
+      {/* Plus Button with Bottom Sheet */}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
@@ -156,17 +162,22 @@ export const PlusMenu = ({
           >
             {isOpen ? <X size={22} /> : <Plus size={22} />}
           </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[360px] p-0 rounded-2xl overflow-hidden border-border bg-card">
+        </SheetTrigger>
+        <SheetContent side="bottom" className="rounded-t-3xl px-0 pb-8 pt-3 max-h-[85vh]">
+          {/* Handle bar */}
+          <div className="flex justify-center mb-4">
+            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+          </div>
+
           {/* Quick Action Buttons */}
-          <div className="flex items-center justify-around p-4 border-b border-border bg-muted/30">
+          <div className="flex items-center justify-around px-4 pb-4 border-b border-border">
             {quickActions.map((action, index) => (
               <button
                 key={index}
                 onClick={action.onClick}
                 className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted transition-colors min-w-[80px]"
               >
-                <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground">
+                <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground">
                   {action.icon}
                 </div>
                 <span className="text-xs font-medium text-foreground">{action.label}</span>
@@ -175,7 +186,7 @@ export const PlusMenu = ({
           </div>
 
           {/* Menu Items */}
-          <div className="py-2 max-h-[400px] overflow-y-auto">
+          <div className="py-2 overflow-y-auto max-h-[50vh]">
             {menuItems.map((item) => {
               const isActive = item.isToggle && (
                 (item.id === "thinking" && activeFeatures.thinking) ||
@@ -187,7 +198,7 @@ export const PlusMenu = ({
                   key={item.id}
                   onClick={() => handleItemClick(item)}
                   className={cn(
-                    "w-full flex items-center gap-4 px-4 py-3 hover:bg-muted transition-colors text-left",
+                    "w-full flex items-center gap-4 px-6 py-4 hover:bg-muted transition-colors text-left",
                     isActive && "bg-primary/10"
                   )}
                 >
@@ -201,28 +212,24 @@ export const PlusMenu = ({
                         <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
                   </div>
                   {item.isToggle && (
                     <div className={cn(
-                      "w-4 h-4 rounded-full border-2 transition-colors",
+                      "w-5 h-5 rounded-full border-2 transition-colors flex items-center justify-center",
                       isActive ? "bg-primary border-primary" : "border-muted-foreground"
-                    )} />
+                    )}>
+                      {isActive && <div className="w-2 h-2 bg-primary-foreground rounded-full" />}
+                    </div>
                   )}
                 </button>
               );
             })}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Image Generation Modal */}
-      <ImageGenerationModal
-        trigger={<span className="hidden" />}
-        onImageGenerated={(url) => onAction?.("image_generated", url)}
-      />
-      
-      {/* External modals */}
       <Dialog open={showImageGen} onOpenChange={setShowImageGen}>
         <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
           <ImageGenerationModal onImageGenerated={(url) => {
@@ -258,19 +265,11 @@ interface NigerianStickerModalProps {
   onStickerGenerated?: (url: string) => void;
 }
 
-import { useState as useLocalState } from "react";
-import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Loader2, Download, RefreshCw } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-
 const NigerianStickerModal = ({ onClose, onStickerGenerated }: NigerianStickerModalProps) => {
-  const [prompt, setPrompt] = useLocalState("");
-  const [stickerType, setStickerType] = useLocalState<"pepe" | "nigerian" | "auto">("auto");
-  const [isGenerating, setIsGenerating] = useLocalState(false);
-  const [generatedImage, setGeneratedImage] = useLocalState<string | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const [stickerType, setStickerType] = useState<"pepe" | "nigerian" | "auto">("auto");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
@@ -388,12 +387,12 @@ const NigerianStickerModal = ({ onClose, onStickerGenerated }: NigerianStickerMo
         </Button>
 
         <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg space-y-1">
-          <p className="font-medium">💡 Tips for Nigerian stickers:</p>
+          <p className="font-medium">💡 Tips for Nigerian memes:</p>
           <ul className="list-disc list-inside space-y-0.5">
-            <li>Use Pidgin phrases: "No wahala", "E choke", "Sapa"</li>
-            <li>Add Nigerian expressions and reactions</li>
-            <li>Pepe memes work great with "Comrade why??"</li>
-            <li>Describe emotions: frustrated, happy, confused</li>
+            <li>Use Pidgin: "No wahala", "E choke", "Sapa", "Ehen!"</li>
+            <li>Add Nigerian expressions like "mumu", "comrade why?"</li>
+            <li>Pepe frog memes with "Comrade..." phrases work great</li>
+            <li>Reference relatable scenarios: NEPA, fuel scarcity, etc.</li>
           </ul>
         </div>
       </div>
