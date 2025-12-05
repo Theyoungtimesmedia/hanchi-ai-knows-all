@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, style = "default", size = "1024x1024", isSticker = false } = await req.json();
+    const { prompt, style = "default", size = "1024x1024", isSticker = false, stickerType = "auto" } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -22,18 +22,52 @@ serve(async (req) => {
       throw new Error("Prompt is required");
     }
 
-    console.log(`Image generation request - Prompt: "${prompt.substring(0, 50)}...", Style: ${style}, Sticker: ${isSticker}`);
+    console.log(`Image generation request - Prompt: "${prompt.substring(0, 50)}...", Style: ${style}, Sticker: ${isSticker}, StickerType: ${stickerType}`);
 
-    // Enhance prompt for Nigerian context if style is nigerian
+    // Build enhanced prompt based on style
     let enhancedPrompt = prompt;
+    
     if (style === "nigerian") {
-      enhancedPrompt = `${prompt}, Nigerian style, vibrant colors, African aesthetic, Nigerian cultural elements`;
+      enhancedPrompt = `${prompt}, Nigerian style, vibrant colors, African aesthetic, Nigerian cultural elements, high quality`;
+    } else if (style === "nigerian_sticker" || (isSticker && style === "sticker")) {
+      // Nigerian WhatsApp sticker generation - enhanced for quality
+      const isPepeStyle = stickerType === "pepe" || 
+        (stickerType === "auto" && (
+          prompt.toLowerCase().includes("pepe") || 
+          prompt.toLowerCase().includes("frog") ||
+          prompt.toLowerCase().includes("comrade")
+        ));
+      
+      if (isPepeStyle) {
+        // Pepe the Frog Nigerian meme style
+        enhancedPrompt = `Create a high-quality WhatsApp sticker featuring Pepe the Frog (green cartoon frog character) in a Nigerian meme style. The frog should be expressive with the following characteristics:
+- Green face with distinctive Pepe features (wide mouth, bulging eyes)
+- The frog head should be placed on a human body wearing Nigerian-style clothing
+- Expression matching: "${prompt}"
+- Bold white text at bottom with the phrase in the image
+- Simple clean background (white or transparent)
+- Cartoon/meme style with bold outlines
+- Size: 512x512 pixels, suitable for WhatsApp sticker
+- Style reference: Nigerian WhatsApp Pepe meme format like "Comrade why??" memes
+- High contrast, readable text, expressive facial features`;
+      } else {
+        // Regular Nigerian meme sticker style
+        enhancedPrompt = `Create a high-quality Nigerian WhatsApp sticker meme with:
+- A realistic Nigerian person's face/expression matching: "${prompt}"
+- Bold Impact font text overlay with the phrase
+- Nigerian meme aesthetic (like viral Nigerian Twitter/WhatsApp memes)
+- Simple white or transparent background
+- 512x512 pixels, optimized for WhatsApp sticker
+- High contrast, expressive, relatable Nigerian humor style
+- Reference style: Nigerian reaction memes like "Hoo my God", "Ur mata tire me"
+- Clear, readable text, authentic Nigerian expression`;
+      }
     } else if (style === "sticker" || isSticker) {
-      enhancedPrompt = `${prompt}, cartoon style, simple clean design, bold outlines, expressive, suitable for WhatsApp sticker, transparent background, 512x512 pixels`;
+      enhancedPrompt = `${prompt}, WhatsApp sticker format, cartoon style, simple clean design, bold outlines, expressive, transparent background, 512x512 pixels, high quality, vibrant colors`;
     } else if (style === "professional") {
-      enhancedPrompt = `${prompt}, professional, high quality, clean, modern design`;
+      enhancedPrompt = `${prompt}, professional, high quality, clean, modern design, photorealistic`;
     } else if (style === "creative") {
-      enhancedPrompt = `${prompt}, creative, artistic, imaginative, unique style`;
+      enhancedPrompt = `${prompt}, creative, artistic, imaginative, unique style, vibrant`;
     }
 
     // Use Lovable AI with Gemini image model
@@ -92,6 +126,7 @@ serve(async (req) => {
         prompt: enhancedPrompt,
         style,
         isSticker,
+        stickerType,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
