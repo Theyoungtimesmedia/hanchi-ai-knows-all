@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { analytics } from "@/utils/analytics";
@@ -18,12 +18,15 @@ interface Message {
   confidence?: number;
   sources?: Source[];
   thought?: string;
+  id?: string;
 }
 
 export const useChat = (language: string, conversationId: string | null, userId: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (conversationId && userId) {
@@ -44,6 +47,7 @@ export const useChat = (language: string, conversationId: string | null, userId:
       if (error) throw error;
 
       const loadedMessages: Message[] = data.map((msg) => ({
+        id: msg.id,
         role: msg.role as "user" | "assistant",
         content: msg.content,
         images: (msg.metadata as any)?.images || [],
@@ -89,6 +93,36 @@ export const useChat = (language: string, conversationId: string | null, userId:
     }
   };
 
+  // Generate auto-title from first message
+  const generateTitle = async (content: string, convId: string) => {
+    if (!convId) return;
+    
+    // Create a smart title from the first message (max 50 chars)
+    let title = content.trim();
+    if (title.length > 50) {
+      title = title.substring(0, 47) + '...';
+    }
+    
+    try {
+      await supabase
+        .from('conversations')
+        .update({ title })
+        .eq('id', convId);
+    } catch (error) {
+      console.error('Error updating title:', error);
+    }
+  };
+
+  // Stop streaming response
+  const stopGeneration = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsStreaming(false);
+      setIsLoading(false);
+    }
+  }, []);
+
   const sendMessage = useCallback(
     async (content: string, images?: string[]) => {
       analytics.trackChatMessage('user', content.length);
@@ -97,10 +131,19 @@ export const useChat = (language: string, conversationId: string | null, userId:
       const userMessage: Message = { role: "user", content, images };
       setMessages((prev) => [...prev, userMessage]);
       setIsLoading(true);
+      setIsStreaming(true);
+
+      // Create abort controller for this request
+      abortControllerRef.current = new AbortController();
 
       try {
         if (conversationId && userId) {
           await saveMessage(userMessage, conversationId);
+          
+          // Auto-generate title for first message
+          if (messages.length === 0) {
+            await generateTitle(content, conversationId);
+          }
         }
 
         const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
@@ -111,13 +154,14 @@ export const useChat = (language: string, conversationId: string | null, userId:
             "Content-Type": "application/json",
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-      body: JSON.stringify({
-        messages: [...messages, userMessage],
-        language,
-        images: images || [],
-        searchWeb: true,
-        userMemory: "", // Memory context will be fetched by backend if needed
-      }),
+          body: JSON.stringify({
+            messages: [...messages, userMessage],
+            language,
+            images: images || [],
+            searchWeb: true,
+            userMemory: "",
+          }),
+          signal: abortControllerRef.current.signal,
         });
 
         if (!response.ok) {
@@ -211,6 +255,10 @@ export const useChat = (language: string, conversationId: string | null, userId:
         performanceMonitor.endTimer('chat_response');
         analytics.trackChatMessage('assistant', assistantContent.length);
       } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          console.log('Request was aborted');
+          return;
+        }
         analytics.trackError('chat_send_failed', { error: String(error) });
         console.error("Chat error:", error);
         toast({
@@ -221,6 +269,8 @@ export const useChat = (language: string, conversationId: string | null, userId:
         setMessages((prev) => prev.slice(0, -1));
       } finally {
         setIsLoading(false);
+        setIsStreaming(false);
+        abortControllerRef.current = null;
       }
     },
     [messages, language, toast, conversationId, userId]
@@ -255,9 +305,11 @@ export const useChat = (language: string, conversationId: string | null, userId:
   return {
     messages,
     isLoading,
+    isStreaming,
     sendMessage,
     clearMessages,
     regenerateLastMessage,
     editMessage,
+    stopGeneration,
   };
 };
