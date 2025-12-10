@@ -21,12 +21,19 @@ interface Message {
   id?: string;
 }
 
-export const useChat = (language: string, conversationId: string | null, userId: string | null) => {
+interface ChatOptions {
+  model?: string;
+  tone?: string;
+  thinkMode?: boolean;
+}
+
+export const useChat = (language: string, conversationId: string | null, userId: string | null, options: ChatOptions = {}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const { model = 'mistral', tone = 'default', thinkMode = false } = options;
 
   useEffect(() => {
     if (conversationId && userId) {
@@ -160,6 +167,9 @@ export const useChat = (language: string, conversationId: string | null, userId:
             images: images || [],
             searchWeb: true,
             userMemory: "",
+            model,
+            tone,
+            thinkMode,
           }),
           signal: abortControllerRef.current.signal,
         });

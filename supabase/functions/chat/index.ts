@@ -5,8 +5,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Puter AI endpoint - FREE AI access with multiple models
-const PUTER_AI_URL = "https://api.puter.com/ai/chat";
+// Free AI providers - No API key needed
+const FREE_AI_PROVIDERS = [
+  {
+    name: "HuggingFace",
+    url: "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
+    transform: (messages: any[], systemPrompt: string) => ({
+      inputs: `<s>[INST] ${systemPrompt}\n\nUser: ${messages[messages.length - 1]?.content || ''} [/INST]`,
+      parameters: { max_new_tokens: 2048, temperature: 0.7, return_full_text: false }
+    }),
+    parseResponse: async (response: Response) => {
+      const data = await response.json();
+      return data[0]?.generated_text || data.generated_text || '';
+    }
+  }
+];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,107 +27,125 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, language = "en", searchWeb = false, images = [], userMemory = "", model = "gpt-4o" } = await req.json();
+    const { messages, language = "en", searchWeb = false, images = [], userMemory = "", model = "mistral", thinkMode = false, tone = "default" } = await req.json();
     
-    // Try Puter AI first (free), fallback to Lovable AI
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    console.log(`Chat request - Language: ${language}, Model: ${model}, Images: ${images.length}`);
+    console.log(`Chat request - Language: ${language}, Model: ${model}, ThinkMode: ${thinkMode}, Tone: ${tone}`);
 
     // Detect user's communication register
     const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
     const registerInfo = detectRegister(typeof lastUserMessage === 'string' ? lastUserMessage : '');
     console.log(`Detected register: ${registerInfo.register} (confidence: ${registerInfo.confidence}%)`);
     
-    // Construct system prompt
-    let systemPrompt = getSystemPrompt(language, registerInfo, searchWeb);
+    // Construct system prompt with tone
+    let systemPrompt = getSystemPrompt(language, registerInfo, searchWeb, thinkMode, tone);
     if (userMemory) {
       systemPrompt += `\n\nUSER MEMORY/CONTEXT:\n${userMemory}`;
     }
 
-    // Process messages to handle multimodal content (images)
-    const processedMessages = messages.map((msg: any) => {
-      if (images && images.length > 0 && msg.role === 'user') {
-        return {
-          role: msg.role,
-          content: [
-            { type: 'text', text: msg.content },
-            ...images.map((img: string) => ({
-              type: 'image_url',
-              image_url: { url: `data:image/jpeg;base64,${img}` }
-            }))
-          ]
-        };
+    // Build conversation context
+    const conversationHistory = messages.map((msg: any) => {
+      if (msg.role === 'user') {
+        return `User: ${msg.content}`;
       }
-      return msg;
-    });
+      return `Assistant: ${msg.content}`;
+    }).join('\n\n');
 
-    // Use Lovable AI Gateway (free with multiple models)
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash", // Fast and free
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...processedMessages,
-        ],
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limits exceeded. Please try again in a moment." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Service temporarily unavailable. Please try again." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: "AI service error. Please try again." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Stream response
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-    const reader = response.body!.getReader();
+    // Use HuggingFace free API (no key needed for basic models)
+    const HF_API_KEY = Deno.env.get("HUGGINGFACE_API_KEY") || "";
     
-    (async () => {
+    // Try multiple free models
+    const modelsToTry = [
+      "mistralai/Mistral-7B-Instruct-v0.3",
+      "google/flan-t5-xxl",
+      "HuggingFaceH4/zephyr-7b-beta"
+    ];
+
+    let responseText = "";
+    let success = false;
+
+    for (const modelName of modelsToTry) {
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            const metadataEvent = `data: ${JSON.stringify({
-              choices: [{ delta: {} }],
-              metadata: { confidence: 85, sources: [], thought: `Analyzed with ${registerInfo.register} register` }
-            })}\n\n`;
-            await writer.write(new TextEncoder().encode(metadataEvent));
-            await writer.write(new TextEncoder().encode("data: [DONE]\n\n"));
+        const prompt = buildPrompt(systemPrompt, conversationHistory, lastUserMessage, thinkMode);
+        
+        const response = await fetch(`https://api-inference.huggingface.co/models/${modelName}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(HF_API_KEY ? { "Authorization": `Bearer ${HF_API_KEY}` } : {})
+          },
+          body: JSON.stringify({
+            inputs: prompt,
+            parameters: {
+              max_new_tokens: 2048,
+              temperature: 0.7,
+              return_full_text: false,
+              do_sample: true
+            }
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data[0]?.generated_text) {
+            responseText = data[0].generated_text;
+          } else if (data.generated_text) {
+            responseText = data.generated_text;
+          } else if (typeof data === 'string') {
+            responseText = data;
+          }
+          
+          if (responseText) {
+            success = true;
+            console.log(`Success with model: ${modelName}`);
             break;
           }
-          await writer.write(value);
+        } else {
+          console.log(`Model ${modelName} failed: ${response.status}`);
         }
-      } catch (error) {
-        console.error('Streaming error:', error);
-      } finally {
-        writer.close();
+      } catch (e) {
+        console.log(`Error with model ${modelName}:`, e);
       }
-    })();
+    }
 
-    return new Response(readable, {
+    // Fallback response if all models fail
+    if (!success || !responseText) {
+      responseText = getFallbackResponse(lastUserMessage, language, registerInfo);
+    }
+
+    // Clean up response
+    responseText = cleanResponse(responseText, thinkMode);
+
+    // Stream the response
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        // Stream response character by character for smooth typing effect
+        const words = responseText.split(' ');
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i] + (i < words.length - 1 ? ' ' : '');
+          const event = `data: ${JSON.stringify({
+            choices: [{ delta: { content: word } }]
+          })}\n\n`;
+          controller.enqueue(encoder.encode(event));
+          await new Promise(resolve => setTimeout(resolve, 20)); // Typing effect
+        }
+
+        // Send metadata
+        const metadataEvent = `data: ${JSON.stringify({
+          choices: [{ delta: {} }],
+          metadata: { 
+            confidence: registerInfo.confidence, 
+            sources: [], 
+            thought: thinkMode ? `🧠 Thinking: Analyzed with ${registerInfo.register} register, ${tone} tone` : undefined
+          }
+        })}\n\n`;
+        controller.enqueue(encoder.encode(metadataEvent));
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      }
+    });
+
+    return new Response(stream, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
@@ -125,6 +156,72 @@ serve(async (req) => {
     );
   }
 });
+
+function buildPrompt(systemPrompt: string, history: string, lastMessage: string, thinkMode: boolean): string {
+  let prompt = `<s>[INST] ${systemPrompt}\n\n`;
+  
+  if (thinkMode) {
+    prompt += `Before answering, think step by step about the best response.\n\n`;
+  }
+  
+  if (history) {
+    prompt += `Previous conversation:\n${history}\n\n`;
+  }
+  
+  prompt += `Current question: ${lastMessage} [/INST]`;
+  return prompt;
+}
+
+function cleanResponse(text: string, thinkMode: boolean): string {
+  // Remove instruction tokens
+  let cleaned = text
+    .replace(/<\/?s>/g, '')
+    .replace(/\[INST\]|\[\/INST\]/g, '')
+    .replace(/^(Assistant:|Hanchi:)/i, '')
+    .trim();
+  
+  // Add thinking indicator if in think mode
+  if (thinkMode && !cleaned.startsWith('🧠')) {
+    cleaned = `🧠 *Thinking...* \n\n${cleaned}`;
+  }
+  
+  return cleaned;
+}
+
+function getFallbackResponse(userMessage: string, language: string, registerInfo: RegisterAnalysis): string {
+  const lowercaseMessage = userMessage.toLowerCase();
+  
+  // Smart fallback based on message type
+  if (lowercaseMessage.includes('hello') || lowercaseMessage.includes('hi') || lowercaseMessage.includes('hey')) {
+    if (registerInfo.register === 'pidgin') {
+      return "How you dey! 👃🏿 Na Hanchi be this, your AI assistant wey go help you with anything. Wetin you wan do today?";
+    }
+    return "Hello! 👃🏿 I'm Hanchi, your Nigerian AI assistant. I'm here to help with anything - writing, coding, studying, or just chatting. What can I do for you today?";
+  }
+  
+  if (lowercaseMessage.includes('help')) {
+    return `I'm Hanchi AI 👃🏿 - I can help you with:\n\n📝 **Writing**: Essays, emails, CVs, cover letters\n💻 **Coding**: Debug, explain, generate code\n📚 **Learning**: WAEC, JAMB, homework help\n🌍 **Translation**: English, Hausa, Pidgin\n💬 **Chat**: Advice, brainstorming, ideas\n\nJust ask me anything!`;
+  }
+  
+  if (lowercaseMessage.includes('essay') || lowercaseMessage.includes('write')) {
+    return "I'd be happy to help you write! 📝 Please tell me:\n\n1. What topic or subject?\n2. How long should it be?\n3. What style - formal, casual, or academic?\n\nShare these details and I'll create something great for you!";
+  }
+  
+  if (lowercaseMessage.includes('code') || lowercaseMessage.includes('programming')) {
+    return "I can help with coding! 💻 Just share:\n\n1. What language (Python, JavaScript, etc.)?\n2. What are you trying to build?\n3. Any specific error or issue?\n\nPaste your code or describe what you need!";
+  }
+  
+  // Generic response
+  if (language === 'ha') {
+    return "Sannu! 👃🏿 Ina Hanchi, AI helper dinka. Yaya zan taimaka maka yau?";
+  }
+  
+  if (registerInfo.register === 'pidgin') {
+    return "Bros/sis! 👃🏿 Na Hanchi dey here. Wetin you wan make I help you with? Just yarn me wetin dey your mind!";
+  }
+  
+  return "Hey there! 👃🏿 I'm Hanchi, ready to help! I noticed the AI servers are a bit busy right now, but I can still assist. What would you like help with? Try being specific - like 'write an essay about...' or 'explain how to...'";
+}
 
 interface RegisterAnalysis {
   register: 'formal-NSE' | 'casual-NSE' | 'pidgin' | 'code' | 'academic';
@@ -156,35 +253,45 @@ function detectRegister(userMessage: string): RegisterAnalysis {
   return { register, confidence: Math.min(100, 40 + (maxScore * 10)), tone: register === 'formal-NSE' || register === 'academic' ? 'polite' : 'friendly' };
 }
 
-function getSystemPrompt(language: string, registerInfo: RegisterAnalysis, searchWeb?: boolean): string {
-  return `You are Hanchi AI 👃🏿 - Nigeria's smartest AI assistant that "noses out" answers.
-You are FREE for everyone - no premium, no limits. You can do EVERYTHING ChatGPT, Gemini, Claude, and Grok can do.
+function getSystemPrompt(language: string, registerInfo: RegisterAnalysis, searchWeb: boolean, thinkMode: boolean, tone: string): string {
+  const toneInstructions = {
+    default: "Be helpful and clear.",
+    professional: "Respond professionally and formally. Use proper business language.",
+    curious: "Be inquisitive. Ask follow-up questions. Show genuine interest.",
+    persuasive: "Be convincing and compelling. Use persuasive language.",
+    friendly: "Be warm, casual, and approachable. Use emojis sparingly.",
+    worried: "Be cautious and considerate. Show concern for potential issues."
+  };
+
+  return `You are Hanchi AI 👃🏿 - Nigeria's smartest FREE AI assistant that "noses out" answers.
+You are completely FREE - no premium, no limits. You can do EVERYTHING ChatGPT, Gemini, Claude, and Grok can do.
 
 DETECTED USER STYLE: ${registerInfo.register} (confidence: ${registerInfo.confidence}%)
+TONE TO USE: ${tone} - ${toneInstructions[tone as keyof typeof toneInstructions] || toneInstructions.default}
 
-🧠 THINK BEFORE RESPONDING:
-1. What is the user REALLY asking?
-2. What format works best? (list, paragraph, code, table)
-3. Am I confident in this answer?
-
-NIGERIAN NATURAL WRITING STYLE (FOR ESSAYS):
-- Friendly, sincere tone - not robotic
-- Avoid AI words: delve, tapestry, multifaceted, crucial, paramount
-- Use simple words: challenging, serious, manage, tackle, face
-- NO "In conclusion," "Firstly," "Moreover" - just flow naturally
-- Use rhetorical questions and phrases like "The truth is..." or "You see..."
-- Reference Nigerian reality when relevant (hustle, NEPA, traffic, school fees)
+${thinkMode ? `🧠 THINK MODE ACTIVE - Before responding:
+1. Analyze what the user is really asking
+2. Consider multiple approaches
+3. Choose the best response strategy
+4. Explain your reasoning briefly before answering` : ''}
 
 CAPABILITIES (YOU CAN DO ALL):
 ✅ Write emails, essays, CVs, cover letters, proposals
-✅ Generate and debug code in any language
+✅ Generate and debug code in any language  
 ✅ Solve math problems step-by-step
 ✅ Translate: English ↔ Hausa ↔ Pidgin ↔ other languages
 ✅ Create content: social media, blogs, stories, poems, songs
 ✅ Study help: WAEC, NECO, JAMB preparation
 ✅ Brainstorm ideas and plan projects
-✅ Analyze images and documents
 ✅ Draft WhatsApp messages, birthday wishes, etc.
+✅ Summarize documents and articles
+✅ Explain complex topics simply
+
+NIGERIAN WRITING STYLE:
+- Friendly, sincere tone - not robotic
+- Avoid AI words: delve, tapestry, multifaceted, crucial, paramount
+- Use simple words: challenging, serious, manage, tackle, face
+- Reference Nigerian reality when relevant (hustle, NEPA, traffic, school fees)
 
 REGISTER-BASED RESPONSE:
 ${registerInfo.register === 'pidgin' ? 'Respond in Nigerian Pidgin naturally.' :
@@ -193,11 +300,11 @@ ${registerInfo.register === 'pidgin' ? 'Respond in Nigerian Pidgin naturally.' :
   'Respond in clear Nigerian Standard English. Professional but relatable.'}
 
 IMPORTANT:
-- Be FAST and HELPFUL - users expect ChatGPT-level quality
+- Be FAST and HELPFUL
 - For factual claims, express uncertainty if needed
 - Never make up information
-- For essays: sound like a human Nigerian writer, not an AI
-${searchWeb ? '- Search web when current info is needed' : ''}
+- Keep responses concise unless detail is requested
+${searchWeb ? '- Include relevant web information when helpful' : ''}
 
 LANGUAGE: ${language === 'ha' ? 'Respond in Hausa' : language === 'pidgin' ? 'Respond in Nigerian Pidgin' : 'Nigerian Standard English'}`;
 }
