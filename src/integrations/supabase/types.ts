@@ -499,7 +499,8 @@ export type Database = {
             Args: {
               filter_language?: string
               match_count?: number
-              search_query: string
+              match_threshold?: number
+              query_embedding: string
             }
             Returns: {
               category: string
@@ -515,8 +516,7 @@ export type Database = {
             Args: {
               filter_language?: string
               match_count?: number
-              match_threshold?: number
-              query_embedding: string
+              search_query: string
             }
             Returns: {
               category: string
