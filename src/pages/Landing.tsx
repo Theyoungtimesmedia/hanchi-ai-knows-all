@@ -177,45 +177,15 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">👃🏿</span>
-                <span className="font-semibold text-foreground">Hanchi AI</span>
-              </div>
-              <p className="text-sm text-muted-foreground">The AI that noses out everything. Built for Nigerians, by Nigerians.</p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Features</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate("/tools")} className="hover:text-primary">AI Tools</button></li>
-                <li><button onClick={() => navigate("/prompts")} className="hover:text-primary">Prompt Library</button></li>
-                <li><button onClick={() => navigate("/discover")} className="hover:text-primary">Discover</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Support</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate("/help")} className="hover:text-primary">Help Center</button></li>
-                <li><button onClick={() => navigate("/about")} className="hover:text-primary">About Us</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-foreground mb-3">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => navigate("/terms")} className="hover:text-primary">Terms of Service</button></li>
-                <li><button onClick={() => navigate("/terms")} className="hover:text-primary">Privacy Policy</button></li>
-              </ul>
-            </div>
+      <footer className="border-t border-border py-8 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">👃🏿</span>
+            <span className="font-semibold text-foreground">Hanchi AI</span>
           </div>
-          <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              © 2025 Hanchi AI. The AI that noses out everything.
-            </p>
-            <p className="text-sm text-muted-foreground">Made with ❤️ for Nigeria</p>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            © 2024 Hanchi AI. The AI that noses out everything.
+          </p>
         </div>
       </footer>
     </div>

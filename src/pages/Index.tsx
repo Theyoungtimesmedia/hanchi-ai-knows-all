@@ -8,30 +8,36 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { NoseSphere } from "@/components/NoseSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { EnhancedQuickActions } from "@/components/EnhancedQuickActions";
+import { ExpandedQuickActions } from "@/components/ExpandedQuickActions";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
-import { AIModelSelector } from "@/components/AIModelSelector";
-import { ToneSelector } from "@/components/ToneSelector";
-import { ThinkBeforeTalkToggle } from "@/components/ThinkBeforeTalkToggle";
-import { Menu, Bell, Globe, Square } from "lucide-react";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { analytics } from "@/utils/analytics";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const AI_MODELS = [
+  { id: 'gemini-pro', name: 'Hanchi Pro', description: 'Best quality' },
+  { id: 'gemini-flash', name: 'Hanchi Fast', description: 'Quick responses' },
+];
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
-  const [selectedModel, setSelectedModel] = useState('mistral');
-  const [selectedTone, setSelectedTone] = useState('default');
+  const [selectedModel, setSelectedModel] = useState('gemini-pro');
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [thinkModeEnabled, setThinkModeEnabled] = useState(() => {
     const saved = localStorage.getItem('hanchi_think_mode');
-    return saved !== null ? JSON.parse(saved) : false;
+    return saved !== null ? JSON.parse(saved) : true;
   });
   const [jailbreakEnabled, setJailbreakEnabled] = useState(() => {
     const saved = localStorage.getItem('hanchi_jailbreak_mode');
@@ -44,15 +50,8 @@ export default function Index() {
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
     useConversationHistory(user?.id || null);
-  
-  // Pass model, tone, and thinkMode to useChat
   const { messages, isLoading, isStreaming, sendMessage, regenerateLastMessage, editMessage, stopGeneration } = 
-    useChat(language, currentConversationId, user?.id || null, {
-      model: selectedModel,
-      tone: selectedTone,
-      thinkMode: thinkModeEnabled,
-    });
-  
+    useChat(language, currentConversationId, user?.id || null);
   const { getMemoryContext } = useUserMemory(user?.id || null);
 
   // Handle auth state - persist session
@@ -134,8 +133,8 @@ export default function Index() {
   const handleToggleThinking = (enabled: boolean) => {
     setThinkModeEnabled(enabled);
     toast({
-      title: enabled ? "Think Mode ON 🧠" : "Think Mode OFF",
-      description: enabled ? "AI will reason step-by-step before answering" : "Quick responses enabled",
+      title: enabled ? "Thinking Mode ON 💭" : "Thinking Mode OFF",
+      description: enabled ? "Hanchi will think deeper before responding" : "Quick responses enabled",
     });
   };
 
@@ -165,27 +164,14 @@ export default function Index() {
     return '';
   };
 
-  const getLastThought = () => {
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'assistant' && messages[i].thought) {
-        return messages[i].thought;
-      }
-    }
-    return '';
-  };
-
   // Show loading state while initializing
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <div className="text-5xl mb-4 animate-bounce">👃🏿</div>
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-bounce">👃🏿</div>
           <p className="text-muted-foreground">Loading Hanchi...</p>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -193,24 +179,19 @@ export default function Index() {
   if (!user) return null;
 
   const lastAIMessage = getLastAIMessage();
-  const lastThought = getLastThought();
+  const currentModel = AI_MODELS.find(m => m.id === selectedModel) || AI_MODELS[0];
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <OfflineIndicator />
       
       {/* Mobile Sidebar Overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </AnimatePresence>
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
       
       {/* Sidebar */}
       <AppSidebar
@@ -236,7 +217,7 @@ export default function Index() {
       <div className="flex-1 flex flex-col relative w-full max-w-full">
         {/* Header */}
         <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-sm border-b border-border/50">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -247,27 +228,32 @@ export default function Index() {
             </Button>
             
             {/* Model Selector */}
-            <AIModelSelector 
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-            />
-            
-            {/* Tone Selector */}
-            <ToneSelector
-              selectedTone={selectedTone}
-              onToneChange={setSelectedTone}
-            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 font-medium">
+                  <span className="text-lg">👃🏿</span>
+                  <span className="hidden sm:inline">{currentModel.name}</span>
+                  <ChevronDown size={14} className="text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {AI_MODELS.map((model) => (
+                  <DropdownMenuItem
+                    key={model.id}
+                    onClick={() => setSelectedModel(model.id)}
+                    className={selectedModel === model.id ? 'bg-primary/10' : ''}
+                  >
+                    <div>
+                      <div className="font-medium">{model.name}</div>
+                      <div className="text-xs text-muted-foreground">{model.description}</div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Think Mode Toggle */}
-            <ThinkBeforeTalkToggle
-              enabled={thinkModeEnabled}
-              onToggle={handleToggleThinking}
-              thought={lastThought}
-              isThinking={isLoading && thinkModeEnabled}
-            />
-            
             <div className="hidden md:flex items-center gap-2 bg-muted/50 px-2.5 py-1 rounded-full text-xs">
               <Globe size={12} className="text-primary" />
               <span className="text-muted-foreground">
@@ -282,94 +268,107 @@ export default function Index() {
 
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-40 scrollbar-thin">
-          <AnimatePresence mode="wait">
-            {messages.length === 0 ? (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="h-full flex flex-col items-center justify-center max-w-4xl mx-auto pt-8"
-              >
-                <NoseSphere />
-                
-                {/* Enhanced Quick Actions */}
-                <EnhancedQuickActions onActionClick={handleSend} />
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="messages"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="max-w-3xl mx-auto pt-4"
-              >
-                {messages.map((msg, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <MessageBubbleV2
-                      role={msg.role}
-                      content={msg.content}
-                      thought={msg.thought}
-                      images={msg.images}
-                      confidence={msg.confidence}
-                      sources={msg.sources}
-                      language={language}
-                      onRegenerate={
-                        msg.role === 'assistant' && index === messages.length - 1
-                          ? regenerateLastMessage
-                          : undefined
-                      }
-                      onEdit={
-                        msg.role === 'user'
-                          ? (newContent) => editMessage(index, newContent)
-                          : undefined
-                      }
-                    />
-                  </motion.div>
-                ))}
-                
-                {/* Streaming/Loading Indicator */}
-                {isLoading && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-3 mb-4"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs">
-                      👃🏿
-                    </div>
-                    <ThinkingIndicatorV2 />
-                    {isStreaming && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={stopGeneration}
-                        className="ml-auto flex items-center gap-2 rounded-full"
-                      >
-                        <Square size={12} className="fill-current" />
-                        Stop
-                      </Button>
-                    )}
-                  </motion.div>
-                )}
-                
-                {/* Smart Reply Suggestions */}
-                {!isLoading && lastAIMessage && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
-                  <SmartReplySuggestions
-                    lastMessage={lastAIMessage}
-                    messageType={detectMessageType(lastAIMessage)}
-                    onSuggestionClick={handleSend}
-                  />
-                )}
-                
-                <div ref={messagesEndRef} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center animate-fade-in max-w-2xl mx-auto pt-8">
+              <NoseSphere />
+              
+              <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-2 text-center">
+                What can I help with?
+              </h2>
+              <p className="text-muted-foreground text-center text-sm max-w-md mb-8">
+                Ask me anything - I'll nose out the answer for you.
+              </p>
+              
+              {/* Quick Action Grid - ChatGPT Style */}
+              <div className="grid grid-cols-2 gap-2.5 w-full max-w-md mx-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => handleSend("Generate an image of a beautiful Nigerian landscape")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left"
+                >
+                  <ImagePlus className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm font-medium">Create image</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSend("Tell me an interesting fact about Nigeria that would surprise most people")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium">Surprise me</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => handleSend("Help me write a professional email to apply for a job")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left"
+                >
+                  <PenLine className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium">Help me write</span>
+                </Button>
+                <ExpandedQuickActions onAction={handleQuickAction} disabled={isLoading} />
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-3xl mx-auto pt-4">
+              {messages.map((msg, index) => (
+                <MessageBubbleV2
+                  key={index}
+                  role={msg.role}
+                  content={msg.content}
+                  thought={msg.thought}
+                  images={msg.images}
+                  confidence={msg.confidence}
+                  sources={msg.sources}
+                  language={language}
+                  onRegenerate={
+                    msg.role === 'assistant' && index === messages.length - 1
+                      ? regenerateLastMessage
+                      : undefined
+                  }
+                  onEdit={
+                    msg.role === 'user'
+                      ? (newContent) => editMessage(index, newContent)
+                      : undefined
+                  }
+                />
+              ))}
+              
+              {/* Streaming/Loading Indicator */}
+              {isLoading && (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs">
+                    👃🏿
+                  </div>
+                  <ThinkingIndicatorV2 />
+                  {isStreaming && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={stopGeneration}
+                      className="ml-auto flex items-center gap-2 rounded-full"
+                    >
+                      <Square size={12} className="fill-current" />
+                      Stop
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              {/* Smart Reply Suggestions */}
+              {!isLoading && lastAIMessage && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+                <SmartReplySuggestions
+                  lastMessage={lastAIMessage}
+                  messageType={detectMessageType(lastAIMessage)}
+                  onSuggestionClick={handleSend}
+                />
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
 
         {/* Floating Input */}
