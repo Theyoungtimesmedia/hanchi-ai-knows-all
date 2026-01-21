@@ -12,6 +12,7 @@ interface FloatingInputProps {
   activeFeatures?: {
     thinking?: boolean;
     jailbreak?: boolean;
+    webSearch?: boolean;
   };
   onToggleThinking?: (enabled: boolean) => void;
   onToggleJailbreak?: (enabled: boolean) => void;

@@ -21,7 +21,19 @@ interface Message {
   id?: string;
 }
 
-export const useChat = (language: string, conversationId: string | null, userId: string | null) => {
+interface ChatOptions {
+  model?: string;
+  tone?: string;
+  thinkMode?: boolean;
+  searchWeb?: boolean;
+}
+
+export const useChat = (
+  language: string, 
+  conversationId: string | null, 
+  userId: string | null,
+  options?: ChatOptions
+) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -93,11 +105,9 @@ export const useChat = (language: string, conversationId: string | null, userId:
     }
   };
 
-  // Generate auto-title from first message
   const generateTitle = async (content: string, convId: string) => {
     if (!convId) return;
     
-    // Create a smart title from the first message (max 50 chars)
     let title = content.trim();
     if (title.length > 50) {
       title = title.substring(0, 47) + '...';
@@ -113,7 +123,6 @@ export const useChat = (language: string, conversationId: string | null, userId:
     }
   };
 
-  // Stop streaming response
   const stopGeneration = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -133,14 +142,12 @@ export const useChat = (language: string, conversationId: string | null, userId:
       setIsLoading(true);
       setIsStreaming(true);
 
-      // Create abort controller for this request
       abortControllerRef.current = new AbortController();
 
       try {
         if (conversationId && userId) {
           await saveMessage(userMessage, conversationId);
           
-          // Auto-generate title for first message
           if (messages.length === 0) {
             await generateTitle(content, conversationId);
           }
@@ -158,8 +165,11 @@ export const useChat = (language: string, conversationId: string | null, userId:
             messages: [...messages, userMessage],
             language,
             images: images || [],
-            searchWeb: true,
+            searchWeb: options?.searchWeb ?? false,
             userMemory: "",
+            model: options?.model || "gemini-flash",
+            tone: options?.tone || "default",
+            thinkMode: options?.thinkMode ?? false,
           }),
           signal: abortControllerRef.current.signal,
         });
@@ -168,17 +178,19 @@ export const useChat = (language: string, conversationId: string | null, userId:
           if (response.status === 429) {
             toast({
               title: "Rate limit exceeded",
-              description: "Please try again in a moment.",
+              description: "Please wait a moment and try again.",
               variant: "destructive",
             });
+            setMessages((prev) => prev.slice(0, -1));
             return;
           }
           if (response.status === 402) {
             toast({
-              title: "Service unavailable",
-              description: "Please contact support.",
+              title: "Service limit reached",
+              description: "Please contact support to continue.",
               variant: "destructive",
             });
+            setMessages((prev) => prev.slice(0, -1));
             return;
           }
           throw new Error("Failed to get response");
@@ -273,7 +285,7 @@ export const useChat = (language: string, conversationId: string | null, userId:
         abortControllerRef.current = null;
       }
     },
-    [messages, language, toast, conversationId, userId]
+    [messages, language, toast, conversationId, userId, options]
   );
 
   const clearMessages = useCallback(() => {
