@@ -137,25 +137,21 @@ export function EnhancedQuickActions({ onAction, disabled }: EnhancedQuickAction
               {quickActions.map((action) => (
                 <button
                   key={action.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    onClick={() => {
-                      onAction(action.prompt);
-                      setIsExpanded(false);
-                    }}
-                    disabled={disabled}
-                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors border border-transparent hover:border-border"
-                  >
-                    <div className={action.color}>{action.icon}</div>
-                    <span className="text-sm font-medium text-center">{action.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  onClick={() => {
+                    onAction(action.prompt);
+                    setIsExpanded(false);
+                  }}
+                  disabled={disabled}
+                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors border border-transparent hover:border-border"
+                >
+                  <div className={action.color}>{action.icon}</div>
+                  <span className="text-sm font-medium text-center">{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
