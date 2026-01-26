@@ -1,74 +1,62 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ImagePlus, Loader2, Download, RefreshCw, Sparkles, Palette, Smile } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  ImagePlus, Loader2, Sparkles, Smile, Wand2, 
+  ChevronDown, ChevronUp, Type, Zap
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { 
+  StyleSelector, 
+  ModelSelector, 
+  TextOverlayEditor,
+  ImagePreview,
+  GiphyBrowser,
+  type ImageStyle,
+  type ImageModel,
+  type TextOverlay,
+} from "./image-creator";
 
 interface ImageGenerationModalProps {
   onImageGenerated?: (imageUrl: string) => void;
   trigger?: React.ReactNode;
 }
 
-type ImageStyle = 
-  | "default" | "nigerian" | "nigerian_sticker" | "sticker" 
-  | "anime" | "midjourney" | "dalle" | "realistic" 
-  | "professional" | "creative" | "cartoon" 
-  | "oil_painting" | "watercolor" | "pixel_art" | "3d_render";
-
-type ImageModel = "sdxl" | "sdxl-turbo" | "anime" | "dreamshaper" | "realistic";
-
-const STYLES: { value: ImageStyle; label: string; emoji: string; category: "general" | "artistic" | "nigerian" }[] = [
-  { value: "default", label: "Default", emoji: "✨", category: "general" },
-  { value: "professional", label: "Professional", emoji: "💼", category: "general" },
-  { value: "creative", label: "Creative", emoji: "🎨", category: "general" },
-  { value: "realistic", label: "Photorealistic", emoji: "📷", category: "general" },
-  { value: "cartoon", label: "Cartoon", emoji: "🎬", category: "general" },
-  { value: "3d_render", label: "3D Render", emoji: "🎮", category: "general" },
-  
-  { value: "anime", label: "Anime", emoji: "🌸", category: "artistic" },
-  { value: "midjourney", label: "Midjourney Style", emoji: "🔮", category: "artistic" },
-  { value: "dalle", label: "DALL-E Style", emoji: "🤖", category: "artistic" },
-  { value: "oil_painting", label: "Oil Painting", emoji: "🖼️", category: "artistic" },
-  { value: "watercolor", label: "Watercolor", emoji: "💧", category: "artistic" },
-  { value: "pixel_art", label: "Pixel Art", emoji: "👾", category: "artistic" },
-  
-  { value: "nigerian", label: "Nigerian Style", emoji: "🇳🇬", category: "nigerian" },
-  { value: "nigerian_sticker", label: "Nigerian Meme", emoji: "😂", category: "nigerian" },
-  { value: "sticker", label: "WhatsApp Sticker", emoji: "💬", category: "nigerian" },
-];
-
-const MODELS: { value: ImageModel; label: string; description: string }[] = [
-  { value: "sdxl", label: "SDXL", description: "High quality, detailed" },
-  { value: "sdxl-turbo", label: "SDXL Turbo", description: "Fast generation" },
-  { value: "anime", label: "Anime Model", description: "Best for anime style" },
-  { value: "dreamshaper", label: "DreamShaper", description: "Artistic & creative" },
-  { value: "realistic", label: "Realistic", description: "Photorealistic images" },
+const PROMPT_SUGGESTIONS = [
+  "A beautiful sunset over Lagos Island with orange sky",
+  "Nigerian street food vendor in colorful market",
+  "Ankara pattern design with vibrant colors",
+  "Happy Yoruba woman in traditional attire",
+  "Futuristic Lagos skyline at night",
+  "Cute anime girl with Nigerian flag colors",
 ];
 
 export const ImageGenerationModal = ({ onImageGenerated, trigger }: ImageGenerationModalProps) => {
   const [open, setOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [style, setStyle] = useState<ImageStyle>("default");
-  const [model, setModel] = useState<ImageModel>("sdxl");
+  const [model, setModel] = useState<ImageModel>("sdxl-turbo");
   const [isSticker, setIsSticker] = useState(false);
-  const [useGiphy, setUseGiphy] = useState(false);
-  const [giphyType, setGiphyType] = useState<"stickers" | "gifs">("stickers");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<any>(null);
-  const [giphyResults, setGiphyResults] = useState<any[]>([]);
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [activeTab, setActiveTab] = useState("generate");
   const { toast } = useToast();
 
-  const handleGenerate = async () => {
+  const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a prompt for the image",
+        title: "Enter a prompt",
+        description: "Describe what you want to create",
         variant: "destructive",
       });
       return;
@@ -76,75 +64,54 @@ export const ImageGenerationModal = ({ onImageGenerated, trigger }: ImageGenerat
 
     setIsGenerating(true);
     setGeneratedImage(null);
-    setGiphyResults([]);
+    setTextOverlays([]);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-image', {
+      const { data, error } = await supabase.functions.invoke("generate-image", {
         body: { 
           prompt, 
           style, 
           model,
           isSticker: isSticker || style === "sticker" || style === "nigerian_sticker",
-          useGiphy,
-          giphyType
         }
       });
 
       if (error) throw error;
-
-      if (!data.success) {
-        throw new Error(data.error || "Image generation failed");
-      }
+      if (!data.success) throw new Error(data.error || "Generation failed");
 
       setGeneratedImage(data);
       
-      if (data.all_results) {
-        setGiphyResults(data.all_results);
-      }
-      
       toast({
-        title: data.provider === "giphy" ? "Found from Giphy! 🎉" : "Image generated! 🎨",
-        description: data.message,
+        title: "Created! 🎨",
+        description: data.message || "Your image is ready",
       });
 
       if (onImageGenerated && data.image_url) {
         onImageGenerated(data.image_url);
       }
     } catch (error) {
-      console.error("Image generation error:", error);
+      console.error("Generation error:", error);
       toast({
         title: "Generation failed",
-        description: error instanceof Error ? error.message : "Failed to generate image",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [prompt, style, model, isSticker, toast, onImageGenerated]);
 
-  const handleDownload = async () => {
-    if (!generatedImage?.image_url) return;
-    
-    try {
-      const link = document.createElement('a');
-      link.href = generatedImage.image_url;
-      link.download = `hanchi-${style}-${Date.now()}.${generatedImage.provider === 'giphy' ? 'gif' : 'png'}`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Download error:", error);
-      window.open(generatedImage.image_url, '_blank');
-    }
-  };
-
-  const selectGiphyResult = (result: any) => {
+  const handleGiphySelect = (result: { id: string; title: string; url: string; preview: string }) => {
     setGeneratedImage({
-      ...generatedImage,
       image_url: result.url,
-      message: `Selected "${result.title}" from Giphy!`
+      provider: "giphy",
+      message: `Selected "${result.title}" from Giphy!`,
     });
+    setActiveTab("generate");
+  };
+
+  const handleUsePrompt = (suggestion: string) => {
+    setPrompt(suggestion);
   };
 
   return (
@@ -156,238 +123,195 @@ export const ImageGenerationModal = ({ onImageGenerated, trigger }: ImageGenerat
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ImagePlus className="text-primary" size={20} />
-            Create Image with Hanchi
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] p-0 gap-0 overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="px-6 py-4 border-b border-border bg-gradient-to-r from-primary/5 to-purple-500/5">
+          <DialogTitle className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
+              <Wand2 className="text-primary-foreground" size={20} />
+            </div>
+            <div>
+              <span className="text-lg">Hanchi Image Creator</span>
+              <p className="text-xs text-muted-foreground font-normal">
+                AI-powered images & stickers
+              </p>
+            </div>
           </DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="generate" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="generate" className="gap-2">
-              <Sparkles size={16} /> Generate
-            </TabsTrigger>
-            <TabsTrigger value="giphy" className="gap-2">
-              <Smile size={16} /> Giphy
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="generate" className="space-y-4 mt-4">
-            {/* Prompt Input */}
-            <div className="space-y-2">
-              <Label htmlFor="prompt">Describe your image</Label>
-              <Textarea
-                id="prompt"
-                placeholder="A beautiful sunset over Lagos Island with orange and purple sky..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-[80px] resize-none"
-              />
-            </div>
-
-            {/* Style Selection with Categories */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Palette size={16} /> Style
-              </Label>
-              <Select value={style} onValueChange={(v: ImageStyle) => setStyle(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select style" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className="px-2 py-1 text-xs text-muted-foreground font-semibold">General</div>
-                  {STYLES.filter(s => s.category === "general").map(s => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.emoji} {s.label}
-                    </SelectItem>
-                  ))}
-                  <div className="px-2 py-1 text-xs text-muted-foreground font-semibold mt-2">Artistic</div>
-                  {STYLES.filter(s => s.category === "artistic").map(s => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.emoji} {s.label}
-                    </SelectItem>
-                  ))}
-                  <div className="px-2 py-1 text-xs text-muted-foreground font-semibold mt-2">Nigerian 🇳🇬</div>
-                  {STYLES.filter(s => s.category === "nigerian").map(s => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.emoji} {s.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Model Selection */}
-            <div className="space-y-2">
-              <Label>AI Model</Label>
-              <Select value={model} onValueChange={(v: ImageModel) => setModel(v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MODELS.map(m => (
-                    <SelectItem key={m.value} value={m.value}>
-                      <div className="flex flex-col">
-                        <span>{m.label}</span>
-                        <span className="text-xs text-muted-foreground">{m.description}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sticker Mode Toggle */}
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <div className="space-y-0.5">
-                <Label htmlFor="sticker-mode">Sticker Mode</Label>
-                <p className="text-xs text-muted-foreground">
-                  512x512px optimized for WhatsApp
-                </p>
-              </div>
-              <Switch
-                id="sticker-mode"
-                checked={isSticker}
-                onCheckedChange={setIsSticker}
-              />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="giphy" className="space-y-4 mt-4">
-            {/* Giphy Search */}
-            <div className="space-y-2">
-              <Label htmlFor="giphy-prompt">Search Giphy</Label>
-              <Textarea
-                id="giphy-prompt"
-                placeholder="Search for stickers, GIFs, memes..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                className="min-h-[60px] resize-none"
-              />
-            </div>
-
-            {/* Giphy Type */}
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Select value={giphyType} onValueChange={(v: "stickers" | "gifs") => setGiphyType(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stickers">🏷️ Stickers</SelectItem>
-                  <SelectItem value="gifs">🎬 GIFs</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-              <div className="space-y-0.5">
-                <Label>Use Giphy</Label>
-                <p className="text-xs text-muted-foreground">
-                  Search millions of stickers & GIFs
-                </p>
-              </div>
-              <Switch
-                checked={useGiphy}
-                onCheckedChange={setUseGiphy}
-              />
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* Generated Image Preview */}
-        {generatedImage && (
-          <div className="space-y-3 mt-4">
-            <Label>Generated {generatedImage.provider === 'giphy' ? 'Giphy Result' : 'Image'}</Label>
-            <div className="relative rounded-xl overflow-hidden border border-border bg-muted/50">
-              <img 
-                src={generatedImage.image_url} 
-                alt="Generated" 
-                className="w-full h-auto max-h-[300px] object-contain"
-              />
-              {generatedImage.provider && (
-                <div className="absolute top-2 right-2 px-2 py-1 bg-background/80 rounded text-xs">
-                  {generatedImage.provider === 'giphy' ? '🎉 Giphy' : 
-                   generatedImage.provider === 'replicate' ? '🎨 AI' : '✨ Gemini'}
+        <ScrollArea className="max-h-[calc(90vh-80px)]">
+          <div className="p-6 space-y-5">
+            {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 h-12">
+                <TabsTrigger value="generate" className="gap-2 text-sm">
+                  <Sparkles size={16} /> Generate AI
+                </TabsTrigger>
+                <TabsTrigger value="giphy" className="gap-2 text-sm">
+                  <Smile size={16} /> Giphy Search
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="generate" className="space-y-5 mt-5">
+                {/* Prompt Input */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-sm font-medium">
+                    <Type size={16} /> Describe your image
+                  </Label>
+                  <Textarea
+                    placeholder="A beautiful sunset over Lagos Island..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    className="min-h-[100px] resize-none text-base"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.metaKey) {
+                        handleGenerate();
+                      }
+                    }}
+                  />
+                  
+                  {/* Prompt Suggestions */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {PROMPT_SUGGESTIONS.slice(0, 3).map((suggestion, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleUsePrompt(suggestion)}
+                        className="px-2.5 py-1 text-xs bg-muted/50 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground truncate max-w-[200px]"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-            
-            {/* Giphy alternatives */}
-            {giphyResults.length > 1 && (
-              <div className="space-y-2">
-                <Label className="text-xs">More options:</Label>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {giphyResults.map((result) => (
-                    <button
-                      key={result.id}
-                      onClick={() => selectGiphyResult(result)}
-                      className="flex-shrink-0 rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-colors"
-                    >
-                      <img 
-                        src={result.preview || result.url} 
-                        alt={result.title}
-                        className="w-16 h-16 object-cover"
-                      />
-                    </button>
-                  ))}
+
+                {/* Style Selector */}
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-sm font-medium">
+                    <Sparkles size={16} /> Style
+                  </Label>
+                  <StyleSelector value={style} onChange={setStyle} />
                 </div>
+
+                {/* Quick Options */}
+                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-xl">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Switch
+                      id="sticker-mode"
+                      checked={isSticker}
+                      onCheckedChange={setIsSticker}
+                    />
+                    <Label htmlFor="sticker-mode" className="text-sm cursor-pointer">
+                      <span className="font-medium">Sticker Mode</span>
+                      <span className="text-muted-foreground ml-2">512x512</span>
+                    </Label>
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="gap-1 text-muted-foreground"
+                  >
+                    Advanced
+                    {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </Button>
+                </div>
+
+                {/* Advanced Options */}
+                {showAdvanced && (
+                  <div className="space-y-4 p-4 bg-muted/20 rounded-xl border border-border animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-3">
+                      <Label className="flex items-center gap-2 text-sm">
+                        <Zap size={14} /> AI Model
+                      </Label>
+                      <ModelSelector value={model} onChange={setModel} compact />
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="giphy" className="mt-5">
+                <GiphyBrowser onSelect={handleGiphySelect} />
+              </TabsContent>
+            </Tabs>
+
+            {/* Generated Image Preview */}
+            {generatedImage && (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Your Creation</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowTextEditor(!showTextEditor)}
+                    className={cn(
+                      "gap-1.5 text-xs",
+                      showTextEditor && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <Type size={14} />
+                    Add Text
+                  </Button>
+                </div>
+                
+                <ImagePreview
+                  imageUrl={generatedImage.image_url}
+                  provider={generatedImage.provider}
+                  textOverlays={textOverlays}
+                  onRegenerate={handleGenerate}
+                  isRegenerating={isGenerating}
+                />
+                
+                {/* Text Overlay Editor */}
+                {showTextEditor && (
+                  <div className="animate-in fade-in slide-in-from-top-2">
+                    <TextOverlayEditor
+                      overlays={textOverlays}
+                      onChange={setTextOverlays}
+                      imageWidth={512}
+                      imageHeight={512}
+                    />
+                  </div>
+                )}
               </div>
             )}
-            
-            <div className="flex gap-2">
+
+            {/* Generate Button */}
+            {activeTab === "generate" && (
               <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleDownload}
-                className="flex-1 gap-2"
+                onClick={handleGenerate} 
+                disabled={isGenerating || !prompt.trim()}
+                className="w-full h-12 gap-2 text-base font-medium"
+                size="lg"
               >
-                <Download size={16} /> Download
+                {isGenerating ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Creating magic...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 size={20} />
+                    Generate Image
+                  </>
+                )}
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                className="flex-1 gap-2"
-              >
-                <RefreshCw size={16} /> Regenerate
-              </Button>
+            )}
+
+            {/* Tips */}
+            <div className="text-xs text-muted-foreground space-y-1.5 p-4 bg-muted/30 rounded-xl">
+              <p className="font-medium flex items-center gap-1.5">
+                <span className="text-base">💡</span> Pro tips
+              </p>
+              <ul className="space-y-1 ml-5">
+                <li>• Use <strong>Midjourney</strong> style for stunning artistic images</li>
+                <li>• <strong>Nigerian Meme</strong> creates WhatsApp-ready stickers</li>
+                <li>• Be specific: "Happy Yoruba woman in Ankara" vs just "woman"</li>
+                <li>• Press <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">⌘ Enter</kbd> to generate quickly</li>
+              </ul>
             </div>
           </div>
-        )}
-
-        {/* Generate Button */}
-        <Button 
-          onClick={handleGenerate} 
-          disabled={isGenerating || !prompt.trim()}
-          className="w-full gap-2 mt-4"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 size={18} className="animate-spin" />
-              {useGiphy ? "Searching..." : "Generating..."}
-            </>
-          ) : (
-            <>
-              <ImagePlus size={18} />
-              {useGiphy ? "Search Giphy" : "Generate Image"}
-            </>
-          )}
-        </Button>
-
-        {/* Tips */}
-        <div className="text-xs text-muted-foreground space-y-1 p-3 bg-muted/50 rounded-lg mt-4">
-          <p className="font-medium">💡 Tips for better results:</p>
-          <ul className="list-disc list-inside space-y-0.5">
-            <li>Try <strong>Anime</strong> or <strong>Midjourney</strong> styles for artistic images</li>
-            <li>Use <strong>Nigerian Meme</strong> for Naija-style WhatsApp stickers</li>
-            <li>Enable <strong>Giphy</strong> tab to find existing stickers & GIFs</li>
-            <li>Be specific: "A happy Yoruba woman in Ankara" vs "A woman"</li>
-          </ul>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
