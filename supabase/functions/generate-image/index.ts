@@ -96,6 +96,11 @@ const MODEL_CONFIGS: Record<string, { version: string; name: string; params?: an
     version: "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
     name: "Realistic Vision",
     params: { scheduler: "DPMSolverMultistep", num_inference_steps: 30, guidance_scale: 7 }
+  },
+  "flux": {
+    version: "f2ab8a5bfe79f02f0789a146cf5e73d2a4ff2684a98c2b303d1e1ff3814271db",
+    name: "Flux",
+    params: { num_inference_steps: 28, guidance_scale: 3.5 }
   }
 };
 
@@ -247,6 +252,25 @@ serve(async (req) => {
       
       case "3d_render":
         enhancedPrompt = `${prompt}, 3D render, octane render, unreal engine, cinema 4d, high quality, realistic lighting, detailed`;
+        break;
+      
+      case "cyberpunk":
+        enhancedPrompt = `${prompt}, cyberpunk style, neon lights, futuristic city, sci-fi, blade runner aesthetic, purple and cyan colors, high tech, detailed`;
+        negativePrompt = "natural, organic, vintage, old";
+        break;
+      
+      case "vintage":
+        enhancedPrompt = `${prompt}, vintage style, retro aesthetic, 1970s photography, warm tones, film grain, nostalgic, sepia undertones`;
+        negativePrompt = "modern, digital, futuristic";
+        break;
+      
+      case "neon":
+        enhancedPrompt = `${prompt}, neon glow, vibrant neon colors, glowing lights, dark background, synthwave aesthetic, electric, high contrast`;
+        break;
+      
+      case "minimalist":
+        enhancedPrompt = `${prompt}, minimalist design, clean lines, simple shapes, white space, modern aesthetic, elegant simplicity`;
+        negativePrompt = "complex, detailed, busy, cluttered";
         break;
       
       default:
