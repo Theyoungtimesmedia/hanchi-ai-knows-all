@@ -183,98 +183,102 @@ serve(async (req) => {
     
     switch (style) {
       case "nigerian":
-        enhancedPrompt = `${prompt}, Nigerian style, vibrant Ankara patterns, African aesthetic, Nigerian cultural elements, Lagos cityscape, colorful, high quality, detailed`;
+        enhancedPrompt = `${prompt}, professional Nigerian style, vibrant Ankara patterns, African aesthetic, Nigerian cultural elements, Lagos cityscape, colorful, ultra high quality, photorealistic, detailed`;
         break;
       
-      case "nigerian_sticker":
-        const isPepeStyle = stickerType === "pepe" || 
-          prompt.toLowerCase().includes("pepe") || 
-          prompt.toLowerCase().includes("frog") ||
-          prompt.toLowerCase().includes("comrade");
-        
-        if (isPepeStyle) {
-          enhancedPrompt = `Nigerian WhatsApp meme sticker, Pepe the Frog character wearing traditional Nigerian agbada or dashiki, expressive exaggerated face showing "${prompt}", Nigerian meme humor style, bold readable text overlay, clean white background, 512x512, high contrast, viral meme quality`;
-        } else {
-          enhancedPrompt = `Nigerian WhatsApp meme sticker, expressive cartoon character or Nollywood actor expression, "${prompt}", Nigerian Pidgin text overlay, relatable Nigerian humor, clean white background, 512x512, bold outlines, high quality meme`;
-        }
-        negativePrompt = "realistic, photorealistic, low quality, blurry";
+      case "nigerian_meme":
+        // Mature, realistic Nigerian meme style - not cartoonish
+        enhancedPrompt = `Ultra realistic Nigerian meme image, photorealistic style, ${prompt}, authentic Nigerian context, natural lighting, high resolution, professional photography quality, real human expressions, genuine emotion, viral meme potential, sharp details, modern Nigerian urban setting`;
+        negativePrompt = "cartoon, anime, illustrated, childish, low quality, blurry, distorted, unrealistic";
+        break;
+      
+      case "nollywood":
+        enhancedPrompt = `${prompt}, Nollywood movie poster style, dramatic lighting, Nigerian actors aesthetic, cinematic composition, bold colors, professional movie poster quality, 4K, dramatic`;
         break;
       
       case "sticker":
-        enhancedPrompt = `${prompt}, WhatsApp sticker format, cartoon style, simple clean design, bold black outlines, expressive, white background, 512x512 pixels, high quality, vibrant colors, cute`;
-        negativePrompt = "realistic, complex background, photorealistic";
+        enhancedPrompt = `${prompt}, WhatsApp sticker format, clean professional design, solid white background, high contrast, clear edges, modern illustration style, 512x512 pixels, high quality, sharp details`;
+        negativePrompt = "realistic photo, complex background, low quality";
         break;
       
       case "anime":
-        enhancedPrompt = `${prompt}, anime style, manga art, Japanese animation, vibrant colors, detailed, studio ghibli quality, beautiful lighting, masterpiece`;
+        enhancedPrompt = `${prompt}, anime style, manga art, Japanese animation, vibrant colors, detailed, studio ghibli quality, beautiful lighting, masterpiece, 4K`;
         negativePrompt = "realistic, western cartoon, low quality, blurry";
         break;
       
       case "midjourney":
-        enhancedPrompt = `${prompt}, highly detailed, intricate, elegant, sharp focus, artstation trending, concept art, digital painting, dramatic lighting, 8k, masterpiece, cinematic`;
+        enhancedPrompt = `${prompt}, highly detailed, intricate, elegant, sharp focus, artstation trending, concept art, digital painting, dramatic lighting, 8k, masterpiece, cinematic, volumetric lighting`;
         negativePrompt = "simple, flat, low detail, amateur";
         break;
       
       case "dalle":
-        enhancedPrompt = `${prompt}, digital art, trending on artstation, highly detailed, vibrant colors, creative, imaginative, professional quality`;
+        enhancedPrompt = `${prompt}, digital art, trending on artstation, highly detailed, vibrant colors, creative, imaginative, professional quality, 4K`;
         break;
       
       case "realistic":
-        enhancedPrompt = `${prompt}, photorealistic, professional photography, high resolution, detailed, natural lighting, 8k, ultra HD`;
-        negativePrompt = "cartoon, anime, illustration, drawing, painting";
+        enhancedPrompt = `${prompt}, photorealistic, professional photography, high resolution, ultra detailed, natural lighting, 8k, ultra HD, DSLR quality`;
+        negativePrompt = "cartoon, anime, illustration, drawing, painting, artificial";
         break;
       
       case "professional":
-        enhancedPrompt = `${prompt}, professional photography, high quality, clean composition, modern design, photorealistic, studio lighting, 8k`;
+        enhancedPrompt = `${prompt}, professional photography, high quality, clean composition, modern design, photorealistic, studio lighting, 8k, commercial quality`;
+        break;
+      
+      case "cinematic":
+        enhancedPrompt = `${prompt}, cinematic photography, movie still, dramatic lighting, anamorphic lens, film grain, color grading, 35mm film, blockbuster movie quality, epic composition`;
+        break;
+      
+      case "portrait":
+        enhancedPrompt = `${prompt}, professional portrait photography, studio lighting, shallow depth of field, high resolution, beautiful skin tones, magazine quality, 8k`;
         break;
       
       case "creative":
-        enhancedPrompt = `${prompt}, creative artistic style, imaginative, unique, vibrant colors, digital art, highly detailed, surreal`;
+        enhancedPrompt = `${prompt}, creative artistic style, imaginative, unique, vibrant colors, digital art, highly detailed, surreal, award-winning`;
         break;
       
       case "cartoon":
-        enhancedPrompt = `${prompt}, cartoon style, colorful, fun, animated, pixar style, 3d render, cute, friendly`;
-        negativePrompt = "realistic, scary, dark";
+        enhancedPrompt = `${prompt}, cartoon style, colorful, fun, animated, pixar style, 3d render, professional animation quality`;
+        negativePrompt = "realistic, scary, dark, low quality";
         break;
       
       case "oil_painting":
-        enhancedPrompt = `${prompt}, oil painting, classical art, Renaissance style, rich colors, textured brushstrokes, museum quality, masterpiece`;
+        enhancedPrompt = `${prompt}, oil painting, classical art, Renaissance style, rich colors, textured brushstrokes, museum quality, masterpiece, gallery worthy`;
         break;
       
       case "watercolor":
-        enhancedPrompt = `${prompt}, watercolor painting, soft colors, artistic, flowing, delicate, paper texture, beautiful`;
+        enhancedPrompt = `${prompt}, watercolor painting, soft colors, artistic, flowing, delicate, paper texture, beautiful, professional artist quality`;
         break;
       
       case "pixel_art":
-        enhancedPrompt = `${prompt}, pixel art, 16-bit, retro game style, nostalgic, colorful pixels, game sprite`;
-        negativePrompt = "realistic, high resolution, blurry";
+        enhancedPrompt = `${prompt}, pixel art, 16-bit, retro game style, nostalgic, colorful pixels, game sprite, professional pixel art`;
+        negativePrompt = "realistic, high resolution, blurry, 3d";
         break;
       
       case "3d_render":
-        enhancedPrompt = `${prompt}, 3D render, octane render, unreal engine, cinema 4d, high quality, realistic lighting, detailed`;
+        enhancedPrompt = `${prompt}, 3D render, octane render, unreal engine 5, cinema 4d, high quality, realistic lighting, detailed, 8K resolution`;
         break;
       
       case "cyberpunk":
-        enhancedPrompt = `${prompt}, cyberpunk style, neon lights, futuristic city, sci-fi, blade runner aesthetic, purple and cyan colors, high tech, detailed`;
-        negativePrompt = "natural, organic, vintage, old";
+        enhancedPrompt = `${prompt}, cyberpunk style, neon lights, futuristic city, sci-fi, blade runner aesthetic, purple and cyan colors, high tech, rain, reflections, detailed, 8K`;
+        negativePrompt = "natural, organic, vintage, old, rural";
         break;
       
       case "vintage":
-        enhancedPrompt = `${prompt}, vintage style, retro aesthetic, 1970s photography, warm tones, film grain, nostalgic, sepia undertones`;
-        negativePrompt = "modern, digital, futuristic";
+        enhancedPrompt = `${prompt}, vintage style, retro aesthetic, 1970s photography, warm tones, film grain, nostalgic, sepia undertones, kodak film`;
+        negativePrompt = "modern, digital, futuristic, sharp, clean";
         break;
       
       case "neon":
-        enhancedPrompt = `${prompt}, neon glow, vibrant neon colors, glowing lights, dark background, synthwave aesthetic, electric, high contrast`;
+        enhancedPrompt = `${prompt}, neon glow, vibrant neon colors, glowing lights, dark background, synthwave aesthetic, electric, high contrast, cinematic`;
         break;
       
       case "minimalist":
-        enhancedPrompt = `${prompt}, minimalist design, clean lines, simple shapes, white space, modern aesthetic, elegant simplicity`;
-        negativePrompt = "complex, detailed, busy, cluttered";
+        enhancedPrompt = `${prompt}, minimalist design, clean lines, simple shapes, white space, modern aesthetic, elegant simplicity, professional`;
+        negativePrompt = "complex, detailed, busy, cluttered, noisy";
         break;
       
       default:
-        enhancedPrompt = `${prompt}, high quality, detailed, professional`;
+        enhancedPrompt = `${prompt}, high quality, detailed, professional, 4K, sharp`;
     }
 
     // Determine dimensions

@@ -72,7 +72,7 @@ export const ImageGenerationModal = ({ onImageGenerated, trigger }: ImageGenerat
           prompt, 
           style, 
           model,
-          isSticker: isSticker || style === "sticker" || style === "nigerian_sticker",
+          isSticker: isSticker || style === "sticker" || style === "nigerian_meme",
         }
       });
 

@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 
 export type ImageStyle = 
-  | "default" | "nigerian" | "nigerian_sticker" | "sticker" 
+  | "default" | "nigerian" | "nigerian_meme" | "sticker" 
   | "anime" | "midjourney" | "dalle" | "realistic" 
   | "professional" | "creative" | "cartoon" 
   | "oil_painting" | "watercolor" | "pixel_art" | "3d_render"
-  | "cyberpunk" | "vintage" | "neon" | "minimalist";
+  | "cyberpunk" | "vintage" | "neon" | "minimalist"
+  | "cinematic" | "portrait" | "nollywood";
 
 export type StyleCategory = "popular" | "artistic" | "nigerian" | "effects";
 
@@ -15,35 +16,39 @@ export interface StyleOption {
   emoji: string;
   category: StyleCategory;
   gradient?: string;
+  description?: string;
 }
 
 export const STYLES: StyleOption[] = [
-  // Popular
-  { value: "default", label: "Default", emoji: "✨", category: "popular", gradient: "from-blue-500 to-purple-500" },
-  { value: "professional", label: "Professional", emoji: "💼", category: "popular", gradient: "from-slate-600 to-slate-800" },
-  { value: "realistic", label: "Photorealistic", emoji: "📷", category: "popular", gradient: "from-gray-500 to-gray-700" },
-  { value: "anime", label: "Anime", emoji: "🌸", category: "popular", gradient: "from-pink-400 to-purple-500" },
-  { value: "midjourney", label: "Midjourney", emoji: "🔮", category: "popular", gradient: "from-indigo-500 to-purple-600" },
+  // Popular - Clean, professional looks
+  { value: "default", label: "Default", emoji: "✨", category: "popular", gradient: "from-blue-500 to-purple-500", description: "High quality general purpose" },
+  { value: "professional", label: "Professional", emoji: "💼", category: "popular", gradient: "from-slate-600 to-slate-800", description: "Clean business style" },
+  { value: "realistic", label: "Photorealistic", emoji: "📷", category: "popular", gradient: "from-gray-500 to-gray-700", description: "Ultra-realistic photos" },
+  { value: "cinematic", label: "Cinematic", emoji: "🎬", category: "popular", gradient: "from-amber-600 to-red-700", description: "Movie poster quality" },
+  { value: "portrait", label: "Portrait", emoji: "👤", category: "popular", gradient: "from-rose-500 to-pink-600", description: "Professional portraits" },
   
   // Artistic
-  { value: "dalle", label: "DALL-E Style", emoji: "🤖", category: "artistic", gradient: "from-emerald-500 to-teal-600" },
-  { value: "cartoon", label: "Cartoon", emoji: "🎬", category: "artistic", gradient: "from-yellow-400 to-orange-500" },
-  { value: "3d_render", label: "3D Render", emoji: "🎮", category: "artistic", gradient: "from-cyan-500 to-blue-600" },
-  { value: "oil_painting", label: "Oil Painting", emoji: "🖼️", category: "artistic", gradient: "from-amber-600 to-orange-700" },
-  { value: "watercolor", label: "Watercolor", emoji: "💧", category: "artistic", gradient: "from-sky-400 to-blue-500" },
-  { value: "pixel_art", label: "Pixel Art", emoji: "👾", category: "artistic", gradient: "from-green-500 to-emerald-600" },
+  { value: "midjourney", label: "Midjourney", emoji: "🔮", category: "artistic", gradient: "from-indigo-500 to-purple-600", description: "Artistic & detailed" },
+  { value: "dalle", label: "DALL-E Style", emoji: "🤖", category: "artistic", gradient: "from-emerald-500 to-teal-600", description: "Creative & imaginative" },
+  { value: "anime", label: "Anime", emoji: "🌸", category: "artistic", gradient: "from-pink-400 to-purple-500", description: "Japanese animation style" },
+  { value: "3d_render", label: "3D Render", emoji: "🎮", category: "artistic", gradient: "from-cyan-500 to-blue-600", description: "CGI quality renders" },
+  { value: "oil_painting", label: "Oil Painting", emoji: "🖼️", category: "artistic", gradient: "from-amber-600 to-orange-700", description: "Classical art style" },
+  { value: "watercolor", label: "Watercolor", emoji: "💧", category: "artistic", gradient: "from-sky-400 to-blue-500", description: "Soft artistic paint" },
   
-  // Nigerian
-  { value: "nigerian", label: "Nigerian Style", emoji: "🇳🇬", category: "nigerian", gradient: "from-green-600 to-green-800" },
-  { value: "nigerian_sticker", label: "Nigerian Meme", emoji: "😂", category: "nigerian", gradient: "from-green-500 to-yellow-500" },
-  { value: "sticker", label: "WhatsApp Sticker", emoji: "💬", category: "nigerian", gradient: "from-green-400 to-teal-500" },
+  // Nigerian - Realistic & Mature styles
+  { value: "nigerian", label: "Nigerian Pro", emoji: "🇳🇬", category: "nigerian", gradient: "from-green-600 to-green-800", description: "Professional Nigerian aesthetic" },
+  { value: "nigerian_meme", label: "Naija Meme", emoji: "😂", category: "nigerian", gradient: "from-green-500 to-yellow-500", description: "Realistic meme style" },
+  { value: "nollywood", label: "Nollywood", emoji: "🎭", category: "nigerian", gradient: "from-purple-600 to-red-600", description: "Movie poster style" },
+  { value: "sticker", label: "WhatsApp Sticker", emoji: "💬", category: "nigerian", gradient: "from-green-400 to-teal-500", description: "Clean sticker format" },
   
   // Effects
-  { value: "cyberpunk", label: "Cyberpunk", emoji: "🌆", category: "effects", gradient: "from-fuchsia-500 to-cyan-500" },
-  { value: "vintage", label: "Vintage", emoji: "📻", category: "effects", gradient: "from-amber-500 to-yellow-600" },
-  { value: "neon", label: "Neon Glow", emoji: "💡", category: "effects", gradient: "from-pink-500 to-violet-600" },
-  { value: "minimalist", label: "Minimalist", emoji: "◻️", category: "effects", gradient: "from-neutral-400 to-neutral-600" },
-  { value: "creative", label: "Creative", emoji: "🎨", category: "effects", gradient: "from-rose-500 to-pink-600" },
+  { value: "cyberpunk", label: "Cyberpunk", emoji: "🌆", category: "effects", gradient: "from-fuchsia-500 to-cyan-500", description: "Futuristic neon city" },
+  { value: "vintage", label: "Vintage", emoji: "📻", category: "effects", gradient: "from-amber-500 to-yellow-600", description: "Retro film look" },
+  { value: "neon", label: "Neon Glow", emoji: "💡", category: "effects", gradient: "from-pink-500 to-violet-600", description: "Glowing neon lights" },
+  { value: "minimalist", label: "Minimalist", emoji: "◻️", category: "effects", gradient: "from-neutral-400 to-neutral-600", description: "Clean & simple" },
+  { value: "pixel_art", label: "Pixel Art", emoji: "👾", category: "effects", gradient: "from-green-500 to-emerald-600", description: "Retro game style" },
+  { value: "cartoon", label: "Cartoon", emoji: "🎨", category: "effects", gradient: "from-yellow-400 to-orange-500", description: "Fun illustrated style" },
+  { value: "creative", label: "Creative", emoji: "🎨", category: "effects", gradient: "from-rose-500 to-pink-600", description: "Artistic & unique" },
 ];
 
 const CATEGORY_LABELS: Record<StyleCategory, { label: string; icon: string }> = {
