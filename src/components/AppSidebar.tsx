@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2 } from "lucide-react";
+import { MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, BookOpen, Sparkles, HelpCircle, Keyboard } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
@@ -44,12 +44,29 @@ export const AppSidebar = ({
 }: AppSidebarProps) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('hanchi_pinned_conversations');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const userAvatar = user?.user_metadata?.avatar_url;
 
   const handleViewProfile = () => {
     navigate("/profile");
     onClose();
+  };
+
+  const togglePin = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newPinned = new Set(pinnedIds);
+    if (newPinned.has(id)) {
+      newPinned.delete(id);
+    } else {
+      newPinned.add(id);
+    }
+    setPinnedIds(newPinned);
+    localStorage.setItem('hanchi_pinned_conversations', JSON.stringify([...newPinned]));
   };
 
   // Filter conversations by search query
@@ -60,7 +77,14 @@ export const AppSidebar = ({
     );
   }, [conversations, searchQuery]);
 
-  // Group conversations by date
+  // Separate pinned and regular conversations
+  const { pinnedConversations, regularConversations } = useMemo(() => {
+    const pinned = filteredConversations.filter(c => pinnedIds.has(c.id));
+    const regular = filteredConversations.filter(c => !pinnedIds.has(c.id));
+    return { pinnedConversations: pinned, regularConversations: regular };
+  }, [filteredConversations, pinnedIds]);
+
+  // Group regular conversations by date
   const groupedConversations = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -79,7 +103,7 @@ export const AppSidebar = ({
       { label: 'Older', conversations: [] },
     ];
 
-    filteredConversations.forEach(conv => {
+    regularConversations.forEach(conv => {
       const date = conv.updated_at ? new Date(conv.updated_at) : new Date();
       date.setHours(0, 0, 0, 0);
 
@@ -97,7 +121,46 @@ export const AppSidebar = ({
     });
 
     return groups.filter(group => group.conversations.length > 0);
-  }, [filteredConversations]);
+  }, [regularConversations]);
+
+  const ConversationItem = ({ conv, isPinned }: { conv: Conversation; isPinned: boolean }) => (
+    <div
+      className={`group flex items-center gap-2 w-full text-left p-2.5 rounded-xl transition-all cursor-pointer ${
+        currentConversationId === conv.id
+          ? 'bg-primary/10 text-primary'
+          : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+      }`}
+      onClick={() => onSelectConversation(conv.id)}
+    >
+      <MessageSquare size={14} className={
+        currentConversationId === conv.id ? 'text-primary flex-shrink-0' : 'text-muted-foreground group-hover:text-primary flex-shrink-0'
+      } />
+      <span className="text-sm font-medium truncate flex-1">
+        {conv.title}
+      </span>
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`h-6 w-6 ${isPinned ? 'opacity-100' : ''}`}
+          onClick={(e) => togglePin(conv.id, e)}
+        >
+          <Pin size={12} className={isPinned ? "text-primary fill-primary" : "text-muted-foreground"} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteConversation(conv.id);
+          }}
+        >
+          <Trash2 size={12} className="text-destructive" />
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-card shadow-xl transform transition-transform duration-300 ${
@@ -123,7 +186,7 @@ export const AppSidebar = ({
       <div className="px-3 py-3">
         <Button
           onClick={onNewConversation}
-          className="w-full rounded-xl flex items-center justify-center gap-2 h-10"
+          className="w-full rounded-xl flex items-center justify-center gap-2 h-10 bg-gradient-primary"
         >
           <Plus size={16} /> New Chat
         </Button>
@@ -137,13 +200,51 @@ export const AppSidebar = ({
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-9 text-sm rounded-lg bg-muted/50 border-0"
+            className="pl-9 h-9 text-sm rounded-xl bg-muted/50 border-0"
           />
         </div>
       </div>
 
+      {/* Quick Links */}
+      <div className="px-3 py-2 flex gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { navigate("/prompts"); onClose(); }}
+          className="flex-1 h-8 text-xs rounded-lg gap-1.5"
+        >
+          <BookOpen size={12} />
+          Prompts
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { navigate("/discover"); onClose(); }}
+          className="flex-1 h-8 text-xs rounded-lg gap-1.5"
+        >
+          <Sparkles size={12} />
+          Discover
+        </Button>
+      </div>
+
       {/* Conversations List */}
       <ScrollArea className="flex-1 px-2">
+        {/* Pinned Section */}
+        {pinnedConversations.length > 0 && (
+          <div className="mb-4">
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1 flex items-center gap-1">
+              <Pin size={10} />
+              Pinned
+            </div>
+            <div className="space-y-0.5">
+              {pinnedConversations.map((conv) => (
+                <ConversationItem key={conv.id} conv={conv} isPinned={true} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Regular Conversations */}
         {groupedConversations.length > 0 ? (
           groupedConversations.map((group, groupIndex) => (
             <div key={groupIndex} className="mb-4">
@@ -152,38 +253,12 @@ export const AppSidebar = ({
               </div>
               <div className="space-y-0.5">
                 {group.conversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    className={`group flex items-center gap-2 w-full text-left p-2.5 rounded-lg transition-colors cursor-pointer ${
-                      currentConversationId === conv.id
-                        ? 'bg-primary/10 text-primary'
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
-                    }`}
-                    onClick={() => onSelectConversation(conv.id)}
-                  >
-                    <MessageSquare size={14} className={
-                      currentConversationId === conv.id ? 'text-primary flex-shrink-0' : 'text-muted-foreground group-hover:text-primary flex-shrink-0'
-                    } />
-                    <span className="text-sm font-medium truncate flex-1">
-                      {conv.title}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteConversation(conv.id);
-                      }}
-                    >
-                      <Trash2 size={12} className="text-destructive" />
-                    </Button>
-                  </div>
+                  <ConversationItem key={conv.id} conv={conv} isPinned={false} />
                 ))}
               </div>
             </div>
           ))
-        ) : (
+        ) : pinnedConversations.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8 px-4">
             {searchQuery ? 'No conversations found' : 'No conversations yet'}
           </p>
@@ -194,7 +269,7 @@ export const AppSidebar = ({
       <div className="p-3 border-t border-border/50">
         <button 
           onClick={handleViewProfile}
-          className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+          className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-muted transition-colors cursor-pointer"
         >
           {userAvatar ? (
             <img src={userAvatar} alt="Profile" className="w-9 h-9 rounded-full" />
@@ -216,7 +291,7 @@ export const AppSidebar = ({
             variant="ghost"
             size="sm"
             onClick={onOpenSettings}
-            className="rounded-lg flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground h-8 text-xs"
+            className="rounded-xl flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground h-8 text-xs"
           >
             <Settings size={14} /> Settings
           </Button>
@@ -224,11 +299,21 @@ export const AppSidebar = ({
             variant="ghost"
             size="sm"
             onClick={onSignOut}
-            className="rounded-lg flex items-center justify-center gap-1.5 text-destructive hover:bg-destructive/10 h-8 text-xs"
+            className="rounded-xl flex items-center justify-center gap-1.5 text-destructive hover:bg-destructive/10 h-8 text-xs"
           >
             <LogOut size={14} /> Logout
           </Button>
         </div>
+
+        {/* Help Link */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => { navigate("/help"); onClose(); }}
+          className="w-full mt-2 rounded-xl flex items-center justify-center gap-1.5 text-muted-foreground hover:text-foreground h-8 text-xs"
+        >
+          <HelpCircle size={14} /> Help & FAQ
+        </Button>
       </div>
     </div>
   );

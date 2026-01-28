@@ -193,7 +193,7 @@ export default function Settings() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/chat")}
             className="rounded-full"
           >
             <ArrowLeft size={20} />

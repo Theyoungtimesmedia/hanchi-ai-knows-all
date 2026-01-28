@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useChat } from "@/hooks/useChat";
 import { useConversationHistory } from "@/hooks/useConversationHistory";
 import { useUserMemory } from "@/hooks/useUserMemory";
@@ -12,11 +12,13 @@ import { EnhancedQuickActions } from "@/components/EnhancedQuickActions";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
 import { AIModelSelector } from "@/components/AIModelSelector";
 import { ToneSelector } from "@/components/ToneSelector";
-import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, Search } from "lucide-react";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { QuickSearchModal } from "@/components/QuickSearchModal";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, Search, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { analytics } from "@/utils/analytics";
 import { useToast } from "@/hooks/use-toast";
@@ -35,8 +37,11 @@ export default function Index() {
   });
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showQuickSearch, setShowQuickSearch] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
@@ -96,6 +101,60 @@ export default function Index() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handle prefilled prompts from navigation
+  useEffect(() => {
+    const state = location.state as { prefillPrompt?: string } | null;
+    if (state?.prefillPrompt && isInitialized && user) {
+      handleSend(state.prefillPrompt);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, isInitialized, user]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for meta/ctrl key combinations
+      if (e.metaKey || e.ctrlKey) {
+        switch (e.key.toLowerCase()) {
+          case 'k':
+            e.preventDefault();
+            setShowQuickSearch(true);
+            break;
+          case 'n':
+            e.preventDefault();
+            handleNewConversation();
+            break;
+          case 'p':
+            e.preventDefault();
+            navigate('/prompts');
+            break;
+          case ',':
+            e.preventDefault();
+            navigate('/settings');
+            break;
+          case '/':
+          case '?':
+            e.preventDefault();
+            setShowShortcuts(true);
+            break;
+          case 'b':
+            e.preventDefault();
+            setSidebarOpen(prev => !prev);
+            break;
+        }
+      }
+      // Escape to close modals
+      if (e.key === 'Escape') {
+        setShowShortcuts(false);
+        setShowQuickSearch(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
   const handleNewConversation = async () => {
     setCurrentConversationId(null);
@@ -164,6 +223,19 @@ export default function Index() {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <OfflineIndicator />
+      
+      {/* Modals */}
+      <KeyboardShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
+      <QuickSearchModal 
+        open={showQuickSearch} 
+        onOpenChange={setShowQuickSearch}
+        conversations={conversations}
+        onSelectConversation={(id) => {
+          setCurrentConversationId(id);
+          setShowQuickSearch(false);
+        }}
+        onNewConversation={handleNewConversation}
+      />
       
       {sidebarOpen && (
         <div 
@@ -272,7 +344,7 @@ export default function Index() {
                   disabled={isLoading}
                   className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <ImagePlus className="w-4 h-4 text-purple-500" />
+                  <ImagePlus className="w-4 h-4 text-accent-foreground" />
                   <span className="text-sm font-medium">Create image</span>
                 </Button>
                 
@@ -282,7 +354,7 @@ export default function Index() {
                   disabled={isLoading}
                   className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Sparkles className="w-4 h-4 text-primary" />
                   <span className="text-sm font-medium">Surprise me</span>
                 </Button>
                 
@@ -292,12 +364,25 @@ export default function Index() {
                   disabled={isLoading}
                   className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <PenLine className="w-4 h-4 text-green-500" />
+                  <PenLine className="w-4 h-4 text-emerald-500" />
                   <span className="text-sm font-medium">Help me write</span>
                 </Button>
                 
-                <EnhancedQuickActions onAction={handleQuickAction} disabled={isLoading} />
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/prompts")}
+                  disabled={isLoading}
+                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <BookOpen className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Prompt Library</span>
+                </Button>
               </div>
+
+              {/* Keyboard shortcut hint */}
+              <p className="text-xs text-muted-foreground mt-6">
+                Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">⌘K</kbd> for quick actions
+              </p>
             </div>
           ) : (
             <div className="max-w-3xl mx-auto pt-4">
