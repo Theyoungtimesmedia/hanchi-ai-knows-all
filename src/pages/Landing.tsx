@@ -52,6 +52,13 @@ export default function Landing() {
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
+                onClick={() => navigate("/help")}
+                className="text-muted-foreground hover:text-foreground hidden sm:inline-flex"
+              >
+                Help
+              </Button>
+              <Button 
+                variant="ghost" 
                 onClick={() => navigate("/auth")}
                 className="text-muted-foreground hover:text-foreground"
               >
