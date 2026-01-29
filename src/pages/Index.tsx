@@ -3,26 +3,32 @@ import { useChat } from "@/hooks/useChat";
 import { useConversationHistory } from "@/hooks/useConversationHistory";
 import { useUserMemory } from "@/hooks/useUserMemory";
 import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
-import { FloatingInput } from "@/components/FloatingInput";
+import { FloatingInputV2 } from "@/components/FloatingInputV2";
+import { ActiveAddons } from "@/components/EnhancedPlusMenu";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NoseSphere } from "@/components/NoseSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
-import { EnhancedQuickActions } from "@/components/EnhancedQuickActions";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
 import { AIModelSelector } from "@/components/AIModelSelector";
 import { ToneSelector } from "@/components/ToneSelector";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { QuickSearchModal } from "@/components/QuickSearchModal";
-import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, Search, BookOpen } from "lucide-react";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 import { analytics } from "@/utils/analytics";
 import { useToast } from "@/hooks/use-toast";
 
+interface CustomGPT {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string;
+  emoji: string;
+}
 
 export default function Index() {
   const [language, setLanguage] = useState("en");
@@ -31,14 +37,11 @@ export default function Index() {
   const [user, setUser] = useState<User | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [thinkModeEnabled, setThinkModeEnabled] = useState(() => {
-    const saved = localStorage.getItem('hanchi_think_mode');
-    return saved !== null ? JSON.parse(saved) : false;
-  });
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickSearch, setShowQuickSearch] = useState(false);
+  const [activeCustomGPT, setActiveCustomGPT] = useState<CustomGPT | null>(null);
+  const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -50,13 +53,26 @@ export default function Index() {
   const chatOptions = {
     model: selectedModel,
     tone: selectedTone,
-    thinkMode: thinkModeEnabled,
-    searchWeb: webSearchEnabled,
+    thinkMode: activeAddons.thinking || false,
+    searchWeb: activeAddons.search || false,
+    deepResearch: activeAddons.deepResearch || false,
+    customSystemPrompt: activeCustomGPT?.systemPrompt || "",
   };
   
   const { messages, isLoading, isStreaming, sendMessage, regenerateLastMessage, editMessage, stopGeneration } = 
     useChat(language, currentConversationId, user?.id || null, chatOptions);
-  const { getMemoryContext } = useUserMemory(user?.id || null);
+  const { getMemoryContext, addMemory } = useUserMemory(user?.id || null);
+
+  // Check for active custom GPT on load
+  useEffect(() => {
+    const saved = sessionStorage.getItem('hanchi_active_custom_gpt');
+    if (saved) {
+      try {
+        setActiveCustomGPT(JSON.parse(saved));
+        sessionStorage.removeItem('hanchi_active_custom_gpt');
+      } catch (e) {}
+    }
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -95,10 +111,6 @@ export default function Index() {
   }, [navigate]);
 
   useEffect(() => {
-    localStorage.setItem('hanchi_think_mode', JSON.stringify(thinkModeEnabled));
-  }, [thinkModeEnabled]);
-
-  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -107,7 +119,6 @@ export default function Index() {
     const state = location.state as { prefillPrompt?: string } | null;
     if (state?.prefillPrompt && isInitialized && user) {
       handleSend(state.prefillPrompt);
-      // Clear the state
       window.history.replaceState({}, document.title);
     }
   }, [location.state, isInitialized, user]);
@@ -115,7 +126,6 @@ export default function Index() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for meta/ctrl key combinations
       if (e.metaKey || e.ctrlKey) {
         switch (e.key.toLowerCase()) {
           case 'k':
@@ -145,7 +155,6 @@ export default function Index() {
             break;
         }
       }
-      // Escape to close modals
       if (e.key === 'Escape') {
         setShowShortcuts(false);
         setShowQuickSearch(false);
@@ -157,17 +166,29 @@ export default function Index() {
   }, [navigate]);
 
   const handleNewConversation = async () => {
+    // Instant new conversation - just clear state
     setCurrentConversationId(null);
+    setActiveCustomGPT(null);
   };
 
-  const handleSend = async (content: string, images?: string[]) => {
+  const handleSend = async (content: string, images?: string[], addons?: ActiveAddons) => {
+    // Merge addons if provided
+    if (addons) {
+      setActiveAddons(addons);
+    }
+    
+    // Create conversation instantly if needed
     if (!currentConversationId) {
       const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
-      const convId = await createConversation(title, language);
-      if (convId) {
-        setCurrentConversationId(convId);
-      }
+      // Create conversation in background - don't wait
+      createConversation(title, language).then(convId => {
+        if (convId) {
+          setCurrentConversationId(convId);
+        }
+      });
     }
+    
+    // Send message immediately
     await sendMessage(content, images);
   };
 
@@ -178,14 +199,6 @@ export default function Index() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
-  };
-
-  const handleToggleThinking = (enabled: boolean) => {
-    setThinkModeEnabled(enabled);
-    toast({
-      title: enabled ? "Think Mode ON 💭" : "Think Mode OFF",
-      description: enabled ? "Hanchi will analyze deeper before responding" : "Quick responses enabled",
-    });
   };
 
   const detectMessageType = (content: string): 'code' | 'text' | 'list' | 'table' | 'explanation' => {
@@ -276,35 +289,26 @@ export default function Index() {
               <Menu size={18} />
             </Button>
             
-            <AIModelSelector 
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-            />
+            {activeCustomGPT ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10">
+                <span className="text-lg">{activeCustomGPT.emoji}</span>
+                <span className="text-sm font-medium">{activeCustomGPT.name}</span>
+                <button 
+                  onClick={() => setActiveCustomGPT(null)}
+                  className="text-xs text-muted-foreground hover:text-foreground ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <AIModelSelector 
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+              />
+            )}
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Web Search Toggle */}
-            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg bg-muted/50">
-              <Search size={14} className={webSearchEnabled ? "text-primary" : "text-muted-foreground"} />
-              <span className="text-xs text-muted-foreground">Web</span>
-              <Switch
-                checked={webSearchEnabled}
-                onCheckedChange={setWebSearchEnabled}
-                className="scale-75"
-              />
-            </div>
-            
-            {/* Think Mode Toggle */}
-            <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg bg-muted/50">
-              <span className="text-xs">💭</span>
-              <span className="text-xs text-muted-foreground">Think</span>
-              <Switch
-                checked={thinkModeEnabled}
-                onCheckedChange={handleToggleThinking}
-                className="scale-75"
-              />
-            </div>
-            
             <ToneSelector 
               selectedTone={selectedTone}
               onToneChange={setSelectedTone}
@@ -330,10 +334,10 @@ export default function Index() {
               <NoseSphere />
               
               <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-2 text-center">
-                What can I help with?
+                {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I help with?"}
               </h2>
               <p className="text-muted-foreground text-center text-sm max-w-md mb-8">
-                Ask me anything - I'll nose out the answer for you.
+                {activeCustomGPT?.description || "Ask me anything - I'll nose out the answer for you."}
               </p>
               
               {/* Quick Action Grid */}
@@ -344,7 +348,7 @@ export default function Index() {
                   disabled={isLoading}
                   className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <ImagePlus className="w-4 h-4 text-accent-foreground" />
+                  <ImagePlus className="w-4 h-4 text-purple-500" />
                   <span className="text-sm font-medium">Create image</span>
                 </Button>
                 
@@ -379,8 +383,18 @@ export default function Index() {
                 </Button>
               </div>
 
+              {/* Custom GPT Link */}
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/custom-gpt")}
+                className="mt-4 gap-2 text-muted-foreground"
+              >
+                <Bot size={16} />
+                Build Custom GPT
+              </Button>
+
               {/* Keyboard shortcut hint */}
-              <p className="text-xs text-muted-foreground mt-6">
+              <p className="text-xs text-muted-foreground mt-4">
                 Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">⌘K</kbd> for quick actions
               </p>
             </div>
@@ -445,15 +459,11 @@ export default function Index() {
 
         {/* Floating Input */}
         <div className="absolute bottom-4 left-0 right-0 px-4 md:px-6 z-20">
-          <FloatingInput
+          <FloatingInputV2
             onSend={handleSend}
             disabled={isLoading}
             language={language}
-            activeFeatures={{
-              thinking: thinkModeEnabled,
-              webSearch: webSearchEnabled,
-            }}
-            onToggleThinking={handleToggleThinking}
+            placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Ask Hanchi..."}
           />
         </div>
       </div>

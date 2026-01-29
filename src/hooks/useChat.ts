@@ -26,6 +26,8 @@ interface ChatOptions {
   tone?: string;
   thinkMode?: boolean;
   searchWeb?: boolean;
+  deepResearch?: boolean;
+  customSystemPrompt?: string;
 }
 
 export const useChat = (
@@ -170,6 +172,9 @@ export const useChat = (
             model: options?.model || "gemini-flash",
             tone: options?.tone || "default",
             thinkMode: options?.thinkMode ?? false,
+            deepResearch: options?.deepResearch ?? false,
+            customSystemPrompt: options?.customSystemPrompt || "",
+            learnUserData: true,
           }),
           signal: abortControllerRef.current.signal,
         });

@@ -7,6 +7,7 @@ import Landing from "./pages/Landing";
 import Prompts from "./pages/Prompts";
 import Help from "./pages/Help";
 import Discover from "./pages/Discover";
+import CustomGPT from "./pages/CustomGPT";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -19,6 +20,7 @@ const App = () => (
     <Route path="/prompts" element={<Prompts />} />
     <Route path="/help" element={<Help />} />
     <Route path="/discover" element={<Discover />} />
+    <Route path="/custom-gpt" element={<CustomGPT />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
