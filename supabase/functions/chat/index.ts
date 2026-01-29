@@ -20,7 +20,10 @@ serve(async (req) => {
       model = "gemini-flash",
       tone = "default",
       thinkMode = false,
-      webSearchQuery = ""
+      webSearchQuery = "",
+      customSystemPrompt = "",
+      learnUserData = true,
+      deepResearch = false
     } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -135,6 +138,7 @@ serve(async (req) => {
 • Model: ${selectedModel}
 • Tone: ${tone}
 • Think Mode: ${thinkMode ? 'ON' : 'OFF'}
+• Deep Research: ${deepResearch ? 'ON' : 'OFF'}
 • Web Search: ${webSources.length > 0 ? `Found ${webSources.length} sources` : 'Not used'}
 • Nigerian Context: ${contextSources.length > 0 ? `${contextSources.length} entries` : 'None'}
 • Confidence: ${confidence}%`;
@@ -149,9 +153,31 @@ serve(async (req) => {
       "worried": "Be empathetic and understanding. Acknowledge concerns and provide reassurance.",
     };
 
-    const systemPrompt = buildSystemPrompt(language, tone, toneInstructions[tone] || "", thinkMode) + 
-      nigerianContext + webContext + 
-      (userMemory ? `\n\nUSER MEMORY:\n${userMemory}` : '');
+    // User learning instructions
+    const userLearningPrompt = learnUserData ? `
+
+USER LEARNING MODE (ACTIVE):
+Pay attention to any personal information the user shares:
+- Name, age, gender, location
+- Occupation, school, interests, hobbies
+- Goals, challenges, preferences
+- Communication style preferences
+
+When you learn something new about the user, acknowledge it naturally. For example:
+- If they mention their name: "Nice to meet you, [name]!"
+- If they share their profession: "Oh you're a [profession]? That's interesting!"
+
+Use this information to personalize future responses.
+` : '';
+
+    // Custom GPT system prompt takes precedence
+    const baseSystemPrompt = customSystemPrompt || buildSystemPrompt(language, tone, toneInstructions[tone] || "", thinkMode);
+    
+    const systemPrompt = baseSystemPrompt + 
+      userLearningPrompt +
+      nigerianContext + 
+      webContext + 
+      (userMemory ? `\n\nUSER MEMORY (What you remember about this user):\n${userMemory}` : '');
 
     // Process messages for multimodal content
     const processedMessages = messages.map((msg: any) => {

@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
-  ArrowLeft, Search, Mail, FileText, Code, Calculator, 
-  Languages, Briefcase, Lightbulb, BookOpen, Music,
+  ArrowLeft, Search, Code, 
   MessageSquare, Sparkles, PenTool, GraduationCap,
-  TrendingUp, Heart, Utensils, Plane
+  TrendingUp, Heart, Music, Edit3, Send, Copy, Check
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface PromptTemplate {
   id: string;
@@ -312,8 +313,12 @@ const CATEGORIES = [
 
 export default function Prompts() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [editingPrompt, setEditingPrompt] = useState<PromptTemplate | null>(null);
+  const [editedText, setEditedText] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const filteredPrompts = PROMPT_TEMPLATES.filter(prompt => {
     const matchesSearch = prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -322,15 +327,27 @@ export default function Prompts() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleUsePrompt = (prompt: PromptTemplate) => {
-    // Navigate to chat with the prompt pre-filled
-    navigate("/chat", { state: { prefillPrompt: prompt.prompt } });
+  const handleOpenPrompt = (prompt: PromptTemplate) => {
+    setEditingPrompt(prompt);
+    setEditedText(prompt.prompt);
+  };
+
+  const handleSendPrompt = () => {
+    if (!editedText.trim()) return;
+    navigate("/chat", { state: { prefillPrompt: editedText } });
+  };
+
+  const handleCopyPrompt = async () => {
+    await navigator.clipboard.writeText(editedText);
+    setCopied(true);
+    toast({ title: "Copied to clipboard!" });
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border p-4">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-lg border-b border-border p-4">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
           <Button
             variant="ghost"
@@ -343,7 +360,7 @@ export default function Prompts() {
           <div className="flex-1">
             <h1 className="text-xl font-bold">Prompt Library</h1>
             <p className="text-sm text-muted-foreground">
-              Ready-to-use prompts for any task
+              Ready-to-use prompts • Click to edit & send
             </p>
           </div>
         </div>
@@ -389,15 +406,16 @@ export default function Prompts() {
           {filteredPrompts.map((prompt) => (
             <button
               key={prompt.id}
-              onClick={() => handleUsePrompt(prompt)}
+              onClick={() => handleOpenPrompt(prompt)}
               className="flex items-start gap-4 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all text-left group"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform">
                 {prompt.emoji}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground mb-1">
+                <h3 className="font-semibold text-foreground mb-1 flex items-center gap-2">
                   {prompt.title}
+                  <Edit3 size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </h3>
                 <p className="text-sm text-muted-foreground line-clamp-2">
                   {prompt.description}
@@ -413,6 +431,44 @@ export default function Prompts() {
           </div>
         )}
       </div>
+
+      {/* Edit & Send Dialog */}
+      <Dialog open={!!editingPrompt} onOpenChange={() => setEditingPrompt(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <span className="text-2xl">{editingPrompt?.emoji}</span>
+              {editingPrompt?.title}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Edit the prompt below to customize it, then send to Hanchi
+            </p>
+            <Textarea
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+              className="min-h-[200px] resize-none"
+              placeholder="Enter your prompt..."
+            />
+            <p className="text-xs text-muted-foreground">
+              💡 Tip: Replace the [BRACKETED] parts with your specific details
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button variant="outline" onClick={handleCopyPrompt} className="gap-2">
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              Copy
+            </Button>
+            <Button onClick={handleSendPrompt} className="gap-2 flex-1">
+              <Send size={16} />
+              Send to Hanchi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
