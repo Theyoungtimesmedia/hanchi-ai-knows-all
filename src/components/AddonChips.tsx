@@ -9,29 +9,29 @@ interface AddonChipsProps {
 
 const addonConfig: Record<keyof ActiveAddons, { icon: React.ReactNode; label: string; color: string }> = {
   search: { 
-    icon: <Globe size={12} />, 
-    label: "Search", 
-    color: "bg-blue-500/20 text-blue-600 border-blue-500/30" 
+    icon: <Globe size={14} />, 
+    label: "Web Search", 
+    color: "bg-sky-500/15 text-sky-600 border-sky-500/30 dark:bg-sky-500/20 dark:text-sky-400" 
   },
   thinking: { 
-    icon: <Lightbulb size={12} />, 
-    label: "Thinking", 
-    color: "bg-yellow-500/20 text-yellow-600 border-yellow-500/30" 
+    icon: <Lightbulb size={14} />, 
+    label: "Think Deeper", 
+    color: "bg-amber-500/15 text-amber-600 border-amber-500/30 dark:bg-amber-500/20 dark:text-amber-400" 
   },
   jailbreak: { 
-    icon: <Shield size={12} />, 
+    icon: <Shield size={14} />, 
     label: "Unrestricted", 
-    color: "bg-red-500/20 text-red-600 border-red-500/30" 
+    color: "bg-red-500/15 text-red-600 border-red-500/30 dark:bg-red-500/20 dark:text-red-400" 
   },
   deepResearch: { 
-    icon: <Brain size={12} />, 
+    icon: <Brain size={14} />, 
     label: "Deep Research", 
-    color: "bg-indigo-500/20 text-indigo-600 border-indigo-500/30" 
+    color: "bg-indigo-500/15 text-indigo-600 border-indigo-500/30 dark:bg-indigo-500/20 dark:text-indigo-400" 
   },
   study: { 
-    icon: <GraduationCap size={12} />, 
+    icon: <GraduationCap size={14} />, 
     label: "Study Mode", 
-    color: "bg-orange-500/20 text-orange-600 border-orange-500/30" 
+    color: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-400" 
   },
 };
 
@@ -43,7 +43,7 @@ export const AddonChips = ({ activeAddons, onRemove }: AddonChipsProps) => {
   if (activeKeys.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1.5 mb-2">
+    <div className="flex flex-wrap gap-2 mb-3 animate-fade-in">
       {activeKeys.map((key) => {
         const config = addonConfig[key];
         return (
@@ -51,13 +51,14 @@ export const AddonChips = ({ activeAddons, onRemove }: AddonChipsProps) => {
             key={key}
             onClick={() => onRemove(key)}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all hover:scale-105 active:scale-95",
+              "flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium border transition-all",
+              "hover:scale-[1.02] active:scale-[0.98] shadow-sm",
               config.color
             )}
           >
             {config.icon}
             <span>{config.label}</span>
-            <X size={12} className="ml-0.5" />
+            <X size={14} className="ml-0.5 opacity-60 hover:opacity-100" />
           </button>
         );
       })}
