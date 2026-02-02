@@ -10,7 +10,11 @@ import {
   ThumbsDown,
   Edit3,
   Share2,
-  MoreHorizontal
+  MoreHorizontal,
+  Download,
+  ExternalLink,
+  Code,
+  FileText
 } from "lucide-react";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { Button } from "./ui/button";
@@ -20,8 +24,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface Source {
   title: string;
@@ -60,6 +66,7 @@ export const MessageBubbleV2 = ({
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(content);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const isAI = role === "assistant";
   const { speak, isPlaying, stop } = useTextToSpeech();
   const { toast } = useToast();
@@ -82,8 +89,8 @@ export const MessageBubbleV2 = ({
   const handleFeedback = (type: 'up' | 'down') => {
     setFeedback(type);
     toast({
-      title: type === 'up' ? "Thanks for the feedback! 👍" : "Sorry about that 👎",
-      description: type === 'up' ? "Glad I could help!" : "I'll try to do better next time.",
+      title: type === 'up' ? "Thanks for the feedback!" : "Sorry about that",
+      description: type === 'up' ? "Glad I could help!" : "I'll try to do better.",
     });
   };
 
@@ -110,90 +117,164 @@ export const MessageBubbleV2 = ({
     setIsEditing(false);
   };
 
+  const handleImageDownload = async (imageUrl: string, index: number) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hanchi-image-${index + 1}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: "Image downloaded" });
+    } catch (error) {
+      toast({ title: "Download failed", variant: "destructive" });
+    }
+  };
+
   const formattedTime = timestamp || new Date().toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit' 
   });
 
-  const getNoseConfidence = (conf: number) => {
-    if (conf >= 80) return { text: "👃✓ Confident", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
-    if (conf >= 60) return { text: "👃~ Likely", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" };
-    return { text: "👃? Uncertain", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" };
+  const getConfidenceBadge = (conf: number) => {
+    if (conf >= 80) return { 
+      text: "High confidence", 
+      color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
+    };
+    if (conf >= 60) return { 
+      text: "Medium confidence", 
+      color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" 
+    };
+    return { 
+      text: "Low confidence", 
+      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" 
+    };
   };
 
+  // Check if content has code blocks
+  const hasCodeBlock = content.includes('```');
+
   return (
-    <div className={`flex w-full mb-4 ${isAI ? 'justify-start' : 'justify-end'} animate-fade-in group`}>
-      <div className={`flex flex-col max-w-[85%] md:max-w-[75%] ${isAI ? 'items-start' : 'items-end'}`}>
+    <div className={cn(
+      "flex w-full mb-6 group",
+      isAI ? 'justify-start' : 'justify-end'
+    )}>
+      <div className={cn(
+        "flex flex-col max-w-[88%] md:max-w-[80%]",
+        isAI ? 'items-start' : 'items-end'
+      )}>
         
         {/* Avatar and Name */}
-        <div className={`flex items-center gap-2 mb-1 ${isAI ? '' : 'flex-row-reverse'}`}>
+        <div className={cn(
+          "flex items-center gap-2.5 mb-2",
+          isAI ? '' : 'flex-row-reverse'
+        )}>
           {isAI ? (
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs">
-              👃🏿
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/20">
+              <span className="text-primary-foreground font-bold text-sm">H</span>
             </div>
           ) : (
-            <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
-              You
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-sm">Y</span>
             </div>
           )}
-          <span className="text-xs text-muted-foreground font-medium">
+          <span className="text-sm font-medium text-foreground">
             {isAI ? 'Hanchi' : 'You'}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formattedTime}
           </span>
         </div>
 
         {/* Thought Process Accordion (AI Only) */}
         {isAI && thought && (
-          <div className="mb-2 w-full">
+          <div className="mb-3 w-full">
             <button 
               onClick={() => setShowThought(!showThought)}
-              className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50"
             >
-              {showThought ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-              <span>View thinking process</span>
+              {showThought ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              View thinking process
             </button>
             
             {showThought && (
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border text-xs text-muted-foreground animate-fade-in">
-                <pre className="whitespace-pre-wrap font-mono">{thought}</pre>
+              <div className="mt-2 p-4 bg-muted/30 rounded-xl border border-border text-sm text-muted-foreground animate-fade-in">
+                <pre className="whitespace-pre-wrap font-mono text-xs">{thought}</pre>
               </div>
             )}
           </div>
         )}
 
         {/* Message Content */}
-        <div className={`relative px-4 py-3 rounded-2xl text-sm leading-relaxed ${
+        <div className={cn(
+          "relative px-5 py-4 rounded-2xl text-base leading-relaxed",
           isAI 
-            ? 'bg-card text-foreground border border-border rounded-tl-sm' 
-            : 'bg-primary text-primary-foreground rounded-tr-sm'
-        }`}>
+            ? 'message-bubble-ai shadow-sm' 
+            : 'message-bubble-user shadow-md'
+        )}>
           {/* Images */}
           {images && images.length > 0 && (
-            <div className="mb-3 grid gap-2">
-              {images.map((img, i) => (
-                <img 
-                  key={i} 
-                  src={img.startsWith('data:') ? img : `data:image/jpeg;base64,${img}`} 
-                  alt="Upload" 
-                  className="rounded-lg max-h-48 object-cover w-full" 
-                />
-              ))}
+            <div className="mb-4 grid gap-3">
+              {images.map((img, i) => {
+                const imgSrc = img.startsWith('data:') || img.startsWith('http') 
+                  ? img 
+                  : `data:image/jpeg;base64,${img}`;
+                return (
+                  <div key={i} className="relative group/img">
+                    <img 
+                      src={imgSrc}
+                      alt="Image" 
+                      className="rounded-xl max-h-72 object-cover w-full cursor-pointer hover:opacity-95 transition-opacity"
+                      onClick={() => setSelectedImage(imgSrc)}
+                    />
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-8 w-8 rounded-lg bg-black/50 hover:bg-black/70 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleImageDownload(imgSrc, i);
+                        }}
+                      >
+                        <Download size={14} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-8 w-8 rounded-lg bg-black/50 hover:bg-black/70 text-white"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(imgSrc, '_blank');
+                        }}
+                      >
+                        <ExternalLink size={14} />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
           
           {/* Content - Edit mode for user messages */}
           {!isAI && isEditing ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full bg-transparent border-0 resize-none focus:outline-none min-h-[60px]"
+                className="w-full bg-transparent border-0 resize-none focus:outline-none min-h-[80px] text-primary-foreground"
                 autoFocus
               />
               <div className="flex gap-2 justify-end">
-                <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10">
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleEditSubmit}>
+                <Button size="sm" onClick={handleEditSubmit} className="bg-white/20 hover:bg-white/30 text-primary-foreground">
                   Save & Resend
                 </Button>
               </div>
@@ -206,76 +287,89 @@ export const MessageBubbleV2 = ({
 
           {/* Confidence badge */}
           {isAI && confidence && (
-            <div className="mt-2 pt-2 border-t border-border/50">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${getNoseConfidence(confidence).color}`}>
-                {getNoseConfidence(confidence).text}
+            <div className="mt-3 pt-3 border-t border-border/30">
+              <span className={cn(
+                "text-xs px-2.5 py-1 rounded-full font-medium",
+                getConfidenceBadge(confidence).color
+              )}>
+                {getConfidenceBadge(confidence).text}
               </span>
             </div>
           )}
         </div>
 
         {/* Actions Row */}
-        <div className="flex items-center gap-1 mt-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-[10px] text-muted-foreground mr-2">
-            {formattedTime}
-          </span>
-          
+        <div className="flex items-center gap-1 mt-2 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {isAI ? (
             <>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy} title="Copy">
+              <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground" onClick={handleCopy}>
                 {copied ? <Check size={14} /> : <Copy size={14} />}
+                <span className="text-xs">Copy</span>
               </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleSpeak} title="Read aloud">
+              <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground" onClick={handleSpeak}>
                 <Volume2 size={14} className={isPlaying ? 'text-primary' : ''} />
+                <span className="text-xs">{isPlaying ? 'Stop' : 'Read'}</span>
               </Button>
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className={`h-7 w-7 ${feedback === 'up' ? 'text-green-500' : ''}`} 
+                size="sm"
+                className={cn("h-8 px-2", feedback === 'up' && 'text-emerald-500')}
                 onClick={() => handleFeedback('up')}
-                title="Good response"
               >
                 <ThumbsUp size={14} />
               </Button>
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className={`h-7 w-7 ${feedback === 'down' ? 'text-red-500' : ''}`} 
+                size="sm"
+                className={cn("h-8 px-2", feedback === 'down' && 'text-red-500')}
                 onClick={() => handleFeedback('down')}
-                title="Bad response"
               >
                 <ThumbsDown size={14} />
               </Button>
               {onRegenerate && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRegenerate} title="Regenerate">
+                <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground" onClick={onRegenerate}>
                   <RefreshCw size={14} />
+                  <span className="text-xs">Retry</span>
                 </Button>
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <MoreHorizontal size={14} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem onClick={handleShare}>
                     <Share2 size={14} className="mr-2" /> Share
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopy}>
-                    <Copy size={14} className="mr-2" /> Copy
+                    <Copy size={14} className="mr-2" /> Copy all
                   </DropdownMenuItem>
+                  {hasCodeBlock && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => toast({ title: "Code copied" })}>
+                        <Code size={14} className="mr-2" /> Copy code
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toast({ title: "Feature coming soon" })}>
+                        <FileText size={14} className="mr-2" /> Download as file
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
             <>
               {onEdit && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsEditing(true)} title="Edit">
+                <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground" onClick={() => setIsEditing(true)}>
                   <Edit3 size={14} />
+                  <span className="text-xs">Edit</span>
                 </Button>
               )}
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy} title="Copy">
+              <Button variant="ghost" size="sm" className="h-8 px-2 gap-1.5 text-muted-foreground hover:text-foreground" onClick={handleCopy}>
                 {copied ? <Check size={14} /> : <Copy size={14} />}
+                <span className="text-xs">Copy</span>
               </Button>
             </>
           )}
@@ -283,24 +377,55 @@ export const MessageBubbleV2 = ({
 
         {/* Sources */}
         {isAI && sources && sources.length > 0 && (
-          <div className="mt-2 px-1 space-y-1">
-            <span className="text-[10px] text-muted-foreground font-medium">Sources:</span>
-            <div className="flex flex-wrap gap-1">
-              {sources.slice(0, 3).map((source, i) => (
-                <span key={i} className="text-[10px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground">
-                  {source.url ? (
-                    <a href={source.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-                      {source.title}
-                    </a>
-                  ) : (
-                    source.title
-                  )}
-                </span>
+          <div className="mt-3 px-1 space-y-2">
+            <span className="text-xs text-muted-foreground font-medium">Sources:</span>
+            <div className="flex flex-wrap gap-2">
+              {sources.slice(0, 4).map((source, i) => (
+                <a
+                  key={i}
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-muted/50 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ExternalLink size={12} />
+                  {source.title}
+                </a>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <img 
+              src={selectedImage} 
+              alt="Preview" 
+              className="max-w-full max-h-[90vh] object-contain rounded-xl"
+            />
+            <div className="absolute top-4 right-4 flex gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="bg-black/50 hover:bg-black/70 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleImageDownload(selectedImage, 0);
+                }}
+              >
+                <Download size={16} className="mr-2" />
+                Download
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

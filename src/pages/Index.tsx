@@ -114,14 +114,20 @@ export default function Index() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle prefilled prompts from navigation
+  // Handle prefilled prompts from sessionStorage (from Prompts page)
   useEffect(() => {
-    const state = location.state as { prefillPrompt?: string } | null;
-    if (state?.prefillPrompt && isInitialized && user) {
-      handleSend(state.prefillPrompt);
-      window.history.replaceState({}, document.title);
+    if (!isInitialized || !user) return;
+    
+    const prefillPrompt = sessionStorage.getItem('hanchi_prefill_prompt');
+    if (prefillPrompt) {
+      // Clear immediately to prevent re-triggers
+      sessionStorage.removeItem('hanchi_prefill_prompt');
+      // Small delay to ensure state is ready
+      setTimeout(() => {
+        handleSend(prefillPrompt);
+      }, 100);
     }
-  }, [location.state, isInitialized, user]);
+  }, [isInitialized, user]);
 
   // Keyboard shortcuts
   useEffect(() => {
