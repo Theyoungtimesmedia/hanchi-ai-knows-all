@@ -112,6 +112,14 @@ export default {
           from: { transform: "rotate(0deg)" },
           to: { transform: "rotate(360deg)" },
         },
+        "page-enter": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "chip-enter": {
+          from: { opacity: "0", transform: "scale(0.8)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -124,6 +132,8 @@ export default {
         "scale-in": "scale-in 0.2s ease-out",
         "bounce-slow": "bounce-slow 3s ease-in-out infinite",
         "spin-slow": "spin-slow 3s linear infinite",
+        "page-enter": "page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        "chip-enter": "chip-enter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
       },
     },
   },

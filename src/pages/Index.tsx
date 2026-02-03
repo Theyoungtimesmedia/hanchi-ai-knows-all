@@ -14,6 +14,8 @@ import { AIModelSelector } from "@/components/AIModelSelector";
 import { ToneSelector } from "@/components/ToneSelector";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { QuickSearchModal } from "@/components/QuickSearchModal";
+import { PageTransition } from "@/components/PageTransition";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -328,6 +330,8 @@ export default function Index() {
                 {language === 'en' ? 'EN' : language === 'ha' ? 'HA' : 'PID'}
               </span>
             </div>
+            
+            <ThemeToggle />
             
             <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10">
               <Bell size={18} />

@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
 import { useNavigate } from "react-router-dom";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface Conversation {
   id: string;
@@ -299,12 +300,13 @@ export const AppSidebar = ({
           </div>
         </button>
         
-        <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-3">
+          <ThemeToggle />
           <Button
             variant="outline"
             size="sm"
             onClick={onOpenSettings}
-            className="rounded-xl flex items-center justify-center gap-1.5 h-9 text-xs border-border/50"
+            className="flex-1 rounded-xl flex items-center justify-center gap-1.5 h-9 text-xs border-border/50"
           >
             <Settings size={14} /> Settings
           </Button>
@@ -312,7 +314,7 @@ export const AppSidebar = ({
             variant="outline"
             size="sm"
             onClick={onSignOut}
-            className="rounded-xl flex items-center justify-center gap-1.5 text-destructive hover:bg-destructive/10 hover:border-destructive/30 h-9 text-xs border-border/50"
+            className="flex-1 rounded-xl flex items-center justify-center gap-1.5 text-destructive hover:bg-destructive/10 hover:border-destructive/30 h-9 text-xs border-border/50"
           >
             <LogOut size={14} /> Logout
           </Button>
