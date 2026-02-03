@@ -174,15 +174,15 @@ export const MessageBubbleV2 = ({
           isAI ? '' : 'flex-row-reverse'
         )}>
           {isAI ? (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/20">
-              <span className="text-primary-foreground font-bold text-sm">H</span>
+            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+              <span className="text-sm">👃🏿</span>
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-sm">Y</span>
+            <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center border border-border/50">
+              <span className="text-foreground font-semibold text-sm">Y</span>
             </div>
           )}
-          <span className="text-sm font-medium text-foreground">
+          <span className="text-sm font-semibold text-foreground">
             {isAI ? 'Hanchi' : 'You'}
           </span>
           <span className="text-xs text-muted-foreground">

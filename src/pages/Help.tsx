@@ -147,21 +147,26 @@ export default function Help() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border p-4">
+      <div className="sticky top-0 z-10 glass border-b border-border/50 p-4">
         <div className="max-w-3xl mx-auto flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/chat")}
-            className="rounded-full"
+            className="rounded-xl h-10 w-10"
           >
             <ArrowLeft size={20} />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Help Center</h1>
-            <p className="text-sm text-muted-foreground">
-              Everything you need to know about Hanchi
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+              <span className="text-lg">👃🏿</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Help Center</h1>
+              <p className="text-xs text-muted-foreground">
+                Everything about Hanchi
+              </p>
+            </div>
           </div>
         </div>
       </div>
