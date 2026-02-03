@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import App from "./App";
 import "./index.css";
 import { initializePlugins } from './plugins';
@@ -31,13 +32,15 @@ if (container) {
   const root = createRoot(container);
   root.render(
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Toaster />
-          <Sonner />
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange={false}>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <Toaster />
+            <Sonner />
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

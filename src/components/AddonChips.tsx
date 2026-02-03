@@ -7,32 +7,12 @@ interface AddonChipsProps {
   onRemove: (addon: keyof ActiveAddons) => void;
 }
 
-const addonConfig: Record<keyof ActiveAddons, { icon: React.ReactNode; label: string; color: string }> = {
-  search: { 
-    icon: <Globe size={14} />, 
-    label: "Web Search", 
-    color: "bg-sky-500/15 text-sky-600 border-sky-500/30 dark:bg-sky-500/20 dark:text-sky-400" 
-  },
-  thinking: { 
-    icon: <Lightbulb size={14} />, 
-    label: "Think Deeper", 
-    color: "bg-amber-500/15 text-amber-600 border-amber-500/30 dark:bg-amber-500/20 dark:text-amber-400" 
-  },
-  jailbreak: { 
-    icon: <Shield size={14} />, 
-    label: "Unrestricted", 
-    color: "bg-red-500/15 text-red-600 border-red-500/30 dark:bg-red-500/20 dark:text-red-400" 
-  },
-  deepResearch: { 
-    icon: <Brain size={14} />, 
-    label: "Deep Research", 
-    color: "bg-indigo-500/15 text-indigo-600 border-indigo-500/30 dark:bg-indigo-500/20 dark:text-indigo-400" 
-  },
-  study: { 
-    icon: <GraduationCap size={14} />, 
-    label: "Study Mode", 
-    color: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-400" 
-  },
+const addonConfig: Record<keyof ActiveAddons, { icon: React.ReactNode; label: string }> = {
+  search: { icon: <Globe size={14} />, label: "Web Search" },
+  thinking: { icon: <Lightbulb size={14} />, label: "Think Deeper" },
+  jailbreak: { icon: <Shield size={14} />, label: "Unrestricted" },
+  deepResearch: { icon: <Brain size={14} />, label: "Deep Research" },
+  study: { icon: <GraduationCap size={14} />, label: "Study Mode" },
 };
 
 export const AddonChips = ({ activeAddons, onRemove }: AddonChipsProps) => {
@@ -43,22 +23,25 @@ export const AddonChips = ({ activeAddons, onRemove }: AddonChipsProps) => {
   if (activeKeys.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-2 mb-3 animate-fade-in">
-      {activeKeys.map((key) => {
+    <div className="flex flex-wrap gap-2 mb-3">
+      {activeKeys.map((key, index) => {
         const config = addonConfig[key];
         return (
           <button
             key={key}
             onClick={() => onRemove(key)}
             className={cn(
-              "flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-sm font-medium border transition-all",
-              "hover:scale-[1.02] active:scale-[0.98] shadow-sm",
-              config.color
+              "flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all",
+              "bg-primary/10 text-primary border-primary/20",
+              "hover:bg-primary/15 hover:border-primary/30 hover:scale-[1.02]",
+              "active:scale-[0.98] shadow-sm",
+              "animate-chip-enter addon-chip-active"
             )}
+            style={{ animationDelay: `${index * 50}ms` }}
           >
-            {config.icon}
+            <span className="text-primary">{config.icon}</span>
             <span>{config.label}</span>
-            <X size={14} className="ml-0.5 opacity-60 hover:opacity-100" />
+            <X size={14} className="ml-0.5 opacity-70 hover:opacity-100 transition-opacity" />
           </button>
         );
       })}

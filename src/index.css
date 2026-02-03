@@ -571,3 +571,139 @@ code[class*="language-"] {
 .skeleton-avatar {
   @apply w-10 h-10 bg-muted animate-pulse rounded-full;
 }
+
+/* =====================================================
+   PAGE TRANSITIONS
+   ===================================================== */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-page-exit {
+  animation: page-exit 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* =====================================================
+   MICRO-INTERACTIONS
+   ===================================================== */
+
+/* Interactive Scale */
+.hover-lift {
+  @apply transition-all duration-200;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -8px hsl(var(--primary) / 0.2);
+}
+
+.hover-lift:active {
+  transform: translateY(0);
+}
+
+/* Button Press Effect */
+.press-effect {
+  @apply transition-transform duration-150 active:scale-[0.97];
+}
+
+/* Input Focus Animation */
+@keyframes input-focus-ring {
+  0% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+  }
+}
+
+.input-focus-animate:focus {
+  animation: input-focus-ring 0.2s ease-out forwards;
+}
+
+/* Chip Animation */
+@keyframes chip-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes chip-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.animate-chip-enter {
+  animation: chip-enter 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-chip-exit {
+  animation: chip-exit 0.15s ease-out forwards;
+}
+
+/* Card Hover Glow */
+.card-glow-hover {
+  @apply transition-all duration-300;
+}
+
+.card-glow-hover:hover {
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.06),
+    0 0 0 1px hsl(var(--primary) / 0.1);
+}
+
+/* Theme Transition */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* =====================================================
+   ADDON CHIPS ANIMATION
+   ===================================================== */
+
+@keyframes addon-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+  }
+}
+
+.addon-chip-active {
+  animation: addon-pulse 2s ease-in-out infinite;
+}

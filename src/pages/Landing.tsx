@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Brain, Globe, Mic, Image as ImageIcon, Search, Sparkles, MessageSquare, Zap, Shield, CheckCircle2 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { PageTransition } from "@/components/PageTransition";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -46,6 +48,7 @@ export default function Landing() {
   ];
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/30">
@@ -60,7 +63,8 @@ export default function Landing() {
                 <span className="hidden sm:inline text-xs text-muted-foreground ml-2">The AI That Knows</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/help")}
@@ -278,5 +282,6 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+    </PageTransition>
   );
 }

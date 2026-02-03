@@ -122,44 +122,49 @@ export const FloatingInputV2 = ({
   const activeAddonCount = Object.values(activeAddons).filter(Boolean).length;
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-2">
+    <div className="w-full max-w-3xl mx-auto space-y-3">
       {/* Active Addons Chips */}
       <AddonChips activeAddons={activeAddons} onRemove={handleRemoveAddon} />
 
       {/* Command hint */}
       {command && (
         <div className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium animate-fade-in",
-          command.type === "image" && "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-          command.type === "sticker" && "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+          "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium animate-chip-enter border",
+          command.type === "image" && "bg-accent/50 text-accent-foreground border-primary/20",
+          command.type === "sticker" && "bg-accent/50 text-accent-foreground border-primary/20"
         )}>
-          {command.type === "image" ? <ImageIcon size={16} /> : <Sticker size={16} />}
+          {command.type === "image" ? <ImageIcon size={18} /> : <Sticker size={18} />}
           {command.hint}
         </div>
       )}
 
       {/* Main Input Container */}
-      <div className="relative bg-card rounded-2xl shadow-premium border border-border/50 transition-all duration-200 hover:border-border focus-within:border-primary/30 focus-within:shadow-lg">
+      <div className={cn(
+        "relative bg-card rounded-2xl shadow-premium border transition-all duration-300",
+        hasContent || activeAddonCount > 0
+          ? "border-primary/30 shadow-lg ring-2 ring-primary/5"
+          : "border-border/50 hover:border-border"
+      )}>
         {/* Image Preview */}
         {imagePreview && (
-          <div className="p-3 pb-0">
-            <div className="relative inline-block">
+          <div className="p-4 pb-0 animate-scale-in">
+            <div className="relative inline-block group">
               <img 
                 src={imagePreview}
                 alt="Upload preview" 
-                className="h-20 w-20 rounded-xl object-cover border border-border"
+                className="h-24 w-24 rounded-xl object-cover border-2 border-border shadow-md transition-transform group-hover:scale-105"
               />
               <button
                 onClick={clearImage}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs shadow-md hover:scale-110 transition-transform"
+                className="absolute -top-2 -right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform press-effect"
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
           </div>
         )}
 
-        <div className="flex items-end gap-2 p-2">
+        <div className="flex items-end gap-2 p-3">
           {/* Plus Menu Button */}
           <EnhancedPlusMenu
             disabled={disabled}
@@ -190,22 +195,22 @@ export const FloatingInputV2 = ({
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled}
-              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none py-4 px-2 text-foreground placeholder-muted-foreground text-base leading-relaxed max-h-[140px] scrollbar-thin"
+              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none py-4 px-2 text-foreground placeholder-muted-foreground text-base leading-relaxed max-h-[140px] scrollbar-thin transition-colors"
               rows={1}
               style={{ minHeight: '56px' }}
             />
           </div>
           
           {/* Right side buttons */}
-          <div className="flex items-center gap-1 pb-2">
+          <div className="flex items-center gap-1.5 pb-2">
             {/* Voice Recording Button */}
             <Button
               variant="ghost"
               size="icon"
               className={cn(
-                "h-10 w-10 rounded-xl transition-all",
+                "h-11 w-11 rounded-xl transition-all duration-200 press-effect",
                 isRecording 
-                  ? 'text-destructive bg-destructive/10 animate-pulse' 
+                  ? 'text-destructive bg-destructive/10 animate-pulse ring-2 ring-destructive/30' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
               onClick={handleVoiceClick}
@@ -224,9 +229,9 @@ export const FloatingInputV2 = ({
               disabled={disabled || !hasContent}
               size="icon"
               className={cn(
-                "h-10 w-10 rounded-xl transition-all",
+                "h-11 w-11 rounded-xl transition-all duration-200 press-effect",
                 hasContent 
-                  ? 'bg-primary text-primary-foreground shadow-md hover:shadow-lg hover:scale-105' 
+                  ? 'bg-primary text-primary-foreground shadow-md hover:shadow-lg hover:-translate-y-0.5' 
                   : 'bg-muted text-muted-foreground'
               )}
             >
@@ -241,8 +246,8 @@ export const FloatingInputV2 = ({
       </div>
 
       {/* Helper text */}
-      <p className="text-center text-xs text-muted-foreground">
-        Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd> to send, <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Shift+Enter</kbd> for new line
+      <p className="text-center text-xs text-muted-foreground opacity-70">
+        Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono border border-border/50">Enter</kbd> to send · <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono border border-border/50">Shift+Enter</kbd> for new line
       </p>
     </div>
   );
