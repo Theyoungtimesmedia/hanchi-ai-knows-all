@@ -192,21 +192,26 @@ export default function Discover() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-card/80 backdrop-blur-lg border-b border-border p-4">
+      <div className="sticky top-0 z-10 glass border-b border-border/50 p-4">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/chat")}
-            className="rounded-full"
+            className="rounded-xl h-10 w-10"
           >
             <ArrowLeft size={20} />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Discover Hanchi</h1>
-            <p className="text-sm text-muted-foreground">
-              Explore everything Hanchi can do
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+              <span className="text-lg">👃🏿</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-foreground">Discover Hanchi</h1>
+              <p className="text-xs text-muted-foreground">
+                Explore all features
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -214,12 +219,17 @@ export default function Discover() {
       <div className="flex-1 p-4 max-w-4xl mx-auto w-full">
         {/* Hero */}
         <div className="text-center py-8 mb-6">
-          <div className="text-6xl mb-4 animate-bounce-slow">👃🏿</div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+          <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4">
+            <div className="absolute inset-0 bg-primary/15 rounded-full blur-2xl animate-pulse" />
+            <div className="relative w-20 h-20 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center nose-sphere">
+              <span className="text-4xl">👃🏿</span>
+            </div>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">
             What can Hanchi nose out for you?
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            From writing essays to creating images, translating languages to solving math - 
+            From writing essays to creating images, translating languages to solving math — 
             discover all the ways Hanchi can help you.
           </p>
         </div>

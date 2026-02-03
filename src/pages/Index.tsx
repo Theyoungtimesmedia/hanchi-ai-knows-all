@@ -227,9 +227,11 @@ export default function Index() {
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center animate-in fade-in duration-300">
-          <div className="text-4xl mb-4 animate-bounce">👃🏿</div>
-          <p className="text-muted-foreground">Loading Hanchi...</p>
+        <div className="text-center animate-fade-in">
+          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/25 nose-sphere">
+            <span className="text-4xl">👃🏿</span>
+          </div>
+          <p className="text-muted-foreground font-medium">Loading Hanchi...</p>
         </div>
       </div>
     );
@@ -284,24 +286,24 @@ export default function Index() {
 
       <div className="flex-1 flex flex-col relative w-full max-w-full">
         {/* Header */}
-        <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-sm border-b border-border/50">
-          <div className="flex items-center gap-2">
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-xl border-b border-border/50">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden rounded-lg h-9 w-9"
+              className="md:hidden rounded-xl h-10 w-10"
             >
-              <Menu size={18} />
+              <Menu size={20} />
             </Button>
             
             {activeCustomGPT ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20">
                 <span className="text-lg">{activeCustomGPT.emoji}</span>
-                <span className="text-sm font-medium">{activeCustomGPT.name}</span>
+                <span className="text-sm font-semibold text-primary">{activeCustomGPT.name}</span>
                 <button 
                   onClick={() => setActiveCustomGPT(null)}
-                  className="text-xs text-muted-foreground hover:text-foreground ml-1"
+                  className="text-muted-foreground hover:text-foreground ml-1 w-5 h-5 rounded-full hover:bg-muted flex items-center justify-center"
                 >
                   ×
                 </button>
@@ -320,15 +322,15 @@ export default function Index() {
               onToneChange={setSelectedTone}
             />
             
-            <div className="hidden md:flex items-center gap-2 bg-muted/50 px-2.5 py-1 rounded-full text-xs">
-              <Globe size={12} className="text-primary" />
-              <span className="text-muted-foreground">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-medium">
+              <Globe size={14} className="text-primary" />
+              <span className="text-foreground">
                 {language === 'en' ? 'EN' : language === 'ha' ? 'HA' : 'PID'}
               </span>
             </div>
             
-            <Button variant="ghost" size="icon" className="rounded-lg h-9 w-9">
-              <Bell size={16} />
+            <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10">
+              <Bell size={18} />
             </Button>
           </div>
         </header>
@@ -336,72 +338,80 @@ export default function Index() {
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-40 scrollbar-thin">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto pt-8 animate-fade-in">
               <NoseSphere />
               
-              <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-2 text-center">
-                {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I help with?"}
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 text-center">
+                {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I nose out for you?"}
               </h2>
-              <p className="text-muted-foreground text-center text-sm max-w-md mb-8">
-                {activeCustomGPT?.description || "Ask me anything - I'll nose out the answer for you."}
+              <p className="text-muted-foreground text-center max-w-md mb-10">
+                {activeCustomGPT?.description || "Ask me anything — I'll find the answer 👃🏿"}
               </p>
               
               {/* Quick Action Grid */}
-              <div className="grid grid-cols-2 gap-2.5 w-full max-w-md mx-auto">
-                <Button
-                  variant="outline"
+              <div className="grid grid-cols-2 gap-3 w-full max-w-lg mx-auto">
+                <button
                   onClick={() => handleSend("Generate an image of a beautiful Nigerian landscape")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
                 >
-                  <ImagePlus className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm font-medium">Create image</span>
-                </Button>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <ImagePlus className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <span className="font-semibold text-foreground">Create image</span>
+                  <span className="text-xs text-muted-foreground">Generate AI artwork</span>
+                </button>
                 
-                <Button
-                  variant="outline"
+                <button
                   onClick={() => handleSend("Tell me an interesting fact about Nigeria that would surprise most people")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
                 >
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Surprise me</span>
-                </Button>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <Sparkles className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <span className="font-semibold text-foreground">Surprise me</span>
+                  <span className="text-xs text-muted-foreground">Random Nigerian fact</span>
+                </button>
                 
-                <Button
-                  variant="outline"
+                <button
                   onClick={() => handleSend("Help me write a professional email to apply for a job")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
                 >
-                  <PenLine className="w-4 h-4 text-emerald-500" />
-                  <span className="text-sm font-medium">Help me write</span>
-                </Button>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <PenLine className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <span className="font-semibold text-foreground">Help me write</span>
+                  <span className="text-xs text-muted-foreground">Emails, essays & more</span>
+                </button>
                 
-                <Button
-                  variant="outline"
+                <button
                   onClick={() => navigate("/prompts")}
                   disabled={isLoading}
-                  className="h-auto py-3 px-4 flex flex-col items-start gap-1 bg-card hover:bg-muted border-border/50 rounded-xl text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
                 >
-                  <BookOpen className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Prompt Library</span>
-                </Button>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <BookOpen className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                  </div>
+                  <span className="font-semibold text-foreground">Prompt Library</span>
+                  <span className="text-xs text-muted-foreground">Browse templates</span>
+                </button>
               </div>
 
               {/* Custom GPT Link */}
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => navigate("/custom-gpt")}
-                className="mt-4 gap-2 text-muted-foreground"
+                className="mt-6 gap-2 rounded-xl border-border/50 hover:border-primary/30"
               >
                 <Bot size={16} />
                 Build Custom GPT
               </Button>
 
               {/* Keyboard shortcut hint */}
-              <p className="text-xs text-muted-foreground mt-4">
-                Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">⌘K</kbd> for quick actions
+              <p className="text-xs text-muted-foreground mt-6">
+                Press <kbd className="px-2 py-1 rounded-lg bg-muted font-mono text-xs border border-border/50">⌘K</kbd> for quick actions
               </p>
             </div>
           ) : (
@@ -432,8 +442,8 @@ export default function Index() {
               
               {isLoading && (
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-xs">
-                    👃🏿
+                  <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+                    <span className="text-sm">👃🏿</span>
                   </div>
                   <ThinkingIndicatorV2 />
                   {isStreaming && (
@@ -441,7 +451,7 @@ export default function Index() {
                       variant="outline"
                       size="sm"
                       onClick={stopGeneration}
-                      className="ml-auto flex items-center gap-2 rounded-full"
+                      className="ml-auto flex items-center gap-2 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
                     >
                       <Square size={12} className="fill-current" />
                       Stop
