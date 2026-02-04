@@ -1,7 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useChat } from "@/hooks/useChat";
 import { useConversationHistory } from "@/hooks/useConversationHistory";
 import { useUserMemory } from "@/hooks/useUserMemory";
+import { useImageGeneration, detectImageCommand } from "@/hooks/useImageGeneration";
 import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
 import { FloatingInputV2 } from "@/components/FloatingInputV2";
 import { ActiveAddons } from "@/components/EnhancedPlusMenu";
@@ -14,9 +16,8 @@ import { AIModelSelector } from "@/components/AIModelSelector";
 import { ToneSelector } from "@/components/ToneSelector";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { QuickSearchModal } from "@/components/QuickSearchModal";
-import { PageTransition } from "@/components/PageTransition";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot } from "lucide-react";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -40,6 +41,7 @@ export default function Index() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [activeCustomGPT, setActiveCustomGPT] = useState<CustomGPT | null>(null);
@@ -48,6 +50,9 @@ export default function Index() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  
+  // Image generation hook
+  const { isGenerating: isGeneratingImage, generateImage } = useImageGeneration();
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
     useConversationHistory(user?.id || null);
@@ -174,15 +179,41 @@ export default function Index() {
   }, [navigate]);
 
   const handleNewConversation = async () => {
-    // Instant new conversation - just clear state
+    // Instant new conversation - just clear state without navigation flash
+    setIsCreatingConversation(true);
     setCurrentConversationId(null);
     setActiveCustomGPT(null);
+    // Small delay to ensure smooth transition
+    setTimeout(() => setIsCreatingConversation(false), 100);
   };
 
   const handleSend = async (content: string, images?: string[], addons?: ActiveAddons) => {
     // Merge addons if provided
     if (addons) {
       setActiveAddons(addons);
+    }
+    
+    // Check for image generation commands
+    const imageCommand = detectImageCommand(content);
+    if (imageCommand.type) {
+      const isSticker = imageCommand.type === 'sticker';
+      toast({
+        title: isSticker ? "Creating sticker..." : "Generating image...",
+        description: `"${imageCommand.prompt}"`,
+      });
+      
+      const result = await generateImage(
+        imageCommand.prompt, 
+        isSticker ? 'sticker' : 'default', 
+        isSticker
+      );
+      
+      if (result) {
+        // Add the generated image as an assistant message
+        const imageMessage = `![Generated ${isSticker ? 'Sticker' : 'Image'}](${result.url})\n\n*Prompt: "${imageCommand.prompt}"*`;
+        await sendMessage(content, images);
+      }
+      return;
     }
     
     // Create conversation instantly if needed
@@ -229,12 +260,17 @@ export default function Index() {
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center animate-fade-in">
-          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/25 nose-sphere">
+        <motion.div 
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/25">
             <span className="text-4xl">👃🏿</span>
           </div>
           <p className="text-muted-foreground font-medium">Loading Hanchi...</p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -242,9 +278,15 @@ export default function Index() {
   if (!user) return null;
 
   const lastAIMessage = getLastAIMessage();
+  const showEmptyState = messages.length === 0 && !isCreatingConversation;
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <motion.div 
+      className="flex h-screen bg-background overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+    >
       <OfflineIndicator />
       
       {/* Modals */}
@@ -340,31 +382,39 @@ export default function Index() {
         </header>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-40 scrollbar-thin">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto pt-8 animate-fade-in">
-              <NoseSphere />
-              
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 text-center">
-                {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I nose out for you?"}
-              </h2>
-              <p className="text-muted-foreground text-center max-w-md mb-10">
-                {activeCustomGPT?.description || "Ask me anything — I'll find the answer 👃🏿"}
-              </p>
-              
-              {/* Quick Action Grid */}
-              <div className="grid grid-cols-2 gap-3 w-full max-w-lg mx-auto">
-                <button
-                  onClick={() => handleSend("Generate an image of a beautiful Nigerian landscape")}
-                  disabled={isLoading}
-                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <ImagePlus className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
-                  </div>
-                  <span className="font-semibold text-foreground">Create image</span>
-                  <span className="text-xs text-muted-foreground">Generate AI artwork</span>
-                </button>
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-40 scrollbar-thin scroll-smooth">
+          <AnimatePresence mode="wait">
+            {showEmptyState ? (
+              <motion.div 
+                key="empty"
+                className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto pt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <NoseSphere />
+                
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 text-center">
+                  {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I nose out for you?"}
+                </h2>
+                <p className="text-muted-foreground text-center max-w-md mb-10">
+                  {activeCustomGPT?.description || "Ask me anything — I'll find the answer 👃🏿"}
+                </p>
+                
+                {/* Quick Action Grid */}
+                <div className="grid grid-cols-2 gap-3 w-full max-w-lg mx-auto">
+                  <button
+                    onClick={() => handleSend("Generate an image of a beautiful Nigerian landscape")}
+                    disabled={isLoading || isGeneratingImage}
+                    className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                      <ImagePlus className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
+                    </div>
+                    <span className="font-semibold text-foreground">Create image</span>
+                    <span className="text-xs text-muted-foreground">Type "/imagine [prompt]"</span>
+                  </button>
                 
                 <button
                   onClick={() => handleSend("Tell me an interesting fact about Nigeria that would surprise most people")}
@@ -417,11 +467,22 @@ export default function Index() {
               <p className="text-xs text-muted-foreground mt-6">
                 Press <kbd className="px-2 py-1 rounded-lg bg-muted font-mono text-xs border border-border/50">⌘K</kbd> for quick actions
               </p>
-            </div>
+            </motion.div>
           ) : (
-            <div className="max-w-3xl mx-auto pt-4">
+            <motion.div 
+              key="messages"
+              className="max-w-3xl mx-auto pt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
               {messages.map((msg, index) => (
-                <div key={index} className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <motion.div 
+                  key={index} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                >
                   <MessageBubbleV2
                     role={msg.role}
                     content={msg.content}
@@ -441,7 +502,7 @@ export default function Index() {
                         : undefined
                     }
                   />
-                </div>
+                </motion.div>
               ))}
               
               {isLoading && (
@@ -473,20 +534,21 @@ export default function Index() {
               )}
               
               <div ref={messagesEndRef} />
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
 
         {/* Floating Input */}
         <div className="absolute bottom-4 left-0 right-0 px-4 md:px-6 z-20">
           <FloatingInputV2
             onSend={handleSend}
-            disabled={isLoading}
+            disabled={isLoading || isGeneratingImage}
             language={language}
             placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Ask Hanchi..."}
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

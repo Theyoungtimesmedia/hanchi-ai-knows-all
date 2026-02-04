@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Brain, Globe, Mic, Image as ImageIcon, Search, Sparkles, MessageSquare, Zap, Shield, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Brain, Globe, Mic, Image as ImageIcon, Search, Sparkles, Zap, CheckCircle2, MessageSquare, Code, FileText, Shield } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { PageTransition } from "@/components/PageTransition";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -11,79 +11,119 @@ export default function Landing() {
     {
       icon: <Brain className="w-5 h-5" />,
       title: "Deep Thinking",
-      description: "AI that reasons through complex problems step by step",
+      description: "Reasons through complex problems",
+      gradient: "from-blue-500 to-purple-500",
     },
     {
       icon: <Globe className="w-5 h-5" />,
       title: "Multilingual",
-      description: "Fluent in English, Hausa, and Nigerian Pidgin",
+      description: "English, Hausa, Pidgin fluency",
+      gradient: "from-emerald-500 to-teal-500",
     },
     {
       icon: <Mic className="w-5 h-5" />,
       title: "Voice Translation",
-      description: "Real-time voice-to-voice across languages",
+      description: "Real-time voice-to-voice",
+      gradient: "from-orange-500 to-red-500",
     },
     {
       icon: <ImageIcon className="w-5 h-5" />,
       title: "Image Creation",
-      description: "Generate beautiful images from descriptions",
+      description: "Generate beautiful images",
+      gradient: "from-pink-500 to-rose-500",
     },
     {
       icon: <Search className="w-5 h-5" />,
       title: "Web Search",
-      description: "Search the web and get cited sources",
+      description: "Search with cited sources",
+      gradient: "from-cyan-500 to-blue-500",
     },
     {
-      icon: <Sparkles className="w-5 h-5" />,
-      title: "Nigerian Context",
-      description: "Deep understanding of Nigerian culture",
+      icon: <Code className="w-5 h-5" />,
+      title: "Code Assistant",
+      description: "Write and debug code",
+      gradient: "from-violet-500 to-purple-500",
     }
   ];
 
   const benefits = [
-    "Free to use with powerful AI models",
-    "No sign-up required to try",
-    "Works offline after first load",
-    "Privacy-focused design"
+    "Free to use with powerful AI",
+    "Nigerian cultural context",
+    "Works offline",
+    "Privacy-focused"
   ];
 
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5 }
+  };
+
+  const stagger = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   return (
-    <PageTransition>
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-emerald-500/5" />
+        <motion.div 
+          className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 blur-3xl"
+          animate={{ 
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div 
+          className="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-gradient-to-r from-emerald-500/10 to-teal-500/10 blur-3xl"
+          animate={{ 
+            x: [0, -80, 0],
+            y: [0, -40, 0],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+        />
+        <motion.div 
+          className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full bg-gradient-to-r from-orange-500/5 to-pink-500/5 blur-3xl"
+          animate={{ 
+            x: [-200, 200, -200],
+            y: [-100, 100, -100],
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
-                <span className="text-xl">👃🏿</span>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+                <span className="text-lg">👃🏿</span>
               </div>
-              <div>
-                <span className="text-lg font-bold text-foreground">Hanchi AI</span>
-                <span className="hidden sm:inline text-xs text-muted-foreground ml-2">The AI That Knows</span>
-              </div>
+              <span className="text-base font-bold text-foreground">Hanchi AI</span>
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Button 
                 variant="ghost" 
-                onClick={() => navigate("/help")}
-                className="hidden sm:inline-flex rounded-xl"
-              >
-                Help
-              </Button>
-              <Button 
-                variant="ghost" 
+                size="sm"
                 onClick={() => navigate("/auth")}
-                className="rounded-xl"
+                className="rounded-lg text-sm"
               >
                 Sign In
               </Button>
               <Button 
+                size="sm"
                 onClick={() => navigate("/auth")}
-                className="btn-premium"
+                className="rounded-lg bg-gradient-to-r from-primary to-emerald-600 hover:opacity-90 text-sm"
               >
-                Get Started <ArrowRight className="ml-2 w-4 h-4" />
+                Get Started
               </Button>
             </div>
           </div>
@@ -91,74 +131,112 @@ export default function Landing() {
       </header>
 
       {/* Hero Section */}
-      <main className="pt-24 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center">
+      <main className="pt-20 pb-16 px-4 sm:px-6">
+        <motion.div 
+          className="max-w-4xl mx-auto text-center"
+          initial="initial"
+          animate="animate"
+          variants={stagger}
+        >
           {/* Nose Sphere */}
-          <div className="relative inline-flex items-center justify-center w-32 h-32 mb-8 animate-fade-in">
-            <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-            <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-primary to-primary/70 shadow-sphere flex items-center justify-center nose-sphere">
-              <span className="text-5xl">👃🏿</span>
-            </div>
-          </div>
+          <motion.div 
+            className="relative inline-flex items-center justify-center w-24 h-24 mb-6"
+            variants={fadeInUp}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-emerald-500/20 rounded-full blur-2xl animate-pulse" />
+            <motion.div 
+              className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary via-emerald-500 to-teal-500 shadow-2xl shadow-primary/30 flex items-center justify-center"
+              animate={{ 
+                boxShadow: [
+                  "0 0 20px rgba(16, 185, 129, 0.3)",
+                  "0 0 40px rgba(59, 130, 246, 0.3)",
+                  "0 0 20px rgba(168, 85, 247, 0.3)",
+                  "0 0 20px rgba(16, 185, 129, 0.3)",
+                ]
+              }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              <span className="text-4xl">👃🏿</span>
+            </motion.div>
+          </motion.div>
           
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-6 animate-fade-in">
-            <Sparkles size={14} />
-            Nigeria's Smartest AI Assistant
-          </div>
+          <motion.div 
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 border border-primary/20 text-xs font-semibold text-primary mb-5"
+            variants={fadeInUp}
+          >
+            <Sparkles size={12} />
+            Nigeria's Smartest AI
+          </motion.div>
           
-          <h1 className="text-display text-foreground mb-6 animate-fade-in stagger-1">
-            The AI That <span className="text-gradient">Noses</span> Everything
-          </h1>
+          <motion.h1 
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight"
+            variants={fadeInUp}
+          >
+            The AI That{" "}
+            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 bg-clip-text text-transparent">
+              Noses
+            </span>{" "}
+            Everything
+          </motion.h1>
           
-          <p className="text-body-lg text-muted-foreground mb-10 max-w-2xl mx-auto animate-fade-in stagger-2">
-            Ask anything, create images, translate between languages — Hanchi noses out the answers with deep Nigerian cultural understanding.
-          </p>
+          <motion.p 
+            className="text-sm sm:text-base text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed"
+            variants={fadeInUp}
+          >
+            Ask anything, create images, translate languages — with deep Nigerian cultural understanding.
+          </motion.p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in stagger-3">
+          <motion.div 
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
+            variants={fadeInUp}
+          >
             <Button 
               size="lg"
               onClick={() => navigate("/auth")}
-              className="btn-premium h-14 px-8 text-lg"
+              className="h-11 px-6 rounded-xl bg-gradient-to-r from-primary via-emerald-500 to-teal-500 hover:opacity-90 shadow-lg shadow-primary/25 text-sm font-semibold"
             >
-              <span className="mr-2">👃🏿</span> Start Nosing <ArrowRight className="ml-2 w-5 h-5" />
+              <span className="mr-2">👃🏿</span> Start Nosing <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
             <Button 
               size="lg"
               variant="outline"
               onClick={() => navigate("/discover")}
-              className="h-14 px-8 text-lg rounded-xl border-border hover:bg-muted"
+              className="h-11 px-6 rounded-xl border-border/50 text-sm"
             >
               See Features
             </Button>
-          </div>
+          </motion.div>
 
           {/* Demo Preview */}
-          <div className="relative max-w-3xl mx-auto animate-fade-in stagger-4">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 blur-3xl -z-10" />
-            <div className="card-premium p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-3 h-3 rounded-full bg-destructive/60" />
-                <div className="w-3 h-3 rounded-full bg-primary/60" />
-                <div className="w-3 h-3 rounded-full bg-primary" />
-                <span className="ml-auto text-xs text-muted-foreground">Hanchi Chat</span>
+          <motion.div 
+            className="relative max-w-2xl mx-auto"
+            variants={fadeInUp}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 blur-2xl -z-10" />
+            <div className="rounded-2xl bg-card/80 backdrop-blur-sm border border-border/50 p-5 sm:p-6 shadow-xl">
+              <div className="flex items-center gap-1.5 mb-4">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/60" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                <span className="ml-auto text-[10px] text-muted-foreground">Hanchi Chat</span>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-end">
-                  <div className="message-user max-w-xs">
-                    <p className="text-sm">How do I say "Hello" in Hausa?</p>
+                  <div className="max-w-[200px] px-3 py-2 rounded-2xl rounded-br-md bg-primary/10 border border-primary/20">
+                    <p className="text-xs">How do I say "Hello" in Hausa?</p>
                   </div>
                 </div>
                 
-                <div className="flex gap-3 justify-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-base">👃🏿</span>
+                <div className="flex gap-2 justify-start">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm">👃🏿</span>
                   </div>
-                  <div className="message-assistant max-w-sm">
-                    <p className="text-sm text-foreground">
+                  <div className="max-w-[250px] px-3 py-2 rounded-2xl rounded-bl-md bg-muted/50 border border-border/50">
+                    <p className="text-xs text-foreground">
                       In Hausa, you say "<strong className="text-primary">Sannu</strong>" (sah-noo). 
-                      It's a warm greeting used throughout Northern Nigeria! 🇳🇬
+                      It's a warm greeting! 🇳🇬
                     </p>
                   </div>
                 </div>
@@ -166,122 +244,147 @@ export default function Landing() {
             </div>
             
             {/* Floating badge */}
-            <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg animate-float">
-              Free to use ✨
-            </div>
-          </div>
-        </div>
+            <motion.div 
+              className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-[10px] font-semibold shadow-lg"
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              Free ✨
+            </motion.div>
+          </motion.div>
+        </motion.div>
 
         {/* Benefits */}
-        <div className="max-w-3xl mx-auto mt-16">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <motion.div 
+          className="max-w-2xl mx-auto mt-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {benefits.map((benefit, i) => (
-              <div key={i} className="flex items-center gap-2 p-3 rounded-xl bg-muted/30 border border-border/50">
-                <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">{benefit}</span>
+              <div key={i} className="flex items-center gap-1.5 p-2.5 rounded-xl bg-card/50 border border-border/30">
+                <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <span className="text-[11px] text-muted-foreground">{benefit}</span>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Features Grid */}
-        <div className="max-w-6xl mx-auto mt-24">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-4">
-              <Zap size={12} />
-              POWERFUL FEATURES
+        <motion.div 
+          className="max-w-5xl mx-auto mt-20"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold mb-3">
+              <Zap size={10} />
+              FEATURES
             </div>
-            <h2 className="text-title text-foreground mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
               Everything You Need
             </h2>
-            <p className="text-body text-muted-foreground max-w-xl mx-auto">
-              Powerful features designed for Nigerian students, professionals, and creators
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Powerful features for Nigerian students, professionals, and creators
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {features.map((feature, index) => (
-              <div 
+              <motion.div 
                 key={index}
-                className="card-premium p-6 group cursor-pointer"
+                className="group cursor-pointer rounded-xl bg-card/50 backdrop-blur-sm border border-border/30 p-4 hover:border-primary/30 transition-all hover:shadow-lg"
                 onClick={() => navigate("/auth")}
+                whileHover={{ y: -2 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${feature.gradient} flex items-center justify-center mb-3 text-white shadow-lg`}>
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm">{feature.description}</p>
-              </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">{feature.title}</h3>
+                <p className="text-xs text-muted-foreground">{feature.description}</p>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Stats */}
-        <div className="max-w-4xl mx-auto mt-24">
-          <div className="grid grid-cols-3 gap-4">
+        <motion.div 
+          className="max-w-3xl mx-auto mt-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+        >
+          <div className="grid grid-cols-3 gap-3">
             {[
-              { value: "500K+", label: "Messages sent" },
-              { value: "50K+", label: "Active users" },
+              { value: "500K+", label: "Messages" },
+              { value: "50K+", label: "Users" },
               { value: "99%", label: "Uptime" },
             ].map((stat, i) => (
-              <div key={i} className="text-center p-6 rounded-2xl bg-muted/30 border border-border/50">
-                <div className="text-3xl sm:text-4xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+              <div key={i} className="text-center p-4 rounded-xl bg-gradient-to-br from-card/80 to-card/40 border border-border/30">
+                <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent mb-0.5">{stat.value}</div>
+                <div className="text-[10px] text-muted-foreground">{stat.label}</div>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* CTA Section */}
-        <div className="max-w-4xl mx-auto mt-24">
-          <div className="relative card-premium p-10 sm:p-14 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <motion.div 
+          className="max-w-3xl mx-auto mt-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div className="relative rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-emerald-500/5 border border-primary/20 p-8 sm:p-10 overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl" />
             
             <div className="relative z-10 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6">
-                <span className="text-3xl">👃🏿</span>
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-emerald-500 mb-4 shadow-lg">
+                <span className="text-2xl">👃🏿</span>
               </div>
-              <h2 className="text-title text-foreground mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground mb-2">
                 Ready to Start Nosing?
               </h2>
-              <p className="text-body text-muted-foreground mb-8 max-w-xl mx-auto">
-                Join thousands of Nigerians using Hanchi to learn, create, and communicate better.
+              <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                Join thousands of Nigerians using Hanchi to learn, create, and communicate.
               </p>
               <Button 
                 size="lg"
                 onClick={() => navigate("/auth")}
-                className="btn-premium h-14 px-10 text-lg"
+                className="h-11 px-8 rounded-xl bg-gradient-to-r from-primary via-emerald-500 to-teal-500 hover:opacity-90 shadow-lg text-sm font-semibold"
               >
-                Get Started Free <ArrowRight className="ml-2 w-5 h-5" />
+                Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-10 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-base">👃🏿</span>
-              </div>
-              <span className="font-semibold text-foreground">Hanchi AI</span>
+      <footer className="border-t border-border/30 py-8 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-sm">👃🏿</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <button onClick={() => navigate("/help")} className="hover:text-foreground transition-colors">Help</button>
-              <button onClick={() => navigate("/discover")} className="hover:text-foreground transition-colors">Features</button>
-              <button onClick={() => navigate("/prompts")} className="hover:text-foreground transition-colors">Prompts</button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2024 Hanchi AI. All rights reserved.
-            </p>
+            <span className="text-sm font-semibold text-foreground">Hanchi AI</span>
           </div>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <button onClick={() => navigate("/help")} className="hover:text-foreground transition-colors">Help</button>
+            <button onClick={() => navigate("/discover")} className="hover:text-foreground transition-colors">Features</button>
+            <button onClick={() => navigate("/prompts")} className="hover:text-foreground transition-colors">Prompts</button>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            © 2024 Hanchi AI
+          </p>
         </div>
       </footer>
     </div>
-    </PageTransition>
   );
 }

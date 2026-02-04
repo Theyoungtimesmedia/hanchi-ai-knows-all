@@ -9,6 +9,45 @@ interface GeneratedImage {
   isSticker: boolean;
 }
 
+// Detect image generation commands in text
+export const detectImageCommand = (text: string): { type: 'image' | 'sticker' | null; prompt: string } => {
+  const lower = text.toLowerCase().trim();
+  
+  // Image commands
+  const imagePatterns = [
+    /^generate\s+(?:an?\s+)?image\s+(?:of\s+)?(.+)/i,
+    /^create\s+(?:an?\s+)?image\s+(?:of\s+)?(.+)/i,
+    /^draw\s+(.+)/i,
+    /^make\s+(?:an?\s+)?image\s+(?:of\s+)?(.+)/i,
+    /^\/imagine\s+(.+)/i,
+    /^\/image\s+(.+)/i,
+  ];
+  
+  // Sticker commands
+  const stickerPatterns = [
+    /^create\s+(?:a\s+)?sticker\s+(?:of\s+)?(.+)/i,
+    /^generate\s+(?:a\s+)?sticker\s+(?:of\s+)?(.+)/i,
+    /^make\s+(?:a\s+)?sticker\s+(?:of\s+)?(.+)/i,
+    /^\/sticker\s+(.+)/i,
+  ];
+  
+  for (const pattern of stickerPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return { type: 'sticker', prompt: match[1].trim() };
+    }
+  }
+  
+  for (const pattern of imagePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return { type: 'image', prompt: match[1].trim() };
+    }
+  }
+  
+  return { type: null, prompt: '' };
+};
+
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null);
@@ -52,8 +91,8 @@ export const useImageGeneration = () => {
       setGeneratedImage(image);
       
       toast({
-        title: "Image generated! 🎨",
-        description: "Hanchi has nosed out your image",
+        title: isSticker ? "Sticker created! 🎨" : "Image generated! 🎨",
+        description: "Hanchi has nosed out your creation",
       });
 
       return image;
@@ -79,5 +118,6 @@ export const useImageGeneration = () => {
     generatedImage,
     generateImage,
     clearImage,
+    detectImageCommand,
   };
 };
