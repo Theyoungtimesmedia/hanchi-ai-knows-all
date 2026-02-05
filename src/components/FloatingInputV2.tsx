@@ -1,5 +1,5 @@
 import { useState, useRef, KeyboardEvent, useEffect } from "react";
-import { Mic, Loader2, Send, Wand2, X, Image as ImageIcon, Sticker } from "lucide-react";
+ import { Mic, Loader2, Send, Wand2, X, Image as ImageIcon, Sticker, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -33,12 +33,44 @@ export const FloatingInputV2 = ({
   // Command detection for inline features
   const detectCommand = (text: string) => {
     const lower = text.toLowerCase().trim();
-    if (lower.startsWith("generate image") || lower.startsWith("create image") || lower.startsWith("draw")) {
+     
+     // Enhanced natural language image detection
+     const imagePatterns = [
+       /^(?:generate|create|make|draw|design|paint|render)\s+(?:a\s+|an\s+)?(?:image|picture|photo|illustration)/i,
+       /^(?:i\s+)?(?:want|need|would\s+like)\s+(?:a\s+|an\s+)?(?:image|picture|photo)/i,
+       /^(?:can\s+you\s+)?(?:make|create|draw|generate)\s+(?:me\s+)?(?:a\s+|an\s+)?(?:image|picture)/i,
+       /^\/imagine/i,
+       /^\/image/i,
+       /^draw\s+/i,
+       /^imagine\s+/i,
+     ];
+     
+     const stickerPatterns = [
+       /^(?:create|generate|make|design)\s+(?:a\s+)?(?:sticker)/i,
+       /^(?:i\s+)?(?:want|need)\s+(?:a\s+)?sticker/i,
+       /^\/sticker/i,
+     ];
+     
+     for (const pattern of stickerPatterns) {
+       if (pattern.test(lower)) {
+         return { type: "sticker", hint: "🎨 AI will create a sticker from your description" };
+       }
+     }
+     
+     for (const pattern of imagePatterns) {
+       if (pattern.test(lower)) {
+         return { type: "image", hint: "🖼️ AI will generate an image from your description" };
+       }
+     }
+     
+     // Legacy simple checks
+     if (lower.startsWith("generate image") || lower.startsWith("create image")) {
       return { type: "image", hint: "AI will generate an image from your description" };
     }
-    if (lower.startsWith("create sticker") || lower.startsWith("make sticker") || lower.startsWith("generate sticker")) {
+     if (lower.includes("sticker of") || lower.includes("sticker for")) {
       return { type: "sticker", hint: "AI will create a sticker from your description" };
     }
+     
     return null;
   };
 
@@ -129,12 +161,17 @@ export const FloatingInputV2 = ({
       {/* Command hint */}
       {command && (
         <div className={cn(
-          "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium animate-chip-enter border",
-          command.type === "image" && "bg-accent/50 text-accent-foreground border-primary/20",
-          command.type === "sticker" && "bg-accent/50 text-accent-foreground border-primary/20"
+           "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium animate-chip-enter border shadow-sm",
+           command.type === "image" && "bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-foreground border-purple-500/30",
+           command.type === "sticker" && "bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-foreground border-amber-500/30"
         )}>
-          {command.type === "image" ? <ImageIcon size={18} /> : <Sticker size={18} />}
+           {command.type === "image" ? (
+             <ImageIcon size={18} className="text-purple-500" />
+           ) : (
+             <Sticker size={18} className="text-amber-500" />
+           )}
           {command.hint}
+           <Sparkles size={14} className="ml-auto text-primary animate-pulse" />
         </div>
       )}
 

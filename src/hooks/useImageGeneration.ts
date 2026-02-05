@@ -9,44 +9,60 @@ interface GeneratedImage {
   isSticker: boolean;
 }
 
-// Detect image generation commands in text
-export const detectImageCommand = (text: string): { type: 'image' | 'sticker' | null; prompt: string } => {
-  const lower = text.toLowerCase().trim();
-  
-  // Image commands
-  const imagePatterns = [
-    /^generate\s+(?:an?\s+)?image\s+(?:of\s+)?(.+)/i,
-    /^create\s+(?:an?\s+)?image\s+(?:of\s+)?(.+)/i,
-    /^draw\s+(.+)/i,
-    /^make\s+(?:an?\s+)?image\s+(?:of\s+)?(.+)/i,
-    /^\/imagine\s+(.+)/i,
-    /^\/image\s+(.+)/i,
-  ];
-  
-  // Sticker commands
-  const stickerPatterns = [
-    /^create\s+(?:a\s+)?sticker\s+(?:of\s+)?(.+)/i,
-    /^generate\s+(?:a\s+)?sticker\s+(?:of\s+)?(.+)/i,
-    /^make\s+(?:a\s+)?sticker\s+(?:of\s+)?(.+)/i,
-    /^\/sticker\s+(.+)/i,
-  ];
-  
-  for (const pattern of stickerPatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return { type: 'sticker', prompt: match[1].trim() };
-    }
-  }
-  
-  for (const pattern of imagePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return { type: 'image', prompt: match[1].trim() };
-    }
-  }
-  
-  return { type: null, prompt: '' };
-};
+ // Enhanced natural language detection for image/sticker generation
+ export const detectImageCommand = (text: string): { type: 'image' | 'sticker' | null; prompt: string } => {
+   const lower = text.toLowerCase().trim();
+   
+   // Sticker patterns - more comprehensive natural language support
+   const stickerPatterns = [
+     // Slash commands
+     /^\/sticker\s+(.+)/i,
+     // Direct commands
+     /^(?:create|generate|make|design)\s+(?:a\s+|an\s+)?(?:nigerian\s+)?sticker\s+(?:of\s+|for\s+|about\s+|showing\s+|with\s+)?(.+)/i,
+     /^(?:i\s+)?(?:want|need)\s+(?:a\s+|an\s+)?sticker\s+(?:of\s+|for\s+|about\s+|showing\s+)?(.+)/i,
+     /^(?:can\s+you\s+)?(?:make|create|design)\s+(?:me\s+)?(?:a\s+|an\s+)?sticker\s+(?:of\s+|for\s+)?(.+)/i,
+     /^sticker\s+(?:of\s+|for\s+|about\s+)?(.+)/i,
+   ];
+   
+   // Image patterns - comprehensive natural language support  
+   const imagePatterns = [
+     // Slash commands
+     /^\/imagine\s+(.+)/i,
+     /^\/image\s+(.+)/i,
+     /^\/draw\s+(.+)/i,
+     /^\/generate\s+(.+)/i,
+     // Direct action commands
+     /^(?:generate|create|make|draw|design|paint|render|produce)\s+(?:a\s+|an\s+)?(?:beautiful\s+|stunning\s+|amazing\s+|realistic\s+|artistic\s+)?(?:image|picture|photo|illustration|artwork|art|visual|graphic)\s+(?:of\s+|for\s+|about\s+|showing\s+|depicting\s+|with\s+)?(.+)/i,
+     // Natural requests
+     /^(?:i\s+)?(?:want|need|would\s+like)\s+(?:a\s+|an\s+)?(?:image|picture|photo|illustration)\s+(?:of\s+|for\s+|about\s+|showing\s+)?(.+)/i,
+     /^(?:can\s+you\s+)?(?:make|create|draw|generate|design)\s+(?:me\s+)?(?:a\s+|an\s+)?(?:image|picture|photo|illustration)\s+(?:of\s+|for\s+)?(.+)/i,
+     /^(?:please\s+)?(?:show\s+me|visualize|illustrate)\s+(.+)/i,
+     // Simple patterns
+     /^draw\s+(?:me\s+)?(?:a\s+|an\s+)?(.+)/i,
+     /^paint\s+(?:me\s+)?(?:a\s+|an\s+)?(.+)/i,
+     /^imagine\s+(.+)/i,
+     // "image of X" pattern
+     /^(?:an?\s+)?(?:image|picture|photo)\s+(?:of\s+|showing\s+)(.+)/i,
+   ];
+   
+   // Check sticker patterns first (more specific)
+   for (const pattern of stickerPatterns) {
+     const match = text.match(pattern);
+     if (match && match[1]) {
+       return { type: 'sticker', prompt: match[1].trim() };
+     }
+   }
+   
+   // Then check image patterns
+   for (const pattern of imagePatterns) {
+     const match = text.match(pattern);
+     if (match && match[1]) {
+       return { type: 'image', prompt: match[1].trim() };
+     }
+   }
+   
+   return { type: null, prompt: '' };
+ };
 
 export const useImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
