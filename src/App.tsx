@@ -9,6 +9,8 @@ import Help from "./pages/Help";
 import Discover from "./pages/Discover";
 import CustomGPT from "./pages/CustomGPT";
 import NotFound from "./pages/NotFound";
+ import Projects from "./pages/Projects";
+ import Apps from "./pages/Apps";
 
 const App = () => (
   <Routes>
@@ -21,6 +23,8 @@ const App = () => (
     <Route path="/help" element={<Help />} />
     <Route path="/discover" element={<Discover />} />
     <Route path="/custom-gpt" element={<CustomGPT />} />
+     <Route path="/projects" element={<Projects />} />
+     <Route path="/apps" element={<Apps />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

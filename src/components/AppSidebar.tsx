@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, BookOpen, Sparkles, HelpCircle } from "lucide-react";
+ import { MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, BookOpen, Sparkles, HelpCircle, Folder, Grid, Bot } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
@@ -212,12 +212,12 @@ export const AppSidebar = ({
       </div>
 
       {/* Quick Links */}
-      <div className="px-3 py-2 flex gap-2">
+       <div className="px-3 py-2 grid grid-cols-2 gap-2">
         <Button
           variant="outline"
           size="sm"
           onClick={() => { navigate("/prompts"); onClose(); }}
-          className="flex-1 h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
+           className="h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
         >
           <BookOpen size={14} />
           Prompts
@@ -225,11 +225,29 @@ export const AppSidebar = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => { navigate("/discover"); onClose(); }}
-          className="flex-1 h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
+           onClick={() => { navigate("/projects"); onClose(); }}
+           className="h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
         >
-          <Sparkles size={14} />
-          Discover
+           <Folder size={14} />
+           Projects
+         </Button>
+         <Button
+           variant="outline"
+           size="sm"
+           onClick={() => { navigate("/apps"); onClose(); }}
+           className="h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
+         >
+           <Grid size={14} />
+           Apps
+         </Button>
+         <Button
+           variant="outline"
+           size="sm"
+           onClick={() => { navigate("/custom-gpt"); onClose(); }}
+           className="h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
+         >
+           <Bot size={14} />
+           GPTs
         </Button>
       </div>
 
