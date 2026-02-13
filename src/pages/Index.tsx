@@ -17,7 +17,9 @@ import { ToneSelector } from "@/components/ToneSelector";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { QuickSearchModal } from "@/components/QuickSearchModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot, Loader2 } from "lucide-react";
+import { VoiceModePanel } from "@/components/VoiceModePanel";
+import { CanvasMode } from "@/components/CanvasMode";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot, Loader2, Mic, Columns } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -46,12 +48,13 @@ export default function Index() {
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [activeCustomGPT, setActiveCustomGPT] = useState<CustomGPT | null>(null);
   const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
+  const [showVoiceMode, setShowVoiceMode] = useState(false);
+  const [canvasState, setCanvasState] = useState<{ open: boolean; content: string; type: "code" | "document" } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   
-  // Image generation hook
   const { isGenerating: isGeneratingImage, generateImage } = useImageGeneration();
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
@@ -85,7 +88,6 @@ export default function Index() {
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
         if (session?.user) {
           setUser(session.user);
           analytics.setUserId(session.user.id);
@@ -99,7 +101,6 @@ export default function Index() {
         navigate("/auth");
         return;
       }
-      
       setIsInitialized(true);
     };
 
@@ -121,18 +122,12 @@ export default function Index() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle prefilled prompts from sessionStorage (from Prompts page)
   useEffect(() => {
     if (!isInitialized || !user) return;
-    
     const prefillPrompt = sessionStorage.getItem('hanchi_prefill_prompt');
     if (prefillPrompt) {
-      // Clear immediately to prevent re-triggers
       sessionStorage.removeItem('hanchi_prefill_prompt');
-      // Small delay to ensure state is ready
-      setTimeout(() => {
-        handleSend(prefillPrompt);
-      }, 100);
+      setTimeout(() => handleSend(prefillPrompt), 100);
     }
   }, [isInitialized, user]);
 
@@ -141,59 +136,30 @@ export default function Index() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) {
         switch (e.key.toLowerCase()) {
-          case 'k':
-            e.preventDefault();
-            setShowQuickSearch(true);
-            break;
-          case 'n':
-            e.preventDefault();
-            handleNewConversation();
-            break;
-          case 'p':
-            e.preventDefault();
-            navigate('/prompts');
-            break;
-          case ',':
-            e.preventDefault();
-            navigate('/settings');
-            break;
-          case '/':
-          case '?':
-            e.preventDefault();
-            setShowShortcuts(true);
-            break;
-          case 'b':
-            e.preventDefault();
-            setSidebarOpen(prev => !prev);
-            break;
+          case 'k': e.preventDefault(); setShowQuickSearch(true); break;
+          case 'n': e.preventDefault(); handleNewConversation(); break;
+          case 'p': e.preventDefault(); navigate('/prompts'); break;
+          case ',': e.preventDefault(); navigate('/settings'); break;
+          case '/': case '?': e.preventDefault(); setShowShortcuts(true); break;
+          case 'b': e.preventDefault(); setSidebarOpen(prev => !prev); break;
         }
       }
-      if (e.key === 'Escape') {
-        setShowShortcuts(false);
-        setShowQuickSearch(false);
-      }
+      if (e.key === 'Escape') { setShowShortcuts(false); setShowQuickSearch(false); }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
   const handleNewConversation = async () => {
-    // Instant new conversation - just clear state without navigation flash
     setIsCreatingConversation(true);
     setCurrentConversationId(null);
     setActiveCustomGPT(null);
-    // Small delay to ensure smooth transition
     setTimeout(() => setIsCreatingConversation(false), 100);
   };
 
   const handleSend = async (content: string, images?: string[], addons?: ActiveAddons) => {
-    // Merge addons if provided
-    if (addons) {
-      setActiveAddons(addons);
-    }
+    if (addons) setActiveAddons(addons);
     
-    // Check for image generation commands
     const imageCommand = detectImageCommand(content);
     if (imageCommand.type) {
       const isSticker = imageCommand.type === 'sticker';
@@ -201,39 +167,34 @@ export default function Index() {
         title: isSticker ? "Creating sticker..." : "Generating image...",
         description: `"${imageCommand.prompt}"`,
       });
-      
-      const result = await generateImage(
-        imageCommand.prompt, 
-        isSticker ? 'sticker' : 'default', 
-        isSticker
-      );
-      
+      const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
       if (result) {
-        // Add the generated image as an assistant message
-        const imageMessage = `![Generated ${isSticker ? 'Sticker' : 'Image'}](${result.url})\n\n*Prompt: "${imageCommand.prompt}"*`;
         await sendMessage(content, images);
       }
       return;
     }
     
-    // Create conversation instantly if needed
     if (!currentConversationId) {
       const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
-      // Create conversation in background - don't wait
       createConversation(title, language).then(convId => {
-        if (convId) {
-          setCurrentConversationId(convId);
-        }
+        if (convId) setCurrentConversationId(convId);
       });
     }
     
-    // Send message immediately
     await sendMessage(content, images);
   };
 
-  const handleQuickAction = (prompt: string) => {
-    handleSend(prompt);
-  };
+  // Canvas: detect if last AI message has code blocks for canvas trigger
+  const handleOpenCanvas = useCallback(() => {
+    const lastAI = [...messages].reverse().find(m => m.role === 'assistant');
+    if (!lastAI) return;
+    const hasCode = lastAI.content.includes('```');
+    setCanvasState({
+      open: true,
+      content: hasCode ? lastAI.content.replace(/```\w*\n?/g, '').replace(/```/g, '') : lastAI.content,
+      type: hasCode ? "code" : "document",
+    });
+  }, [messages]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -250,9 +211,7 @@ export default function Index() {
 
   const getLastAIMessage = () => {
     for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'assistant') {
-        return messages[i].content;
-      }
+      if (messages[i].role === 'assistant') return messages[i].content;
     }
     return '';
   };
@@ -260,16 +219,11 @@ export default function Index() {
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/25">
-            <span className="text-4xl">👃🏿</span>
+        <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-primary/25">
+            <span className="text-3xl">👃🏿</span>
           </div>
-          <p className="text-muted-foreground font-medium">Loading Hanchi...</p>
+          <p className="text-sm text-muted-foreground">Loading Hanchi...</p>
         </motion.div>
       </div>
     );
@@ -281,45 +235,47 @@ export default function Index() {
   const showEmptyState = messages.length === 0 && !isCreatingConversation;
 
   return (
-    <motion.div 
-      className="flex h-screen bg-background overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
-    >
+    <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <OfflineIndicator />
       
       {/* Modals */}
       <KeyboardShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
-      <QuickSearchModal 
-        open={showQuickSearch} 
-        onOpenChange={setShowQuickSearch}
+      <QuickSearchModal open={showQuickSearch} onOpenChange={setShowQuickSearch}
         conversations={conversations}
-        onSelectConversation={(id) => {
-          setCurrentConversationId(id);
-          setShowQuickSearch(false);
-        }}
+        onSelectConversation={(id) => { setCurrentConversationId(id); setShowQuickSearch(false); }}
         onNewConversation={handleNewConversation}
       />
+
+      {/* Voice Mode */}
+      <VoiceModePanel
+        isOpen={showVoiceMode}
+        onClose={() => setShowVoiceMode(false)}
+        onSendMessage={handleSend}
+        lastAIResponse={lastAIMessage}
+        language={language}
+        isAIResponding={isLoading}
+      />
+
+      {/* Canvas Mode */}
+      {canvasState?.open && (
+        <CanvasMode
+          content={canvasState.content}
+          type={canvasState.type}
+          onClose={() => setCanvasState(null)}
+          onUpdate={(newContent) => setCanvasState(prev => prev ? { ...prev, content: newContent } : null)}
+          onSendMessage={(msg) => handleSend(`Regarding the canvas content: ${msg}`)}
+        />
+      )}
       
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
       
       <AppSidebar
         conversations={conversations}
         currentConversationId={currentConversationId}
-        onSelectConversation={(id) => {
-          setCurrentConversationId(id);
-          setSidebarOpen(false);
-        }}
-        onNewConversation={() => {
-          handleNewConversation();
-          setSidebarOpen(false);
-        }}
+        onSelectConversation={(id) => { setCurrentConversationId(id); setSidebarOpen(false); }}
+        onNewConversation={() => { handleNewConversation(); setSidebarOpen(false); }}
         onDeleteConversation={deleteConversation}
         onOpenSettings={() => navigate("/settings")}
         onSignOut={handleSignOut}
@@ -330,54 +286,44 @@ export default function Index() {
 
       <div className="flex-1 flex flex-col relative w-full max-w-full">
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-xl border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden rounded-xl h-10 w-10"
-            >
-              <Menu size={20} />
+        <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="md:hidden rounded-lg h-9 w-9">
+              <Menu size={18} />
             </Button>
             
             {activeCustomGPT ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/10 border border-primary/20">
-                <span className="text-lg">{activeCustomGPT.emoji}</span>
-                <span className="text-sm font-semibold text-primary">{activeCustomGPT.name}</span>
-                <button 
-                  onClick={() => setActiveCustomGPT(null)}
-                  className="text-muted-foreground hover:text-foreground ml-1 w-5 h-5 rounded-full hover:bg-muted flex items-center justify-center"
-                >
-                  ×
-                </button>
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                <span className="text-base">{activeCustomGPT.emoji}</span>
+                <span className="text-xs font-semibold text-primary">{activeCustomGPT.name}</span>
+                <button onClick={() => setActiveCustomGPT(null)} className="text-muted-foreground hover:text-foreground ml-1 w-4 h-4 rounded-full hover:bg-muted flex items-center justify-center text-xs">×</button>
               </div>
             ) : (
-              <AIModelSelector 
-                selectedModel={selectedModel}
-                onModelChange={setSelectedModel}
-              />
+              <AIModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
             )}
           </div>
           
-          <div className="flex items-center gap-2">
-            <ToneSelector 
-              selectedTone={selectedTone}
-              onToneChange={setSelectedTone}
-            />
+          <div className="flex items-center gap-1.5">
+            <ToneSelector selectedTone={selectedTone} onToneChange={setSelectedTone} />
             
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/50 border border-border/50 text-xs font-medium">
-              <Globe size={14} className="text-primary" />
-              <span className="text-foreground">
-                {language === 'en' ? 'EN' : language === 'ha' ? 'HA' : 'PID'}
-              </span>
+            {/* Voice mode button */}
+            <Button variant="ghost" size="icon" onClick={() => setShowVoiceMode(true)} className="rounded-lg h-9 w-9 text-muted-foreground hover:text-primary" title="Voice conversation">
+              <Mic size={16} />
+            </Button>
+
+            {/* Canvas button - only when there are messages */}
+            {messages.length > 0 && (
+              <Button variant="ghost" size="icon" onClick={handleOpenCanvas} className="rounded-lg h-9 w-9 text-muted-foreground hover:text-primary" title="Open Canvas">
+                <Columns size={16} />
+              </Button>
+            )}
+            
+            <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border/40 text-[10px] font-medium">
+              <Globe size={12} className="text-primary" />
+              <span className="text-foreground">{language === 'en' ? 'EN' : language === 'ha' ? 'HA' : 'PID'}</span>
             </div>
             
             <ThemeToggle />
-            
-            <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10">
-              <Bell size={18} />
-            </Button>
           </div>
         </header>
 
@@ -385,157 +331,90 @@ export default function Index() {
         <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-40 scrollbar-thin scroll-smooth">
           <AnimatePresence mode="wait">
             {showEmptyState ? (
-              <motion.div 
-                key="empty"
-                className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto pt-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
+              <motion.div key="empty" className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto pt-8"
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
                 <NoseSphere />
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 text-center">
-                  {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I nose out for you?"}
+                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2 text-center">
+                  {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I help with?"}
                 </h2>
-                <p className="text-muted-foreground text-center max-w-md mb-10">
-                  {activeCustomGPT?.description || "Ask me anything — I'll find the answer 👃🏿"}
+                <p className="text-sm text-muted-foreground text-center max-w-md mb-8">
+                  {activeCustomGPT?.description || "Ask me anything — chat, create, translate, code 👃🏿"}
                 </p>
                 
-                {/* Quick Action Grid */}
-                <div className="grid grid-cols-2 gap-3 w-full max-w-lg mx-auto">
-                  <button
-                    onClick={() => handleSend("Generate an image of a beautiful Nigerian landscape")}
-                    disabled={isLoading || isGeneratingImage}
-                    className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                      <ImagePlus className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
-                    </div>
-                    <span className="font-semibold text-foreground">Create image</span>
-                    <span className="text-xs text-muted-foreground">Type "/imagine [prompt]"</span>
-                  </button>
-                
-                <button
-                  onClick={() => handleSend("Tell me an interesting fact about Nigeria that would surprise most people")}
-                  disabled={isLoading}
-                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <Sparkles className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
-                  </div>
-                  <span className="font-semibold text-foreground">Surprise me</span>
-                  <span className="text-xs text-muted-foreground">Random Nigerian fact</span>
-                </button>
-                
-                <button
-                  onClick={() => handleSend("Help me write a professional email to apply for a job")}
-                  disabled={isLoading}
-                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <PenLine className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
-                  </div>
-                  <span className="font-semibold text-foreground">Help me write</span>
-                  <span className="text-xs text-muted-foreground">Emails, essays & more</span>
-                </button>
-                
-                <button
-                  onClick={() => navigate("/prompts")}
-                  disabled={isLoading}
-                  className="card-premium p-4 flex flex-col items-start gap-2 text-left group"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <BookOpen className="w-5 h-5 text-primary group-hover:text-primary-foreground" />
-                  </div>
-                  <span className="font-semibold text-foreground">Prompt Library</span>
-                  <span className="text-xs text-muted-foreground">Browse templates</span>
-                </button>
-              </div>
-
-              {/* Custom GPT Link */}
-              <Button
-                variant="outline"
-                onClick={() => navigate("/custom-gpt")}
-                className="mt-6 gap-2 rounded-xl border-border/50 hover:border-primary/30"
-              >
-                <Bot size={16} />
-                Build Custom GPT
-              </Button>
-
-              {/* Keyboard shortcut hint */}
-              <p className="text-xs text-muted-foreground mt-6">
-                Press <kbd className="px-2 py-1 rounded-lg bg-muted font-mono text-xs border border-border/50">⌘K</kbd> for quick actions
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="messages"
-              className="max-w-3xl mx-auto pt-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              {messages.map((msg, index) => (
-                <motion.div 
-                  key={index} 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                >
-                  <MessageBubbleV2
-                    role={msg.role}
-                    content={msg.content}
-                    thought={msg.thought}
-                    images={msg.images}
-                    confidence={msg.confidence}
-                    sources={msg.sources}
-                    language={language}
-                    onRegenerate={
-                      msg.role === 'assistant' && index === messages.length - 1
-                        ? regenerateLastMessage
-                        : undefined
-                    }
-                    onEdit={
-                      msg.role === 'user'
-                        ? (newContent) => editMessage(index, newContent)
-                        : undefined
-                    }
-                  />
-                </motion.div>
-              ))}
-              
-              {isLoading && (
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-                    <span className="text-sm">👃🏿</span>
-                  </div>
-                  <ThinkingIndicatorV2 />
-                  {isStreaming && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={stopGeneration}
-                      className="ml-auto flex items-center gap-2 rounded-xl border-border/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                    >
-                      <Square size={12} className="fill-current" />
-                      Stop
-                    </Button>
-                  )}
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-2.5 w-full max-w-lg mx-auto">
+                  {[
+                    { icon: <ImagePlus className="w-4 h-4" />, title: "Create image", desc: "Describe what you want", action: () => handleSend("Create an image of a beautiful Nigerian landscape") },
+                    { icon: <Sparkles className="w-4 h-4" />, title: "Surprise me", desc: "Random Nigerian fact", action: () => handleSend("Tell me an interesting fact about Nigeria") },
+                    { icon: <PenLine className="w-4 h-4" />, title: "Help me write", desc: "Emails, essays & more", action: () => handleSend("Help me write a professional email") },
+                    { icon: <BookOpen className="w-4 h-4" />, title: "Prompt Library", desc: "Browse templates", action: () => navigate("/prompts") },
+                  ].map((item, i) => (
+                    <button key={i} onClick={item.action} disabled={isLoading || isGeneratingImage}
+                      className="card-premium p-3.5 flex flex-col items-start gap-1.5 text-left group hover:border-primary/20">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all text-primary">
+                        {item.icon}
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">{item.title}</span>
+                      <span className="text-[10px] text-muted-foreground">{item.desc}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
-              
-              {!isLoading && lastAIMessage && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
-                <SmartReplySuggestions
-                  lastMessage={lastAIMessage}
-                  messageType={detectMessageType(lastAIMessage)}
-                  onSuggestionClick={handleSend}
-                />
-              )}
-              
-              <div ref={messagesEndRef} />
-            </motion.div>
-          )}
+
+                <div className="flex items-center gap-2 mt-6">
+                  <Button variant="outline" onClick={() => navigate("/custom-gpt")} className="gap-1.5 rounded-lg border-border/40 text-xs h-8">
+                    <Bot size={14} /> Build Custom GPT
+                  </Button>
+                  <Button variant="outline" onClick={() => setShowVoiceMode(true)} className="gap-1.5 rounded-lg border-border/40 text-xs h-8">
+                    <Mic size={14} /> Voice Chat
+                  </Button>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground mt-5">
+                  Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[9px] border border-border/40">⌘K</kbd> for quick actions
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div key="messages" className="max-w-3xl mx-auto pt-4"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                {messages.map((msg, index) => (
+                  <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: index * 0.03 }}>
+                    <MessageBubbleV2
+                      role={msg.role}
+                      content={msg.content}
+                      thought={msg.thought}
+                      images={msg.images}
+                      confidence={msg.confidence}
+                      sources={msg.sources}
+                      language={language}
+                      onRegenerate={msg.role === 'assistant' && index === messages.length - 1 ? regenerateLastMessage : undefined}
+                      onEdit={msg.role === 'user' ? (newContent) => editMessage(index, newContent) : undefined}
+                    />
+                  </motion.div>
+                ))}
+                
+                {isLoading && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+                      <span className="text-sm">👃🏿</span>
+                    </div>
+                    <ThinkingIndicatorV2 />
+                    {isStreaming && (
+                      <Button variant="outline" size="sm" onClick={stopGeneration}
+                        className="ml-auto flex items-center gap-1.5 rounded-lg border-border/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 text-xs">
+                        <Square size={10} className="fill-current" /> Stop
+                      </Button>
+                    )}
+                  </div>
+                )}
+                
+                {!isLoading && lastAIMessage && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && (
+                  <SmartReplySuggestions lastMessage={lastAIMessage} messageType={detectMessageType(lastAIMessage)} onSuggestionClick={handleSend} />
+                )}
+                
+                <div ref={messagesEndRef} />
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
@@ -545,7 +424,7 @@ export default function Index() {
             onSend={handleSend}
             disabled={isLoading || isGeneratingImage}
             language={language}
-            placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Ask Hanchi..."}
+            placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Message Hanchi..."}
           />
         </div>
       </div>
