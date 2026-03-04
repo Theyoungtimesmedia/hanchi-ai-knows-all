@@ -1,224 +1,273 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence, useAnimation } from "framer-motion";
+
+import nosyDefault from "@/assets/nosy-default.png";
+import nosyCurious from "@/assets/nosy-curious.png";
+import nosyHappy from "@/assets/nosy-happy.png";
+import nosyBored from "@/assets/nosy-bored.png";
+import nosyPixar from "@/assets/nosy-pixar.png";
+import nosyGhibli from "@/assets/nosy-ghibli.png";
+import nosyClay from "@/assets/nosy-clay.png";
+
+type NosyMood = "idle" | "curious" | "thinking" | "happy" | "bored";
 
 interface NosyMascotProps {
   isLoading?: boolean;
   isStreaming?: boolean;
-  isTyping?: boolean;
   messageCount?: number;
   hasError?: boolean;
 }
 
-type NosyState = "idle" | "curious" | "thinking" | "happy" | "worried" | "peek" | "sleeping";
-
-const TIPS = [
-  "Try asking me about Nigerian history 🇳🇬",
-  "I can help you prep for JAMB too 📚",
-  "Want me to write an essay in Nigerian English?",
-  "I can translate to Hausa, Pidgin, or Yoruba",
-  "Ask me to create an image of anything 🎨",
-  "Fun fact: Nigeria has over 500 languages!",
-  "Need help with code? I got you 💻",
-  "Try voice mode — just click the mic 🎤",
-  "I can help with your CV or cover letter",
-  "Ask me about minimalist style tips 👕",
+const STYLE_CYCLE = [
+  { src: nosyBored, label: "Bored" },
+  { src: nosyPixar, label: "Pixar" },
+  { src: nosyGhibli, label: "Ghibli" },
+  { src: nosyClay, label: "Clay" },
 ];
 
-const NOSY_EXPRESSIONS: Record<NosyState, { eyes: string; mouth: string; rotate: number; scale: number }> = {
-  idle: { eyes: "👀", mouth: "", rotate: 0, scale: 1 },
-  curious: { eyes: "👀", mouth: "", rotate: 15, scale: 1.1 },
-  thinking: { eyes: "🤔", mouth: "", rotate: -5, scale: 1.05 },
-  happy: { eyes: "😊", mouth: "", rotate: 0, scale: 1.15 },
-  worried: { eyes: "😟", mouth: "", rotate: -10, scale: 0.95 },
-  peek: { eyes: "👀", mouth: "", rotate: 5, scale: 1 },
-  sleeping: { eyes: "😴", mouth: "", rotate: -15, scale: 0.9 },
-};
+const TIPS = [
+  "Try asking me about Nigerian history! 🇳🇬",
+  "I can help you write code too, you know 👀",
+  "Press ⌘K for quick actions!",
+  "Ask me to create an image for you 🎨",
+  "I can translate between English, Yoruba & Pidgin!",
+  "Want style advice? Just ask! 👔",
+  "Omo, don't just stare at me... type something!",
+  "I'm literally the nosiest AI ever created 👃",
+  "Need help with JAMB prep? Say less 📚",
+  "I can help with your CV or cover letter ✍️",
+];
 
-export const NosyMascot = ({ isLoading, isStreaming, isTyping, messageCount = 0, hasError }: NosyMascotProps) => {
-  const [state, setState] = useState<NosyState>("idle");
+export const NosyMascot = ({ isLoading, isStreaming, messageCount = 0, hasError }: NosyMascotProps) => {
+  const [mood, setMood] = useState<NosyMood>("idle");
   const [showTip, setShowTip] = useState(false);
-  const [currentTip, setCurrentTip] = useState("");
-  const [dismissed, setDismissed] = useState(false);
-  const [idleTime, setIdleTime] = useState(0);
+  const [tipText, setTipText] = useState("");
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [boredStyleIndex, setBoredStyleIndex] = useState(0);
+  const [isCyclingStyles, setIsCyclingStyles] = useState(false);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const styleCycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const controls = useAnimation();
+  const constraintsRef = useRef<HTMLDivElement>(null);
 
-  // Check if dismissed
-  useEffect(() => {
-    const d = localStorage.getItem("nosy_dismissed");
-    if (d === "true") setDismissed(true);
-  }, []);
-
-  // State machine based on app state
+  // Mood from props
   useEffect(() => {
     if (hasError) {
-      setState("worried");
-      return;
+      setMood("idle");
+      setIsCyclingStyles(false);
+    } else if (isLoading || isStreaming) {
+      setMood("thinking");
+      setIsCyclingStyles(false);
     }
-    if (isLoading && !isStreaming) {
-      setState("thinking");
-      return;
-    }
-    if (isStreaming) {
-      setState("happy");
-      return;
-    }
-    if (isTyping) {
-      setState("curious");
-      return;
-    }
-    setState("idle");
-  }, [isLoading, isStreaming, isTyping, hasError]);
+  }, [isLoading, isStreaming, hasError]);
 
-  // Idle timer for peek state
+  // Flash happy on new message
   useEffect(() => {
-    if (state !== "idle") {
-      setIdleTime(0);
-      return;
+    if (messageCount > 0 && !isLoading && !isStreaming) {
+      setMood("happy");
+      setIsCyclingStyles(false);
+      const timer = setTimeout(() => setMood("idle"), 3000);
+      return () => clearTimeout(timer);
     }
-    const interval = setInterval(() => {
-      setIdleTime(prev => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [state]);
+  }, [messageCount]);
 
-  // Show tip after 30s idle
+  // Idle → bored after 30s
   useEffect(() => {
-    if (idleTime >= 30 && !showTip && state === "idle") {
-      const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
-      setCurrentTip(tip);
-      setShowTip(true);
-      setState("peek");
-
-      const timeout = setTimeout(() => {
-        setShowTip(false);
-        setState("idle");
-        setIdleTime(0);
-      }, 8000);
-      return () => clearTimeout(timeout);
+    if (mood === "idle" && !isLoading && !isStreaming) {
+      idleTimerRef.current = setTimeout(() => {
+        setMood("bored");
+        setIsCyclingStyles(true);
+      }, 30000);
     }
-  }, [idleTime, showTip, state]);
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [mood, isLoading, isStreaming]);
+
+  // Cycle styles when bored
+  useEffect(() => {
+    if (isCyclingStyles) {
+      styleCycleRef.current = setInterval(() => {
+        setBoredStyleIndex(prev => (prev + 1) % STYLE_CYCLE.length);
+      }, 3000);
+    }
+    return () => {
+      if (styleCycleRef.current) clearInterval(styleCycleRef.current);
+    };
+  }, [isCyclingStyles]);
+
+  // Periodic tips
+  useEffect(() => {
+    if (mood === "bored" || mood === "idle") {
+      const tipTimer = setInterval(() => {
+        setTipText(TIPS[Math.floor(Math.random() * TIPS.length)]);
+        setShowTip(true);
+        setTimeout(() => setShowTip(false), 4000);
+      }, 15000);
+      return () => clearInterval(tipTimer);
+    }
+  }, [mood]);
+
+  // Activity detection
+  useEffect(() => {
+    const handleActivity = () => {
+      if (mood === "bored") {
+        setMood("curious");
+        setIsCyclingStyles(false);
+        setTimeout(() => setMood("idle"), 2000);
+      }
+    };
+    window.addEventListener("keydown", handleActivity);
+    return () => window.removeEventListener("keydown", handleActivity);
+  }, [mood]);
 
   const handleClick = useCallback(() => {
-    if (showTip) {
-      setShowTip(false);
-      setState("idle");
-      setIdleTime(0);
-      return;
-    }
-    const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
-    setCurrentTip(tip);
+    if (isDragging) return;
+    setTipText(TIPS[Math.floor(Math.random() * TIPS.length)]);
     setShowTip(true);
-    setState("happy");
+    setMood("happy");
+    setIsCyclingStyles(false);
+    controls.start({
+      scale: [1, 1.2, 0.9, 1.1, 1],
+      rotate: [0, -10, 10, -5, 0],
+      transition: { duration: 0.5 },
+    });
     setTimeout(() => {
       setShowTip(false);
-      setState("idle");
-    }, 5000);
-  }, [showTip]);
+      setMood("idle");
+    }, 4000);
+  }, [isDragging, controls]);
 
-  const handleDismiss = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDismissed(true);
-    localStorage.setItem("nosy_dismissed", "true");
+  const getCurrentImage = () => {
+    if (isCyclingStyles && mood === "bored") return STYLE_CYCLE[boredStyleIndex].src;
+    switch (mood) {
+      case "curious": return nosyCurious;
+      case "thinking": return nosyCurious;
+      case "happy": return nosyHappy;
+      case "bored": return nosyBored;
+      default: return nosyDefault;
+    }
   };
 
-  if (dismissed) return null;
+  const getCurrentLabel = () => {
+    if (isCyclingStyles && mood === "bored") return STYLE_CYCLE[boredStyleIndex].label;
+    return null;
+  };
 
-  const expr = NOSY_EXPRESSIONS[state];
+  if (isMinimized) {
+    return (
+      <motion.button
+        onClick={() => setIsMinimized(false)}
+        className="fixed bottom-24 right-4 z-50 w-12 h-12 rounded-full bg-primary shadow-lg shadow-primary/30 flex items-center justify-center overflow-hidden"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+      >
+        <img src={nosyDefault} alt="Nosy" className="w-10 h-10 object-contain" />
+      </motion.button>
+    );
+  }
 
   return (
-    <div className="fixed bottom-24 right-4 z-30 md:bottom-8 md:right-6">
-      <AnimatePresence>
-        {showTip && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="absolute bottom-full right-0 mb-2 w-56 p-3 rounded-2xl bg-card border border-border/60 shadow-lg"
-          >
-            <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-card border-r border-b border-border/60 rotate-45" />
-            <p className="text-xs text-foreground leading-relaxed">{currentTip}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-50">
       <motion.div
-        className="relative cursor-pointer select-none group"
-        onClick={handleClick}
-        animate={{
-          rotate: expr.rotate,
-          scale: expr.scale,
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        whileHover={{ scale: expr.scale * 1.1 }}
-        whileTap={{ scale: expr.scale * 0.9 }}
+        drag
+        dragConstraints={constraintsRef}
+        dragElastic={0.1}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={() => setTimeout(() => setIsDragging(false), 100)}
+        className="pointer-events-auto absolute bottom-20 right-4 cursor-grab active:cursor-grabbing"
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", damping: 15, stiffness: 200, delay: 0.5 }}
       >
-        {/* Dismiss button */}
-        <button
-          onClick={handleDismiss}
-          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-muted border border-border text-[8px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground z-10"
-        >
-          ×
-        </button>
+        {/* Speech bubble */}
+        <AnimatePresence>
+          {showTip && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.8 }}
+              className="absolute bottom-full right-0 mb-2 max-w-[200px]"
+            >
+              <div className="bg-card border border-border/60 rounded-2xl rounded-br-sm px-3 py-2 shadow-xl">
+                <p className="text-[11px] text-foreground leading-relaxed">{tipText}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Glow */}
-        <motion.div
-          className="absolute inset-0 rounded-full bg-primary/20 blur-xl"
-          animate={{
-            scale: state === "thinking" ? [1, 1.3, 1] : state === "happy" ? [1, 1.2, 1] : 1,
-            opacity: state === "sleeping" ? 0.3 : 0.6,
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        />
+        {/* Style label when cycling */}
+        <AnimatePresence>
+          {getCurrentLabel() && (
+            <motion.div
+              key={getCurrentLabel()}
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] font-bold px-2 py-0.5 rounded-full shadow-md whitespace-nowrap z-10"
+            >
+              {getCurrentLabel()} mode ✨
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Main body */}
-        <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-lg flex flex-col items-center justify-center overflow-visible">
-          {/* Eyes - positioned above nose */}
-          <motion.span
-            className="text-[10px] leading-none -mt-0.5"
-            animate={
-              state === "curious"
-                ? { x: [0, 3, 0], transition: { duration: 0.6, repeat: Infinity } }
-                : state === "thinking"
-                ? { y: [0, -2, 0], transition: { duration: 1.5, repeat: Infinity } }
-                : state === "sleeping"
-                ? { opacity: [1, 0.3, 1], transition: { duration: 2, repeat: Infinity } }
-                : {}
-            }
+        {/* Character */}
+        <motion.div onClick={handleClick} animate={controls} className="relative select-none group">
+          {/* Glow */}
+          <motion.div
+            className="absolute inset-[-8px] rounded-full opacity-40"
+            animate={{
+              boxShadow: mood === "thinking"
+                ? ["0 0 20px 8px hsl(160 84% 39% / 0.3)", "0 0 35px 12px hsl(160 84% 39% / 0.5)", "0 0 20px 8px hsl(160 84% 39% / 0.3)"]
+                : "0 0 15px 4px hsl(160 84% 39% / 0.15)",
+            }}
+            transition={{ duration: 1.5, repeat: mood === "thinking" ? Infinity : 0 }}
+          />
+
+          {/* Image */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={getCurrentImage()}
+              initial={{ opacity: 0, scale: 0.7, rotate: -10 }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                rotate: 0,
+                y: mood === "thinking" ? [0, -6, 0] : mood === "idle" ? [0, -4, 0] : 0,
+              }}
+              exit={{ opacity: 0, scale: 0.7, rotate: 10 }}
+              transition={{
+                opacity: { duration: 0.4 },
+                scale: { duration: 0.4, type: "spring" },
+                rotate: { duration: 0.4 },
+                y: {
+                  duration: mood === "thinking" ? 0.8 : 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                },
+              }}
+              className="w-24 h-24 md:w-28 md:h-28"
+            >
+              <img
+                src={getCurrentImage()}
+                alt={`Nosy - ${mood}`}
+                className="w-full h-full object-contain drop-shadow-xl"
+                draggable={false}
+              />
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Minimize button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-muted border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-destructive/20 transition-colors text-[10px] opacity-0 group-hover:opacity-100"
           >
-            {expr.eyes}
-          </motion.span>
-
-          {/* Nose */}
-          <motion.span
-            className="text-2xl leading-none"
-            animate={
-              state === "happy"
-                ? { y: [0, -2, 0], transition: { duration: 0.4, repeat: 2 } }
-                : state === "worried"
-                ? { x: [0, -1, 1, 0], transition: { duration: 0.3, repeat: 3 } }
-                : {}
-            }
-          >
-            👃🏿
-          </motion.span>
-
-          {/* Inner highlight */}
-          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
-        </div>
-
-        {/* State indicator dot */}
-        <motion.div
-          className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full"
-          animate={{
-            backgroundColor:
-              state === "thinking" ? "hsl(var(--primary))" :
-              state === "happy" ? "#22c55e" :
-              state === "worried" ? "#ef4444" :
-              state === "curious" ? "#f59e0b" :
-              "hsl(var(--muted-foreground))",
-            scale: state === "thinking" ? [1, 1.3, 1] : 1,
-          }}
-          transition={{ duration: 1, repeat: state === "thinking" ? Infinity : 0 }}
-        />
+            ×
+          </button>
+        </motion.div>
       </motion.div>
     </div>
   );
