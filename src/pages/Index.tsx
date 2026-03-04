@@ -10,6 +10,7 @@ import { ActiveAddons } from "@/components/EnhancedPlusMenu";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NoseSphere } from "@/components/NoseSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
+import { NosyMascot } from "@/components/NosyMascot";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
 import { AIModelSelector } from "@/components/AIModelSelector";
@@ -237,6 +238,12 @@ export default function Index() {
   return (
     <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <OfflineIndicator />
+      <NosyMascot
+        isLoading={isLoading}
+        isStreaming={isStreaming}
+        messageCount={messages.length}
+        hasError={false}
+      />
       
       {/* Modals */}
       <KeyboardShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
