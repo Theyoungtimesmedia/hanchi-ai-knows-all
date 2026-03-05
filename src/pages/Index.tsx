@@ -71,7 +71,7 @@ export default function Index() {
     customSystemPrompt: activeCustomGPT?.systemPrompt || "",
   };
   
-  const { messages, isLoading, isStreaming, sendMessage, regenerateLastMessage, editMessage, stopGeneration } = 
+  const { messages, isLoading, isStreaming, sendMessage, addMessage, regenerateLastMessage, editMessage, stopGeneration } = 
     useChat(language, currentConversationId, user?.id || null, chatOptions);
   const { getMemoryContext, addMemory } = useUserMemory(user?.id || null);
 
@@ -173,17 +173,19 @@ export default function Index() {
     const imageCommand = detectImageCommand(content);
     if (imageCommand.type) {
       const isSticker = imageCommand.type === 'sticker';
-      // Send user message to chat first so it appears in the conversation
-      await sendMessage(content, images);
+      // Add user message manually (don't send to AI)
+      addMessage({ role: "user", content });
       
-      // Now generate image - show loading state via pending prompt
+      // Generate image
       setPendingImagePrompt(imageCommand.prompt);
       const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
       setPendingImagePrompt(null);
       
       if (result?.url) {
-        // Send the generated image as an assistant message with the image embedded
-        await sendMessage(`Here's what I created for "${imageCommand.prompt}" 🎨`, [result.url]);
+        // Add the generated image as an assistant message
+        addMessage({ role: "assistant", content: `Here's what I created for "${imageCommand.prompt}" 🎨`, images: [result.url] });
+      } else {
+        addMessage({ role: "assistant", content: "Sorry, I couldn't generate that image. Try again? 😅" });
       }
       return;
     }
