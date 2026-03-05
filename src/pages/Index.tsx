@@ -57,6 +57,7 @@ export default function Index() {
   const { toast } = useToast();
   
   const { isGenerating: isGeneratingImage, generateImage } = useImageGeneration();
+  const [pendingImagePrompt, setPendingImagePrompt] = useState<string | null>(null);
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
     useConversationHistory(user?.id || null);
@@ -161,25 +162,30 @@ export default function Index() {
   const handleSend = async (content: string, images?: string[], addons?: ActiveAddons) => {
     if (addons) setActiveAddons(addons);
     
-    const imageCommand = detectImageCommand(content);
-    if (imageCommand.type) {
-      const isSticker = imageCommand.type === 'sticker';
-      toast({
-        title: isSticker ? "Creating sticker..." : "Generating image...",
-        description: `"${imageCommand.prompt}"`,
-      });
-      const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
-      if (result) {
-        await sendMessage(content, images);
-      }
-      return;
-    }
-    
+    // Ensure conversation exists
     if (!currentConversationId) {
       const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
       createConversation(title, language).then(convId => {
         if (convId) setCurrentConversationId(convId);
       });
+    }
+    
+    const imageCommand = detectImageCommand(content);
+    if (imageCommand.type) {
+      const isSticker = imageCommand.type === 'sticker';
+      // Send user message to chat first so it appears in the conversation
+      await sendMessage(content, images);
+      
+      // Now generate image - show loading state via pending prompt
+      setPendingImagePrompt(imageCommand.prompt);
+      const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
+      setPendingImagePrompt(null);
+      
+      if (result?.url) {
+        // Send the generated image as an assistant message with the image embedded
+        await sendMessage(`Here's what I created for "${imageCommand.prompt}" 🎨`, [result.url]);
+      }
+      return;
     }
     
     await sendMessage(content, images);
@@ -239,10 +245,13 @@ export default function Index() {
     <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <OfflineIndicator />
       <NosyMascot
-        isLoading={isLoading}
+        isLoading={isLoading || isGeneratingImage}
         isStreaming={isStreaming}
         messageCount={messages.length}
         hasError={false}
+        lastMessageContent={messages.length > 0 ? messages[messages.length - 1].content : undefined}
+        isFirstMessage={messages.length === 1}
+        variant="chat"
       />
       
       {/* Modals */}

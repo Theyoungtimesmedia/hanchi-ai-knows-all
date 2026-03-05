@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Brain, Globe, Mic, Image as ImageIcon, Search, Sparkles, Zap, CheckCircle2, Code, MessageSquare, Shield, PenLine, BookOpen, Star, Users, Lightbulb, TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NosyMascot } from "@/components/NosyMascot";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -99,15 +100,8 @@ export default function Landing() {
           className="max-w-3xl mx-auto text-center px-4 sm:px-6 pb-16"
           initial="initial" animate="animate" variants={stagger}
         >
-          <motion.div className="relative inline-flex items-center justify-center w-20 h-20 mb-5" variants={fadeUp}>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 via-purple-500/15 to-emerald-500/15 rounded-full blur-2xl animate-pulse" />
-            <motion.div 
-              className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-emerald-500 to-teal-500 shadow-xl flex items-center justify-center"
-              animate={{ boxShadow: ["0 0 20px hsl(160 84% 39% / 0.3)", "0 0 40px hsl(217 91% 60% / 0.3)", "0 0 20px hsl(280 60% 55% / 0.3)", "0 0 20px hsl(160 84% 39% / 0.3)"] }}
-              transition={{ duration: 5, repeat: Infinity }}
-            >
-              <span className="text-3xl">👃🏿</span>
-            </motion.div>
+          <motion.div className="relative inline-flex items-center justify-center w-24 h-24 mb-5" variants={fadeUp}>
+            <NosyMascot variant="landing" />
           </motion.div>
 
           <motion.div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary mb-4" variants={fadeUp}>
