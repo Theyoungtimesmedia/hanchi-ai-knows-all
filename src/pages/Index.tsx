@@ -57,6 +57,7 @@ export default function Index() {
   const { toast } = useToast();
   
   const { isGenerating: isGeneratingImage, generateImage } = useImageGeneration();
+  const [pendingImagePrompt, setPendingImagePrompt] = useState<string | null>(null);
 
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
     useConversationHistory(user?.id || null);
@@ -70,7 +71,7 @@ export default function Index() {
     customSystemPrompt: activeCustomGPT?.systemPrompt || "",
   };
   
-  const { messages, isLoading, isStreaming, sendMessage, regenerateLastMessage, editMessage, stopGeneration } = 
+  const { messages, isLoading, isStreaming, sendMessage, addMessage, regenerateLastMessage, editMessage, stopGeneration } = 
     useChat(language, currentConversationId, user?.id || null, chatOptions);
   const { getMemoryContext, addMemory } = useUserMemory(user?.id || null);
 
@@ -161,25 +162,32 @@ export default function Index() {
   const handleSend = async (content: string, images?: string[], addons?: ActiveAddons) => {
     if (addons) setActiveAddons(addons);
     
-    const imageCommand = detectImageCommand(content);
-    if (imageCommand.type) {
-      const isSticker = imageCommand.type === 'sticker';
-      toast({
-        title: isSticker ? "Creating sticker..." : "Generating image...",
-        description: `"${imageCommand.prompt}"`,
-      });
-      const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
-      if (result) {
-        await sendMessage(content, images);
-      }
-      return;
-    }
-    
+    // Ensure conversation exists
     if (!currentConversationId) {
       const title = content.slice(0, 50) + (content.length > 50 ? "..." : "");
       createConversation(title, language).then(convId => {
         if (convId) setCurrentConversationId(convId);
       });
+    }
+    
+    const imageCommand = detectImageCommand(content);
+    if (imageCommand.type) {
+      const isSticker = imageCommand.type === 'sticker';
+      // Add user message manually (don't send to AI)
+      addMessage({ role: "user", content });
+      
+      // Generate image
+      setPendingImagePrompt(imageCommand.prompt);
+      const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
+      setPendingImagePrompt(null);
+      
+      if (result?.url) {
+        // Add the generated image as an assistant message
+        addMessage({ role: "assistant", content: `Here's what I created for "${imageCommand.prompt}" 🎨`, images: [result.url] });
+      } else {
+        addMessage({ role: "assistant", content: "Sorry, I couldn't generate that image. Try again? 😅" });
+      }
+      return;
     }
     
     await sendMessage(content, images);
@@ -239,10 +247,13 @@ export default function Index() {
     <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <OfflineIndicator />
       <NosyMascot
-        isLoading={isLoading}
+        isLoading={isLoading || isGeneratingImage}
         isStreaming={isStreaming}
         messageCount={messages.length}
         hasError={false}
+        lastMessageContent={messages.length > 0 ? messages[messages.length - 1].content : undefined}
+        isFirstMessage={messages.length === 1}
+        variant="chat"
       />
       
       {/* Modals */}
@@ -400,7 +411,23 @@ export default function Index() {
                   </motion.div>
                 ))}
                 
-                {isLoading && (
+                {/* Image generation loading */}
+                {pendingImagePrompt && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+                        <span className="text-sm">👃🏿</span>
+                      </div>
+                      <div className="rounded-2xl border border-border/60 bg-muted/30 p-6 flex flex-col items-center justify-center gap-3 min-h-[180px] flex-1 max-w-md">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Creating your image...</p>
+                        <p className="text-xs text-muted-foreground/70 max-w-[200px] text-center truncate">"{pendingImagePrompt}"</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {isLoading && !pendingImagePrompt && (
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
                       <span className="text-sm">👃🏿</span>

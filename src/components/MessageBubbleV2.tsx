@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { InlineChatImage } from "./InlineChatImage";
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -216,13 +217,26 @@ export const MessageBubbleV2 = ({
             ? 'message-bubble-ai shadow-sm' 
             : 'message-bubble-user shadow-md'
         )}>
-          {/* Images */}
+          {/* Images - use InlineChatImage for AI-generated images */}
           {images && images.length > 0 && (
-            <div className="mb-4 grid gap-3">
+            <div className="mb-4 space-y-3">
               {images.map((img, i) => {
                 const imgSrc = img.startsWith('data:') || img.startsWith('http') 
                   ? img 
                   : `data:image/jpeg;base64,${img}`;
+                
+                // AI-generated images (from assistant) get full controls
+                if (isAI) {
+                  return (
+                    <InlineChatImage
+                      key={i}
+                      imageUrl={imgSrc}
+                      prompt=""
+                    />
+                  );
+                }
+                
+                // User-uploaded images stay simple
                 return (
                   <div key={i} className="relative group/img">
                     <img 
@@ -232,27 +246,9 @@ export const MessageBubbleV2 = ({
                       onClick={() => setSelectedImage(imgSrc)}
                     />
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/img:opacity-100 transition-opacity">
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="h-8 w-8 rounded-lg bg-black/50 hover:bg-black/70 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleImageDownload(imgSrc, i);
-                        }}
-                      >
+                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-lg bg-black/50 hover:bg-black/70 text-white"
+                        onClick={(e) => { e.stopPropagation(); handleImageDownload(imgSrc, i); }}>
                         <Download size={14} />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="h-8 w-8 rounded-lg bg-black/50 hover:bg-black/70 text-white"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(imgSrc, '_blank');
-                        }}
-                      >
-                        <ExternalLink size={14} />
                       </Button>
                     </div>
                   </div>

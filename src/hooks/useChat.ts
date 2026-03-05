@@ -297,6 +297,10 @@ export const useChat = (
     setMessages([]);
   }, []);
 
+  const addMessage = useCallback((message: Message) => {
+    setMessages(prev => [...prev, message]);
+  }, []);
+
   const regenerateLastMessage = useCallback(async () => {
     if (messages.length < 2) return;
 
@@ -325,6 +329,7 @@ export const useChat = (
     isStreaming,
     sendMessage,
     clearMessages,
+    addMessage,
     regenerateLastMessage,
     editMessage,
     stopGeneration,
