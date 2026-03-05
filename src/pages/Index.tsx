@@ -411,7 +411,23 @@ export default function Index() {
                   </motion.div>
                 ))}
                 
-                {isLoading && (
+                {/* Image generation loading */}
+                {pendingImagePrompt && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
+                        <span className="text-sm">👃🏿</span>
+                      </div>
+                      <div className="rounded-2xl border border-border/60 bg-muted/30 p-6 flex flex-col items-center justify-center gap-3 min-h-[180px] flex-1 max-w-md">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Creating your image...</p>
+                        <p className="text-xs text-muted-foreground/70 max-w-[200px] text-center truncate">"{pendingImagePrompt}"</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {isLoading && !pendingImagePrompt && (
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
                       <span className="text-sm">👃🏿</span>
