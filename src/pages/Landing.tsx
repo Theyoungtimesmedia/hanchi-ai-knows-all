@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Brain, Globe, Mic, Image as ImageIcon, Search, Sparkles, Zap, CheckCircle2, Code, MessageSquare, Shield, PenLine, BookOpen, Star, Users, Lightbulb, TrendingUp } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { NosyMascot } from "@/components/NosyMascot";
+import { NosyMascotV2 } from "@/components/nosy";
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -101,7 +101,7 @@ export default function Landing() {
           initial="initial" animate="animate" variants={stagger}
         >
           <motion.div className="relative inline-flex items-center justify-center w-24 h-24 mb-5" variants={fadeUp}>
-            <NosyMascot variant="landing" />
+            <NosyMascotV2 variant="landing" />
           </motion.div>
 
           <motion.div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary mb-4" variants={fadeUp}>

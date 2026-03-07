@@ -13,15 +13,26 @@ interface FloatingInputV2Props {
   disabled?: boolean;
   language?: string;
   placeholder?: string;
+  onInputChange?: (text: string) => void;
+  inputValue?: string;
 }
 
 export const FloatingInputV2 = ({ 
   onSend, 
   disabled, 
   language = "en",
-  placeholder = "Message Hanchi..."
+  placeholder = "Message Hanchi...",
+  onInputChange,
+  inputValue,
 }: FloatingInputV2Props) => {
   const [input, setInput] = useState("");
+  
+  // Sync input from external correction (typo fix)
+  useEffect(() => {
+    if (inputValue !== undefined && inputValue !== input) {
+      setInput(inputValue);
+    }
+  }, [inputValue]);
   const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -227,6 +238,7 @@ export const FloatingInputV2 = ({
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
+                onInputChange?.(e.target.value);
                 adjustTextareaHeight();
               }}
               onKeyDown={handleKeyDown}
