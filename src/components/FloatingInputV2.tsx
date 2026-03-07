@@ -26,6 +26,13 @@ export const FloatingInputV2 = ({
   inputValue,
 }: FloatingInputV2Props) => {
   const [input, setInput] = useState("");
+  
+  // Sync input from external correction (typo fix)
+  useEffect(() => {
+    if (inputValue !== undefined && inputValue !== input) {
+      setInput(inputValue);
+    }
+  }, [inputValue]);
   const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
