@@ -10,7 +10,7 @@ import { ActiveAddons } from "@/components/EnhancedPlusMenu";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NoseSphere } from "@/components/NoseSphere";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
-import { NosyMascot } from "@/components/NosyMascot";
+import { NosyMascotV2 } from "@/components/nosy";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
 import { AIModelSelector } from "@/components/AIModelSelector";
@@ -51,6 +51,7 @@ export default function Index() {
   const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
   const [showVoiceMode, setShowVoiceMode] = useState(false);
   const [canvasState, setCanvasState] = useState<{ open: boolean; content: string; type: "code" | "document" } | null>(null);
+  const [currentInputText, setCurrentInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -246,7 +247,7 @@ export default function Index() {
   return (
     <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
       <OfflineIndicator />
-      <NosyMascot
+      <NosyMascotV2
         isLoading={isLoading || isGeneratingImage}
         isStreaming={isStreaming}
         messageCount={messages.length}
@@ -254,6 +255,8 @@ export default function Index() {
         lastMessageContent={messages.length > 0 ? messages[messages.length - 1].content : undefined}
         isFirstMessage={messages.length === 1}
         variant="chat"
+        inputText={currentInputText}
+        onInputCorrection={setCurrentInputText}
       />
       
       {/* Modals */}
@@ -459,6 +462,8 @@ export default function Index() {
             disabled={isLoading || isGeneratingImage}
             language={language}
             placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Message Hanchi..."}
+            onInputChange={setCurrentInputText}
+            inputValue={currentInputText}
           />
         </div>
       </div>
