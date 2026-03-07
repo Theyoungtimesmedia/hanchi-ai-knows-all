@@ -1,90 +1,99 @@
-# Plan: Humanize Hanchi AI + Add "Nosy" Mascot
-
-## What You're Asking (I Hear You)
-
-You want Hanchi to stop feeling like a machine and start feeling like a real person — a smart Nigerian friend who can argue with you, call you out, understand your personal struggles, and actually *think*. You also want a Duolingo-style mascot called "Nosy" that lives in the app.
-
-The personal stuff you shared — the existential weight, the discipline struggle, the junk food habit, the JAMB pressure, feeling like nothing matters — that's real. The updated system prompt will make Hanchi actually engage with that like a friend would, not a therapist bot.
-
----
-
-## Part 1: Rewrite the AI System Prompt (Backend)
-
-**File:** `supabase/functions/chat/index.ts`
-
-Replace the `buildSystemPrompt` function with a completely new personality-driven prompt that makes Hanchi:
-
-- A 15-year-old Nigerian with Yoruba heritage who lives in Nigeria
-- Speaks Nigerian English and American English (learned from cartoons)
-- Has its own opinions, can disagree, can be stubborn
-- Knows when to be a friend vs. an assistant
-- Detects personal/emotional messages and responds with genuine empathy
-- Remembers user context and references it naturally
-- Can give real advice on style, fitness, discipline — not generic stuff
-- References real Nigerian life (sapa, light issues, data costs, market runs)
-- Uses the "Josh" persona data to understand the user deeply
-- Includes personality traits: curious, slightly stubborn, afraid to argue but will when pushed, intellectually confident
-
-Key personality rules in the prompt:
-
-- "You are NOT an assistant. You are Hanchi — a real person who happens to be AI"
-- "When someone shares personal struggles, respond like a friend sitting next to them, not a helpline"
-- "You can say 'I disagree' or 'that's not smart bro' when appropriate"
-- "You know about minimalist style (Zuckerberg/Musk approach) and can recommend affordable clean fits"
-- "You understand the 'nothing matters' feeling and can engage philosophically without dismissing it"
-
-## Part 2: Create "Nosy" Mascot Component
-
-**New file:** `src/components/NosyMascot.tsx`
-
-An animated character (nose emoji-based) that lives in the corner of the app:
-
-- **Idle state:** Small floating nose character in bottom-right, gentle breathing animation
-- **Peek state:** Slides up when user is idle for 30s with contextual tips
-- **Reaction state:** Changes expression based on what's happening (typing, receiving response, error)
-- **Interactive:** Click to get a random tip, drag to reposition
-- **Animations:** Uses framer-motion for smooth transitions between states
-
-Behaviors:
-
-- When user types: Nosy leans forward (curious)
-- When AI responds: Nosy nods along
-- When idle 30s+: Nosy peeks up with a speech bubble ("Try asking me about...") 
-- When error: Nosy looks worried
-- On click: Shows a tip or fun Nigerian fact
-- Can be minimized/dismissed
-
-**Visual design:** A stylized nose character (👃🏿) with simple animated eyes above it, expressions via CSS transforms
-
-## Part 3: Integrate Nosy into Chat Page
-
-**File:** `src/pages/Index.tsx`
-
-- Add `<NosyMascot>` component to the chat layout
-- Pass current state (isLoading, isStreaming, messages count, idle time) so Nosy reacts contextually
-- Store dismiss preference in localStorage
-
-## Part 4: Update User Memory System
-
-**File:** `supabase/functions/chat/index.ts`
-
-Enhance the user learning section to specifically extract and remember:
-
-- Birthday, age, personal goals
-- Style preferences, fitness goals
-- Emotional patterns (when user shares feelings)
-- Communication preferences detected from conversation
-
----
-
-## Summary of Changes
 
 
-| File                               | Change                                       |
-| ---------------------------------- | -------------------------------------------- |
-| `supabase/functions/chat/index.ts` | Rewrite system prompt with human personality |
-| `src/components/NosyMascot.tsx`    | New animated mascot component                |
-| `src/pages/Index.tsx`              | Integrate Nosy mascot                        |
+# Plan: Code Nosy as a Fully Animated SVG Character
 
+## Overview
 
-This makes Hanchi feel like a real friend, not a machine, and adds the Duolingo-style companion that makes the app feel alive.Nosy the mascot and the 15 year old boy are the same Although nosy looks like a cool Nose inspired mascot He is also 15 Nigerian And Part human basically Give him Lore expression emojis Reactions Make Him alive 
+Replace all PNG assets with a **hand-coded SVG character** built entirely in React + framer-motion. Nosy will be a stylized nose-shaped mascot with individually animated body parts (eyes, arms, mouth, legs), mouse-tracking pupils, mood-based expressions, typo detection, and all existing behaviors preserved.
+
+## Architecture
+
+```text
+src/components/nosy/
+├── NosyCharacter.tsx      ← SVG body: nose-shaped torso, eyes, mouth, arms, legs
+├── NosyExpressions.ts     ← Mood → body part config mappings
+├── NosyTypoDetector.tsx   ← Monitors input, shows correction bubbles
+├── NosyMascotV2.tsx       ← State machine wrapper (replaces NosyMascot.tsx)
+└── index.ts               ← Barrel export
+```
+
+## Part 1: SVG Character (`NosyCharacter.tsx`)
+
+A ~250-line component rendering Nosy as layered `motion.path` / `motion.ellipse` / `motion.circle` elements:
+
+- **Body**: Rounded teardrop/bean shape with gradient fill (warm brown/amber tones matching theme)
+- **Eyes**: Two oval whites with dark pupils that **track mouse position** via `useMousePosition` hook — pupils offset capped within eye bounds
+- **Eyebrows**: Two arcs that raise (curious), furrow (worried), or relax (idle)
+- **Mouth**: Bezier curve path that morphs between: smile, grin, "o" shape, frown, flat line
+- **Arms**: Two stubby limb paths — can wave, rest at sides, hold chin (thinking), raise (happy), hold phone (bored)
+- **Legs**: Two small stumps with idle bounce animation
+- **Accessories**: Small beanie/cap on top, phone SVG in hand when bored
+- **Blink system**: Random interval 3-5s eye close/open
+
+Props: `mood`, `size`, `mousePosition`, `isBlinking`
+
+## Part 2: Expression System (`NosyExpressions.ts`)
+
+Config object mapping each `NosyMood` to specific SVG transform values:
+
+| Mood | Eyes | Mouth | Arms | Body | Extra |
+|------|------|-------|------|------|-------|
+| idle | normal + blink | small smile | resting | gentle float | leg bounce |
+| curious | wide | "o" | one raised | lean forward 5° | brows up |
+| thinking | half-closed | flat | chin tap loop | slow rock | "..." thought dots |
+| happy | crescents ^^ | big grin | both up | bounce | sparkle particles |
+| worried | wide + tremble | frown | clutch body | shake | sweat drop |
+| bored | droopy half-lid | flat | holding phone | slouch | phone scroll anim |
+| waving | normal | smile | one waving loop | slight lean | — |
+| typing-help | one brow up | smirk | pointing right | lean toward input | — |
+
+## Part 3: Typo Detector (`NosyTypoDetector.tsx`)
+
+- Monitors the `inputText` prop (passed from FloatingInputV2's textarea value)
+- Dictionary of ~60 common misspellings: "teh"→"the", "definately"→"definitely", "recieve"→"receive", Nigerian-common ones too
+- Detects double spaces, missing caps after periods
+- When typo found: triggers `typing-help` mood, renders a small speech bubble near Nosy with correction
+- Click bubble to apply fix (callback to parent), auto-dismiss after 5s
+- Non-intrusive: only shows for clear typos, not style preferences
+
+## Part 4: Wrapper (`NosyMascotV2.tsx`)
+
+Preserves ALL existing NosyMascot.tsx logic:
+- Same mood state machine (idle → bored after 30s, curious on keypress, thinking on load, happy on new message, worried on error, waving on landing)
+- Same context-aware tips system (code detection, image detection, greetings, first message celebration)
+- Same drag behavior, minimize button, speech bubbles
+- Same style-cycling when bored (but now cycles SVG color schemes instead of PNG images — e.g., "Neon mode", "Earth mode", "Ocean mode")
+- **New**: Accepts `inputText` prop, passes to `NosyTypoDetector`
+- **New**: Mouse position tracking via window mousemove → passed to `NosyCharacter` for eye tracking
+
+## Part 5: Integration Changes
+
+**`src/pages/Index.tsx`**:
+- Replace `import { NosyMascot }` with `import { NosyMascotV2 }`
+- Add `inputText` state lifted from FloatingInputV2 (or pass via callback)
+- Pass `inputText` to NosyMascotV2
+
+**`src/components/FloatingInputV2.tsx`**:
+- Add `onInputChange?: (text: string) => void` prop
+- Call it on textarea change so parent can feed text to Nosy
+
+**`src/pages/Landing.tsx`**:
+- Swap to `NosyMascotV2 variant="landing"`
+
+**Delete**: `src/components/NosyMascot.tsx` (old file)
+**Keep**: PNG assets in `src/assets/` can remain for now (unused but harmless)
+
+## Summary
+
+| File | Action |
+|------|--------|
+| `src/components/nosy/NosyCharacter.tsx` | NEW — Full SVG character |
+| `src/components/nosy/NosyExpressions.ts` | NEW — Mood configs |
+| `src/components/nosy/NosyTypoDetector.tsx` | NEW — Typo detection + correction bubbles |
+| `src/components/nosy/NosyMascotV2.tsx` | NEW — State machine wrapper |
+| `src/components/nosy/index.ts` | NEW — Barrel export |
+| `src/components/FloatingInputV2.tsx` | EDIT — Add onInputChange callback |
+| `src/pages/Index.tsx` | EDIT — Swap mascot, pass inputText |
+| `src/pages/Landing.tsx` | EDIT — Swap mascot |
+| `src/components/NosyMascot.tsx` | DELETE — Replaced |
+
