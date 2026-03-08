@@ -162,8 +162,14 @@ export const EnhancedPlusMenu = ({
     }
 
     if (item.isNav) {
-      if (item.id === "custom_gpt") {
-        navigate("/custom-gpt");
+      const navMap: Record<string, string> = {
+        custom_gpt: "/custom-gpt",
+        sticker_studio: "/sticker-studio",
+        prompt_library: "/prompts",
+      };
+      const path = navMap[item.id];
+      if (path) {
+        navigate(path);
         setIsOpen(false);
       }
       return;
