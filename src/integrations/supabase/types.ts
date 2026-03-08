@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      collection_items: {
+        Row: {
+          collection_id: string
+          created_at: string | null
+          id: string
+          item_content: string | null
+          item_id: string
+          item_metadata: Json | null
+          item_type: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string | null
+          id?: string
+          item_content?: string | null
+          item_id: string
+          item_metadata?: Json | null
+          item_type: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string | null
+          id?: string
+          item_content?: string | null
+          item_id?: string
+          item_metadata?: Json | null
+          item_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      collections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_templates: {
         Row: {
           category: string | null
@@ -55,6 +117,7 @@ export type Database = {
           created_at: string | null
           id: string
           language: string | null
+          pinned: boolean | null
           title: string
           updated_at: string | null
           user_id: string
@@ -63,6 +126,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           language?: string | null
+          pinned?: boolean | null
           title: string
           updated_at?: string | null
           user_id: string
@@ -71,6 +135,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           language?: string | null
+          pinned?: boolean | null
           title?: string
           updated_at?: string | null
           user_id?: string

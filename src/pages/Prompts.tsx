@@ -1,13 +1,15 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   ArrowLeft, Search, Code, 
   MessageSquare, Sparkles, PenTool, GraduationCap,
-  TrendingUp, Heart, Music, Edit3, Send, Copy, Check
+  TrendingUp, Heart, Music, Edit3, Send, Copy, Check,
+  Instagram, Linkedin, Clock, Hash
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -22,214 +24,59 @@ interface PromptTemplate {
 
 const PROMPT_TEMPLATES: PromptTemplate[] = [
   // Writing
-  { 
-    id: "email-formal", 
-    icon: <MessageSquare size={20} />,
-    title: "Professional Email", 
-    description: "Write a formal business email",
-    prompt: "Write a professional email for the following situation. Make it clear, concise, and appropriately formal:\n\n[Describe your situation here]",
-    category: "writing"
-  },
-  { 
-    id: "email-job", 
-    icon: <TrendingUp size={20} />,
-    title: "Job Application", 
-    description: "Apply for a job position",
-    prompt: "Write a compelling job application email for the position of [JOB TITLE] at [COMPANY]. Highlight my experience in [YOUR SKILLS] and my passion for [INDUSTRY/FIELD].",
-    category: "writing"
-  },
-  { 
-    id: "cv-writer", 
-    icon: <PenTool size={20} />,
-    title: "CV/Resume Helper", 
-    description: "Improve your CV content",
-    prompt: "Help me write a strong professional summary for my CV. I am a [YOUR PROFESSION] with [X] years of experience in [YOUR FIELD]. My key skills include [SKILLS]. Make it compelling and under 4 sentences.",
-    category: "writing"
-  },
-  { 
-    id: "essay-writer", 
-    icon: <PenTool size={20} />,
-    title: "Essay Writer", 
-    description: "Write a natural Nigerian essay",
-    prompt: "Write an essay on the topic: [YOUR TOPIC]. Use clear Nigerian Standard English with simple vocabulary. Make it sound natural and human, like an educated Nigerian wrote it. Avoid AI-sounding words like 'delve' or 'tapestry'.",
-    category: "writing"
-  },
-  { 
-    id: "improve-text", 
-    icon: <Sparkles size={20} />,
-    title: "Improve My Text", 
-    description: "Make your writing better",
-    prompt: "Improve this text. Make it clearer, more engaging, and fix any grammar issues while keeping my voice:\n\n[PASTE YOUR TEXT HERE]",
-    category: "writing"
-  },
-  { 
-    id: "summarize", 
-    icon: <PenTool size={20} />,
-    title: "Summarize Text", 
-    description: "Get key points quickly",
-    prompt: "Summarize this text in bullet points. Give me the 5 most important points:\n\n[PASTE YOUR TEXT HERE]",
-    category: "writing"
-  },
+  { id: "email-formal", icon: <MessageSquare size={20} />, title: "Professional Email", description: "Write a formal business email", prompt: "Write a professional email for the following situation. Make it clear, concise, and appropriately formal:\n\n[Describe your situation here]", category: "writing" },
+  { id: "email-job", icon: <TrendingUp size={20} />, title: "Job Application", description: "Apply for a job position", prompt: "Write a compelling job application email for the position of [JOB TITLE] at [COMPANY]. Highlight my experience in [YOUR SKILLS] and my passion for [INDUSTRY/FIELD].", category: "writing" },
+  { id: "cv-writer", icon: <PenTool size={20} />, title: "CV/Resume Helper", description: "Improve your CV content", prompt: "Help me write a strong professional summary for my CV. I am a [YOUR PROFESSION] with [X] years of experience in [YOUR FIELD]. My key skills include [SKILLS]. Make it compelling and under 4 sentences.", category: "writing" },
+  { id: "essay-writer", icon: <PenTool size={20} />, title: "Essay Writer", description: "Write a natural Nigerian essay", prompt: "Write an essay on the topic: [YOUR TOPIC]. Use clear Nigerian Standard English with simple vocabulary. Make it sound natural and human, like an educated Nigerian wrote it. Avoid AI-sounding words like 'delve' or 'tapestry'.", category: "writing" },
+  { id: "improve-text", icon: <Sparkles size={20} />, title: "Improve My Text", description: "Make your writing better", prompt: "Improve this text. Make it clearer, more engaging, and fix any grammar issues while keeping my voice:\n\n[PASTE YOUR TEXT HERE]", category: "writing" },
+  { id: "summarize", icon: <PenTool size={20} />, title: "Summarize Text", description: "Get key points quickly", prompt: "Summarize this text in bullet points. Give me the 5 most important points:\n\n[PASTE YOUR TEXT HERE]", category: "writing" },
 
-  // Social Media
-  { 
-    id: "instagram-caption", 
-    icon: <Heart size={20} />,
-    title: "Instagram Caption", 
-    description: "Catchy captions for your posts",
-    prompt: "Write 3 engaging Instagram captions for a photo of [DESCRIBE YOUR PHOTO]. Include relevant hashtags. Make them trendy and relatable for Nigerian audience.",
-    category: "social"
-  },
-  { 
-    id: "tiktok-script", 
-    icon: <Music size={20} />,
-    title: "TikTok Script", 
-    description: "Viral video script ideas",
-    prompt: "Write a short TikTok video script (30-60 seconds) about [YOUR TOPIC]. Make it engaging, with a hook at the start and a call-to-action at the end.",
-    category: "social"
-  },
-  { 
-    id: "linkedin-post", 
-    icon: <TrendingUp size={20} />,
-    title: "LinkedIn Post", 
-    description: "Professional social content",
-    prompt: "Write a professional LinkedIn post about [YOUR TOPIC]. Make it insightful, include a personal angle, and end with a question to encourage engagement.",
-    category: "social"
-  },
-  { 
-    id: "whatsapp-message", 
-    icon: <MessageSquare size={20} />,
-    title: "WhatsApp Message", 
-    description: "Draft the perfect message",
-    prompt: "Help me write a WhatsApp message to [RECIPIENT] about [TOPIC]. The tone should be [formal/casual/friendly]. Keep it natural and Nigerian.",
-    category: "social"
-  },
+  // Social Media - with platform-specific icons
+  { id: "instagram-caption", icon: <Instagram size={20} />, title: "Instagram Caption", description: "Catchy captions for your posts", prompt: "Write 3 engaging Instagram captions for a photo of [DESCRIBE YOUR PHOTO]. Include relevant hashtags. Make them trendy and relatable for Nigerian audience.", category: "social" },
+  { id: "tiktok-script", icon: <Music size={20} />, title: "TikTok Script", description: "Viral video script ideas", prompt: "Write a short TikTok video script (30-60 seconds) about [YOUR TOPIC]. Make it engaging, with a hook at the start and a call-to-action at the end.", category: "social" },
+  { id: "linkedin-post", icon: <Linkedin size={20} />, title: "LinkedIn Post", description: "Professional social content", prompt: "Write a professional LinkedIn post about [YOUR TOPIC]. Make it insightful, include a personal angle, and end with a question to encourage engagement.", category: "social" },
+  { id: "twitter-thread", icon: <Hash size={20} />, title: "X/Twitter Thread", description: "Viral thread ideas", prompt: "Write a compelling Twitter/X thread (5-7 tweets) about [YOUR TOPIC]. Start with a hook, include insights, and end with a strong CTA. Use emojis sparingly.", category: "social" },
+  { id: "whatsapp-message", icon: <MessageSquare size={20} />, title: "WhatsApp Message", description: "Draft the perfect message", prompt: "Help me write a WhatsApp message to [RECIPIENT] about [TOPIC]. The tone should be [formal/casual/friendly]. Keep it natural and Nigerian.", category: "social" },
 
   // Learning
-  { 
-    id: "explain-concept", 
-    icon: <GraduationCap size={20} />,
-    title: "Explain Like I'm 12", 
-    description: "Simple explanations",
-    prompt: "Explain [CONCEPT] in simple terms like I'm 12 years old. Use everyday examples and avoid jargon.",
-    category: "learning"
-  },
-  { 
-    id: "waec-prep", 
-    icon: <GraduationCap size={20} />,
-    title: "WAEC/NECO Prep", 
-    description: "Exam preparation help",
-    prompt: "Help me prepare for my WAEC [SUBJECT] exam. Explain [TOPIC] clearly and give me practice questions with answers.",
-    category: "learning"
-  },
-  { 
-    id: "jamb-practice", 
-    icon: <GraduationCap size={20} />,
-    title: "JAMB Practice", 
-    description: "UTME preparation",
-    prompt: "Give me 10 JAMB-style multiple choice questions on [SUBJECT]: [TOPIC]. Include explanations for the correct answers.",
-    category: "learning"
-  },
-  { 
-    id: "math-solver", 
-    icon: <Code size={20} />,
-    title: "Math Problem Solver", 
-    description: "Step-by-step solutions",
-    prompt: "Solve this math problem step by step. Explain each step clearly so I can understand:\n\n[YOUR MATH PROBLEM]",
-    category: "learning"
-  },
+  { id: "explain-concept", icon: <GraduationCap size={20} />, title: "Explain Like I'm 12", description: "Simple explanations", prompt: "Explain [CONCEPT] in simple terms like I'm 12 years old. Use everyday examples and avoid jargon.", category: "learning" },
+  { id: "waec-prep", icon: <GraduationCap size={20} />, title: "WAEC/NECO Prep", description: "Exam preparation help", prompt: "Help me prepare for my WAEC [SUBJECT] exam. Explain [TOPIC] clearly and give me practice questions with answers.", category: "learning" },
+  { id: "jamb-practice", icon: <GraduationCap size={20} />, title: "JAMB Practice", description: "UTME preparation", prompt: "Give me 10 JAMB-style multiple choice questions on [SUBJECT]: [TOPIC]. Include explanations for the correct answers.", category: "learning" },
+  { id: "math-solver", icon: <Code size={20} />, title: "Math Problem Solver", description: "Step-by-step solutions", prompt: "Solve this math problem step by step. Explain each step clearly so I can understand:\n\n[YOUR MATH PROBLEM]", category: "learning" },
 
   // Coding
-  { 
-    id: "write-code", 
-    icon: <Code size={20} />,
-    title: "Write Code", 
-    description: "Generate code for your task",
-    prompt: "Write code in [LANGUAGE] to [DESCRIBE WHAT YOU WANT]. Include comments explaining the logic.",
-    category: "coding"
-  },
-  { 
-    id: "debug-code", 
-    icon: <Code size={20} />,
-    title: "Debug My Code", 
-    description: "Find and fix errors",
-    prompt: "Debug this code. Explain what's wrong and provide the fixed version:\n\n```\n[PASTE YOUR CODE HERE]\n```",
-    category: "coding"
-  },
-  { 
-    id: "explain-code", 
-    icon: <Code size={20} />,
-    title: "Explain Code", 
-    description: "Understand code better",
-    prompt: "Explain this code line by line in simple terms:\n\n```\n[PASTE CODE HERE]\n```",
-    category: "coding"
-  },
+  { id: "write-code", icon: <Code size={20} />, title: "Write Code", description: "Generate code for your task", prompt: "Write code in [LANGUAGE] to [DESCRIBE WHAT YOU WANT]. Include comments explaining the logic.", category: "coding" },
+  { id: "debug-code", icon: <Code size={20} />, title: "Debug My Code", description: "Find and fix errors", prompt: "Debug this code. Explain what's wrong and provide the fixed version:\n\n```\n[PASTE YOUR CODE HERE]\n```", category: "coding" },
+  { id: "explain-code", icon: <Code size={20} />, title: "Explain Code", description: "Understand code better", prompt: "Explain this code line by line in simple terms:\n\n```\n[PASTE CODE HERE]\n```", category: "coding" },
 
   // Business
-  { 
-    id: "business-plan", 
-    icon: <TrendingUp size={20} />,
-    title: "Business Plan Outline", 
-    description: "Structure your business idea",
-    prompt: "Create a business plan outline for [BUSINESS IDEA]. Include: Executive Summary, Market Analysis, Products/Services, Marketing Strategy, Financial Projections, and Team Structure.",
-    category: "business"
-  },
-  { 
-    id: "marketing-copy", 
-    icon: <Sparkles size={20} />,
-    title: "Marketing Copy", 
-    description: "Persuasive ad content",
-    prompt: "Write marketing copy for [PRODUCT/SERVICE]. Target audience: [AUDIENCE]. Highlight benefits, create urgency, and include a strong call-to-action.",
-    category: "business"
-  },
+  { id: "business-plan", icon: <TrendingUp size={20} />, title: "Business Plan Outline", description: "Structure your business idea", prompt: "Create a business plan outline for [BUSINESS IDEA]. Include: Executive Summary, Market Analysis, Products/Services, Marketing Strategy, Financial Projections, and Team Structure.", category: "business" },
+  { id: "marketing-copy", icon: <Sparkles size={20} />, title: "Marketing Copy", description: "Persuasive ad content", prompt: "Write marketing copy for [PRODUCT/SERVICE]. Target audience: [AUDIENCE]. Highlight benefits, create urgency, and include a strong call-to-action.", category: "business" },
 
   // Creative
-  { 
-    id: "story-writer", 
-    icon: <Heart size={20} />,
-    title: "Story Writer", 
-    description: "Creative fiction",
-    prompt: "Write a short story about [TOPIC/THEME]. Make it engaging with vivid descriptions and interesting characters.",
-    category: "creative"
-  },
-  { 
-    id: "song-lyrics", 
-    icon: <Music size={20} />,
-    title: "Song Lyrics", 
-    description: "Music lyrics generator",
-    prompt: "Write lyrics for a [GENRE: Afrobeats/Hip-hop/Gospel/R&B] song about [TOPIC]. Include verse, chorus, and bridge.",
-    category: "creative"
-  },
+  { id: "story-writer", icon: <Heart size={20} />, title: "Story Writer", description: "Creative fiction", prompt: "Write a short story about [TOPIC/THEME]. Make it engaging with vivid descriptions and interesting characters.", category: "creative" },
+  { id: "song-lyrics", icon: <Music size={20} />, title: "Song Lyrics", description: "Music lyrics generator", prompt: "Write lyrics for a [GENRE: Afrobeats/Hip-hop/Gospel/R&B] song about [TOPIC]. Include verse, chorus, and bridge.", category: "creative" },
 
   // Everyday
-  { 
-    id: "recipe", 
-    icon: <Heart size={20} />,
-    title: "Nigerian Recipe", 
-    description: "Cooking instructions",
-    prompt: "Give me the recipe for [NIGERIAN DISH]. Include ingredients with quantities, step-by-step instructions, and cooking tips.",
-    category: "everyday"
-  },
-  { 
-    id: "translate", 
-    icon: <MessageSquare size={20} />,
-    title: "Translate", 
-    description: "Language translation",
-    prompt: "Translate this text from [SOURCE LANGUAGE] to [TARGET LANGUAGE]:\n\n[YOUR TEXT]",
-    category: "everyday"
-  },
+  { id: "recipe", icon: <Heart size={20} />, title: "Nigerian Recipe", description: "Cooking instructions", prompt: "Give me the recipe for [NIGERIAN DISH]. Include ingredients with quantities, step-by-step instructions, and cooking tips.", category: "everyday" },
+  { id: "translate", icon: <MessageSquare size={20} />, title: "Translate", description: "Language translation", prompt: "Translate this text from [SOURCE LANGUAGE] to [TARGET LANGUAGE]:\n\n[YOUR TEXT]", category: "everyday" },
 ];
 
 const CATEGORIES = [
   { id: "all", label: "All", icon: Sparkles },
   { id: "writing", label: "Writing", icon: PenTool },
-  { id: "social", label: "Social Media", icon: MessageSquare },
+  { id: "social", label: "Social Media", icon: Instagram },
   { id: "learning", label: "Learning", icon: GraduationCap },
   { id: "coding", label: "Coding", icon: Code },
   { id: "business", label: "Business", icon: TrendingUp },
   { id: "creative", label: "Creative", icon: Music },
   { id: "everyday", label: "Everyday", icon: Heart },
 ];
+
+const getCategoryCount = (catId: string) => {
+  if (catId === "all") return PROMPT_TEMPLATES.length;
+  return PROMPT_TEMPLATES.filter(p => p.category === catId).length;
+};
 
 export default function Prompts() {
   const navigate = useNavigate();
@@ -239,7 +86,21 @@ export default function Prompts() {
   const [editingPrompt, setEditingPrompt] = useState<PromptTemplate | null>(null);
   const [editedText, setEditedText] = useState("");
   const [copied, setCopied] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [recentlyUsed, setRecentlyUsed] = useState<string[]>([]);
+
+  // Load recently used from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('hanchi_recent_prompts');
+    if (saved) {
+      try { setRecentlyUsed(JSON.parse(saved)); } catch {}
+    }
+  }, []);
+
+  const trackUsage = (promptId: string) => {
+    const updated = [promptId, ...recentlyUsed.filter(id => id !== promptId)].slice(0, 5);
+    setRecentlyUsed(updated);
+    localStorage.setItem('hanchi_recent_prompts', JSON.stringify(updated));
+  };
 
   const filteredPrompts = PROMPT_TEMPLATES.filter(prompt => {
     const matchesSearch = prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -248,27 +109,32 @@ export default function Prompts() {
     return matchesSearch && matchesCategory;
   });
 
+  const recentPrompts = recentlyUsed
+    .map(id => PROMPT_TEMPLATES.find(p => p.id === id))
+    .filter(Boolean) as PromptTemplate[];
+
   const handleOpenPrompt = (prompt: PromptTemplate) => {
     setEditingPrompt(prompt);
     setEditedText(prompt.prompt);
   };
 
-  // Fixed: Use useCallback and prevent multiple sends
-  const handleSendPrompt = useCallback(() => {
-    if (!editedText.trim() || isSending) return;
-    
-    setIsSending(true);
+  // Prefill mode: navigate to chat with prompt in input, NOT auto-send
+  const handlePrefillPrompt = useCallback(() => {
+    if (!editedText.trim() || !editingPrompt) return;
+    trackUsage(editingPrompt.id);
     setEditingPrompt(null);
-    
-    // Use sessionStorage to pass the prompt safely
     sessionStorage.setItem('hanchi_prefill_prompt', editedText.trim());
-    
-    // Navigate without state to prevent re-triggers
     navigate("/chat");
-    
-    // Reset after navigation
-    setTimeout(() => setIsSending(false), 500);
-  }, [editedText, isSending, navigate]);
+  }, [editedText, editingPrompt, navigate]);
+
+  // Direct send mode
+  const handleSendPrompt = useCallback(() => {
+    if (!editedText.trim() || !editingPrompt) return;
+    trackUsage(editingPrompt.id);
+    setEditingPrompt(null);
+    sessionStorage.setItem('hanchi_prefill_prompt', editedText.trim());
+    navigate("/chat");
+  }, [editedText, editingPrompt, navigate]);
 
   const handleCopyPrompt = async () => {
     await navigator.clipboard.writeText(editedText);
@@ -282,19 +148,12 @@ export default function Prompts() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border py-4 px-4 md:px-6">
         <div className="max-w-5xl mx-auto flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/chat")}
-            className="rounded-xl h-11 w-11"
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate("/chat")} className="rounded-xl h-11 w-11">
             <ArrowLeft size={20} />
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">Prompt Library</h1>
-            <p className="text-sm text-muted-foreground">
-              Ready-to-use prompts — Click to edit & send
-            </p>
+            <p className="text-sm text-muted-foreground">Click to edit & customize before sending</p>
           </div>
         </div>
       </div>
@@ -311,11 +170,35 @@ export default function Prompts() {
           />
         </div>
 
-        {/* Categories */}
+        {/* Recently Used */}
+        {recentPrompts.length > 0 && selectedCategory === "all" && !searchQuery && (
+          <div className="mb-8">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Clock size={14} /> Recently Used
+            </h2>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {recentPrompts.map((prompt) => (
+                <button
+                  key={prompt.id}
+                  onClick={() => handleOpenPrompt(prompt)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-all text-left min-w-max"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                    {prompt.icon}
+                  </div>
+                  <span className="text-sm font-medium">{prompt.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Categories with count badges */}
         <div className="mb-8 overflow-x-auto pb-2 -mx-4 px-4">
           <div className="flex gap-2 min-w-max">
             {CATEGORIES.map((category) => {
               const Icon = category.icon;
+              const count = getCategoryCount(category.id);
               return (
                 <button
                   key={category.id}
@@ -328,6 +211,9 @@ export default function Prompts() {
                 >
                   <Icon size={16} />
                   {category.label}
+                  <Badge variant={selectedCategory === category.id ? "secondary" : "outline"} className="text-[10px] h-5 px-1.5 ml-0.5">
+                    {count}
+                  </Badge>
                 </button>
               );
             })}
@@ -351,9 +237,7 @@ export default function Prompts() {
                   {prompt.title}
                   <Edit3 size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {prompt.description}
-                </p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{prompt.description}</p>
               </div>
             </button>
           ))}
@@ -380,7 +264,7 @@ export default function Prompts() {
           
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Edit the prompt below to customize it, then send to Hanchi
+              Edit the prompt below, then use "Prefill" to load it into chat for further editing, or "Send" to send directly.
             </p>
             <Textarea
               value={editedText}
@@ -389,7 +273,7 @@ export default function Prompts() {
               placeholder="Enter your prompt..."
             />
             <p className="text-xs text-muted-foreground">
-              Tip: Replace the [BRACKETED] parts with your specific details
+              💡 Replace the [BRACKETED] parts with your specific details
             </p>
           </div>
 
@@ -398,13 +282,13 @@ export default function Prompts() {
               {copied ? <Check size={16} /> : <Copy size={16} />}
               Copy
             </Button>
-            <Button 
-              onClick={handleSendPrompt} 
-              className="gap-2 flex-1 rounded-xl"
-              disabled={isSending}
-            >
+            <Button variant="outline" onClick={handlePrefillPrompt} className="gap-2 rounded-xl">
+              <Edit3 size={16} />
+              Prefill
+            </Button>
+            <Button onClick={handleSendPrompt} className="gap-2 flex-1 rounded-xl">
               <Send size={16} />
-              Send to Hanchi
+              Send
             </Button>
           </DialogFooter>
         </DialogContent>

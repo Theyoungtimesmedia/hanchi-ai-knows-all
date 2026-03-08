@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Plus, X, Camera, Image as ImageIcon, FileText, Wand2, Lightbulb, 
   Search, Globe, BookOpen, Sticker, Shield, Mic, Brain, 
-  GraduationCap, Bot, Sparkles, FileAudio, FileVideo
+  GraduationCap, Bot, Sparkles, FileAudio, FileVideo, Palette, FileDown
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -73,12 +73,20 @@ export const EnhancedPlusMenu = ({
       color: "text-violet-500"
     },
     { 
-      id: "create_sticker", 
-      icon: <Sticker size={22} />, 
-      label: "Create Sticker", 
-      description: "Generate Nigerian-style stickers",
-      isModal: true,
+      id: "sticker_studio", 
+      icon: <Palette size={22} />, 
+      label: "Sticker Studio", 
+      description: "Create & manage sticker packs",
+      isNav: true,
       color: "text-amber-500"
+    },
+    { 
+      id: "prompt_library", 
+      icon: <BookOpen size={22} />, 
+      label: "Prompt Library", 
+      description: "Browse ready-to-use prompts",
+      isNav: true,
+      color: "text-emerald-500"
     },
     { 
       id: "search", 
@@ -121,6 +129,14 @@ export const EnhancedPlusMenu = ({
       color: "text-cyan-500"
     },
     { 
+      id: "export_chat", 
+      icon: <FileDown size={22} />, 
+      label: "Export Chat", 
+      description: "Download as PDF or Markdown",
+      isModal: true,
+      color: "text-orange-500"
+    },
+    { 
       id: "custom_gpt", 
       icon: <Bot size={22} />, 
       label: "Custom GPT", 
@@ -146,8 +162,14 @@ export const EnhancedPlusMenu = ({
     }
 
     if (item.isNav) {
-      if (item.id === "custom_gpt") {
-        navigate("/custom-gpt");
+      const navMap: Record<string, string> = {
+        custom_gpt: "/custom-gpt",
+        sticker_studio: "/sticker-studio",
+        prompt_library: "/prompts",
+      };
+      const path = navMap[item.id];
+      if (path) {
+        navigate(path);
         setIsOpen(false);
       }
       return;
@@ -158,12 +180,11 @@ export const EnhancedPlusMenu = ({
         setStickerMode(false);
         setShowImageGen(true);
         setIsOpen(false);
-      } else if (item.id === "create_sticker") {
-        setStickerMode(true);
-        setShowImageGen(true);
-        setIsOpen(false);
       } else if (item.id === "voice_translate") {
         setShowTranslation(true);
+        setIsOpen(false);
+      } else if (item.id === "export_chat") {
+        onAction?.("export_chat");
         setIsOpen(false);
       }
       return;

@@ -9,8 +9,11 @@ import Help from "./pages/Help";
 import Discover from "./pages/Discover";
 import CustomGPT from "./pages/CustomGPT";
 import NotFound from "./pages/NotFound";
- import Projects from "./pages/Projects";
- import Apps from "./pages/Apps";
+import Projects from "./pages/Projects";
+import Apps from "./pages/Apps";
+import StickerStudio from "./pages/StickerStudio";
+import SharedChat from "./pages/SharedChat";
+import Collections from "./pages/Collections";
 
 const App = () => (
   <Routes>
@@ -23,8 +26,11 @@ const App = () => (
     <Route path="/help" element={<Help />} />
     <Route path="/discover" element={<Discover />} />
     <Route path="/custom-gpt" element={<CustomGPT />} />
-     <Route path="/projects" element={<Projects />} />
-     <Route path="/apps" element={<Apps />} />
+    <Route path="/projects" element={<Projects />} />
+    <Route path="/apps" element={<Apps />} />
+    <Route path="/sticker-studio" element={<StickerStudio />} />
+    <Route path="/shared" element={<SharedChat />} />
+    <Route path="/collections" element={<Collections />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
