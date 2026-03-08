@@ -236,6 +236,23 @@ export const FloatingInputV2 = ({
           ? "border-primary/30 shadow-lg ring-2 ring-primary/5"
           : "border-border/50 hover:border-border"
       )}>
+        {/* Media Processing Indicator */}
+        {(isMediaProcessing || pendingMediaFile) && (
+          <div className="p-4 pb-0 animate-scale-in">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/50 border border-border/50">
+              <Loader2 size={18} className="animate-spin text-primary" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  Processing {pendingMediaFile?.name || 'media'}...
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {pendingMediaFile?.type?.startsWith('video/') ? 'Analyzing video' : 'Transcribing audio'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Image Preview */}
         {imagePreview && (
           <div className="p-4 pb-0 animate-scale-in">
