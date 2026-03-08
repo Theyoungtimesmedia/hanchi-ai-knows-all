@@ -15,7 +15,8 @@ import {
   Download,
   ExternalLink,
   Code,
-  FileText
+  FileText,
+  FolderHeart
 } from "lucide-react";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { Button } from "./ui/button";
@@ -47,6 +48,7 @@ interface MessageBubbleV2Props {
   sources?: Source[];
   onRegenerate?: () => void;
   onEdit?: (newContent: string) => void;
+  onSaveToCollection?: (content: string, type: string) => void;
   language?: string;
 }
 
@@ -60,6 +62,7 @@ export const MessageBubbleV2 = ({
   sources,
   onRegenerate,
   onEdit,
+  onSaveToCollection,
   language = "en",
 }: MessageBubbleV2Props) => {
   const [showThought, setShowThought] = useState(false);
@@ -337,6 +340,9 @@ export const MessageBubbleV2 = ({
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem onClick={handleShare}>
                     <Share2 size={14} className="mr-2" /> Share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSaveToCollection?.(content, images?.length ? 'image' : 'message')}>
+                    <FolderHeart size={14} className="mr-2" /> Save to Collection
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopy}>
                     <Copy size={14} className="mr-2" /> Copy all
