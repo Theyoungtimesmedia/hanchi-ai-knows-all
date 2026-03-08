@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
- import { MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, BookOpen, Sparkles, HelpCircle, Folder, Grid, Bot } from "lucide-react";
+ import { MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, BookOpen, Sparkles, HelpCircle, Folder, Grid, Bot, Palette, FileDown, FolderHeart } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
