@@ -48,6 +48,7 @@ interface MessageBubbleV2Props {
   sources?: Source[];
   onRegenerate?: () => void;
   onEdit?: (newContent: string) => void;
+  onSaveToCollection?: (content: string, type: string) => void;
   language?: string;
 }
 
