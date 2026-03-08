@@ -47,7 +47,8 @@ export const EnhancedPlusMenu = ({
   activeAddons,
   onToggleAddon,
   onImageUpload,
-  onFileUpload
+  onFileUpload,
+  onMediaUpload,
 }: EnhancedPlusMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
