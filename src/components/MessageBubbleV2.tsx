@@ -341,6 +341,9 @@ export const MessageBubbleV2 = ({
                   <DropdownMenuItem onClick={handleShare}>
                     <Share2 size={14} className="mr-2" /> Share
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSaveToCollection?.(content, images?.length ? 'image' : 'message')}>
+                    <FolderHeart size={14} className="mr-2" /> Save to Collection
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleCopy}>
                     <Copy size={14} className="mr-2" /> Copy all
                   </DropdownMenuItem>
