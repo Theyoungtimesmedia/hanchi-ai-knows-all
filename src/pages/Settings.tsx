@@ -433,6 +433,9 @@ export default function Settings() {
                 Hanchi remembers these facts to personalize responses.
               </p>
 
+              {/* Add Memory Form */}
+              <AddMemoryForm userId={userId} onAdded={(mem) => setMemories(prev => [mem, ...prev])} />
+
               {memories.length === 0 ? (
                 <div className="text-center py-6 text-muted-foreground">
                   <Brain className="mx-auto mb-2 opacity-50" size={28} />
