@@ -16,6 +16,7 @@ interface FloatingInputV2Props {
   placeholder?: string;
   onInputChange?: (text: string) => void;
   inputValue?: string;
+  onMediaResult?: (result: MediaResult) => void;
 }
 
 export const FloatingInputV2 = ({ 
