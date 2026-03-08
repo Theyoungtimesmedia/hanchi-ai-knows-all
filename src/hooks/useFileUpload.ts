@@ -7,6 +7,7 @@ export interface UploadedFile {
   size: number;
   data: string; // base64 encoded
   text?: string; // extracted text for text files
+  isMedia?: boolean; // audio or video file
 }
 
 export const useFileUpload = () => {
@@ -15,10 +16,13 @@ export const useFileUpload = () => {
   const { toast } = useToast();
 
   const uploadFile = async (file: File): Promise<void> => {
-    if (file.size > 20 * 1024 * 1024) {
+    const isMedia = file.type.startsWith('audio/') || file.type.startsWith('video/');
+    const maxSize = isMedia ? 50 * 1024 * 1024 : 20 * 1024 * 1024;
+    
+    if (file.size > maxSize) {
       toast({
         title: "File too large",
-        description: "Maximum file size is 20MB",
+        description: `Maximum file size is ${isMedia ? '50' : '20'}MB`,
         variant: "destructive",
       });
       return;
@@ -41,6 +45,7 @@ export const useFileUpload = () => {
         size: file.size,
         data: base64,
         text: extractedText,
+        isMedia,
       };
 
       setFiles((prev) => [...prev, uploadedFile]);

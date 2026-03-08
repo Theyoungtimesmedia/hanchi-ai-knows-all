@@ -1,8 +1,9 @@
 import { useState, useRef, KeyboardEvent, useEffect } from "react";
- import { Mic, Loader2, Send, Wand2, X, Image as ImageIcon, Sticker, Sparkles } from "lucide-react";
+import { Mic, Loader2, Send, Wand2, X, Image as ImageIcon, Sticker, Sparkles, FileAudio, FileVideo } from "lucide-react";
 import { Button } from "./ui/button";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useMediaUpload, MediaResult } from "@/hooks/useMediaUpload";
 import { EnhancedPlusMenu, ActiveAddons } from "./EnhancedPlusMenu";
 import { AddonChips } from "./AddonChips";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +16,7 @@ interface FloatingInputV2Props {
   placeholder?: string;
   onInputChange?: (text: string) => void;
   inputValue?: string;
+  onMediaResult?: (result: MediaResult) => void;
 }
 
 export const FloatingInputV2 = ({ 
@@ -24,6 +26,7 @@ export const FloatingInputV2 = ({
   placeholder = "Message Hanchi...",
   onInputChange,
   inputValue,
+  onMediaResult,
 }: FloatingInputV2Props) => {
   const [input, setInput] = useState("");
   
@@ -40,6 +43,9 @@ export const FloatingInputV2 = ({
   
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecording(language);
   const { imagePreview, imageBase64, isUploading, handleImageUpload, clearImage } = useImageUpload();
+  const { isProcessing: isMediaProcessing, processMedia } = useMediaUpload();
+  const [pendingMediaFile, setPendingMediaFile] = useState<{ name: string; type: string } | null>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
 
   // Command detection for inline features
   const detectCommand = (text: string) => {
@@ -124,9 +130,46 @@ export const FloatingInputV2 = ({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    
+    const isMedia = file.type.startsWith('audio/') || file.type.startsWith('video/');
+    if (isMedia) {
+      setPendingMediaFile({ name: file.name, type: file.type });
+      const result = await processMedia(file, 'transcribe', language);
+      setPendingMediaFile(null);
+      if (result) {
+        onMediaResult?.(result);
+        // Auto-populate input with transcription context
+        const prefix = file.type.startsWith('video/') ? '🎬 Video' : '🎵 Audio';
+        const contextMsg = `${prefix} transcription of "${file.name}":\n\n${result.text}`;
+        onSend(contextMsg);
+      }
+    } else {
       await handleImageUpload(file);
     }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleMediaUploadClick = () => {
+    mediaInputRef.current?.click();
+  };
+
+  const handleMediaFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setPendingMediaFile({ name: file.name, type: file.type });
+    const action = file.type.startsWith('video/') ? 'analyze' : 'transcribe';
+    const result = await processMedia(file, action, language);
+    setPendingMediaFile(null);
+    if (result) {
+      onMediaResult?.(result);
+      const prefix = file.type.startsWith('video/') ? '🎬 Video analysis' : '🎵 Audio transcription';
+      const contextMsg = `${prefix} of "${file.name}":\n\n${result.analysis || result.text}`;
+      onSend(contextMsg);
+    }
+    e.target.value = '';
   };
 
   const adjustTextareaHeight = () => {
@@ -193,6 +236,23 @@ export const FloatingInputV2 = ({
           ? "border-primary/30 shadow-lg ring-2 ring-primary/5"
           : "border-border/50 hover:border-border"
       )}>
+        {/* Media Processing Indicator */}
+        {(isMediaProcessing || pendingMediaFile) && (
+          <div className="p-4 pb-0 animate-scale-in">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-muted/50 border border-border/50">
+              <Loader2 size={18} className="animate-spin text-primary" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  Processing {pendingMediaFile?.name || 'media'}...
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {pendingMediaFile?.type?.startsWith('video/') ? 'Analyzing video' : 'Transcribing audio'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Image Preview */}
         {imagePreview && (
           <div className="p-4 pb-0 animate-scale-in">
@@ -215,11 +275,12 @@ export const FloatingInputV2 = ({
         <div className="flex items-end gap-2 p-3">
           {/* Plus Menu Button */}
           <EnhancedPlusMenu
-            disabled={disabled}
+            disabled={disabled || isMediaProcessing}
             activeAddons={activeAddons}
             onToggleAddon={handleToggleAddon}
             onImageUpload={handleImageClick}
             onFileUpload={handleImageClick}
+            onMediaUpload={handleMediaUploadClick}
             onAction={handleAction}
           />
 
@@ -227,7 +288,14 @@ export const FloatingInputV2 = ({
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*,audio/*,.pdf,.doc,.docx,.txt"
+            accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={mediaInputRef}
+            onChange={handleMediaFileChange}
+            accept="audio/*,video/*,.opus,.ogg,.webm,.mp3,.wav,.m4a,.mp4,.mov,.avi,.mkv"
             className="hidden"
           />
 

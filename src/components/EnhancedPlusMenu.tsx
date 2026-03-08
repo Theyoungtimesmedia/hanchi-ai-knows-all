@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Plus, X, Camera, Image as ImageIcon, FileText, Wand2, Lightbulb, 
   Search, Globe, BookOpen, Sticker, Shield, Mic, Brain, 
-  GraduationCap, Bot, Sparkles
+  GraduationCap, Bot, Sparkles, FileAudio, FileVideo
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -27,6 +27,7 @@ interface EnhancedPlusMenuProps {
   onToggleAddon: (addon: keyof ActiveAddons, enabled: boolean) => void;
   onImageUpload?: () => void;
   onFileUpload?: () => void;
+  onMediaUpload?: () => void;
 }
 
 interface MenuItem {
@@ -46,7 +47,8 @@ export const EnhancedPlusMenu = ({
   activeAddons,
   onToggleAddon,
   onImageUpload,
-  onFileUpload
+  onFileUpload,
+  onMediaUpload,
 }: EnhancedPlusMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
@@ -58,6 +60,7 @@ export const EnhancedPlusMenu = ({
     { icon: <Camera size={22} />, label: "Camera", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
     { icon: <ImageIcon size={22} />, label: "Gallery", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
     { icon: <FileText size={22} />, label: "Files", onClick: () => { onFileUpload?.(); setIsOpen(false); } },
+    { icon: <FileAudio size={22} />, label: "Audio/Video", onClick: () => { onMediaUpload?.(); setIsOpen(false); } },
   ];
 
   const menuItems: MenuItem[] = [
