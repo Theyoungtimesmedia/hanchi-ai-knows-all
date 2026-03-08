@@ -314,11 +314,15 @@ export default function Index() {
         onSelectConversation={(id) => { setCurrentConversationId(id); setSidebarOpen(false); }}
         onNewConversation={() => { handleNewConversation(); setSidebarOpen(false); }}
         onDeleteConversation={deleteConversation}
+        onPinConversation={pinConversation}
         onOpenSettings={() => navigate("/settings")}
         onSignOut={handleSignOut}
         onClose={() => setSidebarOpen(false)}
         isOpen={sidebarOpen}
         user={user}
+        onOpenImageGen={() => setShowImageGen(true)}
+        onOpenVoiceTranslation={() => setShowTranslation(true)}
+        onExportChat={() => toast({ title: "Export", description: "Export feature coming soon" })}
       />
 
       <div className="flex-1 flex flex-col relative w-full max-w-full">
