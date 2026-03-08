@@ -1,8 +1,9 @@
 import { useState, useRef, KeyboardEvent, useEffect } from "react";
- import { Mic, Loader2, Send, Wand2, X, Image as ImageIcon, Sticker, Sparkles } from "lucide-react";
+import { Mic, Loader2, Send, Wand2, X, Image as ImageIcon, Sticker, Sparkles, FileAudio, FileVideo } from "lucide-react";
 import { Button } from "./ui/button";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useMediaUpload, MediaResult } from "@/hooks/useMediaUpload";
 import { EnhancedPlusMenu, ActiveAddons } from "./EnhancedPlusMenu";
 import { AddonChips } from "./AddonChips";
 import { useToast } from "@/hooks/use-toast";
