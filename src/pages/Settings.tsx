@@ -9,8 +9,11 @@ import {
   ArrowLeft, Brain, Globe, Moon, Sun, Volume2, 
   Trash2, Check, Sparkles, PenTool, Mic, Bell,
   Shield, HelpCircle, ExternalLink, Download, Palette,
-  MessageSquare, Code, Zap, Eye, Database, Key
+  MessageSquare, Code, Zap, Eye, Database, Key, Plus
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   SettingsSection, 
