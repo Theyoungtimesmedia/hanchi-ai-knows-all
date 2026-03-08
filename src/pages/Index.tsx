@@ -55,6 +55,13 @@ export default function Index() {
   const [showVoiceMode, setShowVoiceMode] = useState(false);
   const [canvasState, setCanvasState] = useState<{ open: boolean; content: string; type: "code" | "document" } | null>(null);
   const [currentInputText, setCurrentInputText] = useState("");
+  const [showImageGen, setShowImageGen] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [announcements, setAnnouncements] = useState<{ id: string; title: string; content: string }[]>([]);
+  const [dismissedAnnouncements, setDismissedAnnouncements] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('hanchi_dismissed_announcements');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
