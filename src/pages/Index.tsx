@@ -325,7 +325,41 @@ export default function Index() {
         onExportChat={() => toast({ title: "Export", description: "Export feature coming soon" })}
       />
 
+      {/* Image Generation Modal */}
+      <Dialog open={showImageGen} onOpenChange={setShowImageGen}>
+        <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto p-0">
+          <ImageGenerationModal onImageGenerated={(url) => { handleSend(`Here's the image I created`); setShowImageGen(false); }} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Voice Translation Modal */}
+      <Dialog open={showTranslation} onOpenChange={setShowTranslation}>
+        <DialogContent className="sm:max-w-md p-0 bg-transparent border-none">
+          <VoiceTranslationPanel onClose={() => setShowTranslation(false)} />
+        </DialogContent>
+      </Dialog>
+
       <div className="flex-1 flex flex-col relative w-full max-w-full">
+        {/* Announcement Banner */}
+        {announcements.filter(a => !dismissedAnnouncements.has(a.id)).slice(0, 1).map((ann) => (
+          <div key={ann.id} className="bg-primary/10 border-b border-primary/20 px-4 py-2.5 flex items-center gap-3">
+            <Bell size={16} className="text-primary flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">{ann.title}</p>
+              <p className="text-xs text-muted-foreground truncate">{ann.content}</p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg flex-shrink-0"
+              onClick={() => {
+                const newDismissed = new Set(dismissedAnnouncements);
+                newDismissed.add(ann.id);
+                setDismissedAnnouncements(newDismissed);
+                localStorage.setItem('hanchi_dismissed_announcements', JSON.stringify([...newDismissed]));
+              }}>
+              <X size={14} />
+            </Button>
+          </div>
+        ))}
+
         {/* Header */}
         <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40">
           <div className="flex items-center gap-2">

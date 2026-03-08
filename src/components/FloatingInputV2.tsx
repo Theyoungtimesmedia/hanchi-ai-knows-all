@@ -310,6 +310,18 @@ export const FloatingInputV2 = ({
                 adjustTextareaHeight();
               }}
               onKeyDown={handleKeyDown}
+              onPaste={async (e) => {
+                const items = e.clipboardData?.items;
+                if (!items) return;
+                for (const item of items) {
+                  if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    if (file) await handleImageUpload(file);
+                    return;
+                  }
+                }
+              }}
               placeholder={placeholder}
               disabled={disabled}
               className="w-full bg-transparent border-none focus:ring-0 focus:outline-none resize-none py-4 px-2 text-foreground placeholder-muted-foreground text-base leading-relaxed max-h-[140px] scrollbar-thin transition-colors"
