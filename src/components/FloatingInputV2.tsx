@@ -43,6 +43,9 @@ export const FloatingInputV2 = ({
   
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecording(language);
   const { imagePreview, imageBase64, isUploading, handleImageUpload, clearImage } = useImageUpload();
+  const { isProcessing: isMediaProcessing, processMedia } = useMediaUpload();
+  const [pendingMediaFile, setPendingMediaFile] = useState<{ name: string; type: string } | null>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
 
   // Command detection for inline features
   const detectCommand = (text: string) => {
