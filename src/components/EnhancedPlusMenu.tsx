@@ -73,12 +73,20 @@ export const EnhancedPlusMenu = ({
       color: "text-violet-500"
     },
     { 
-      id: "create_sticker", 
-      icon: <Sticker size={22} />, 
-      label: "Create Sticker", 
-      description: "Generate Nigerian-style stickers",
-      isModal: true,
+      id: "sticker_studio", 
+      icon: <Palette size={22} />, 
+      label: "Sticker Studio", 
+      description: "Create & manage sticker packs",
+      isNav: true,
       color: "text-amber-500"
+    },
+    { 
+      id: "prompt_library", 
+      icon: <BookOpen size={22} />, 
+      label: "Prompt Library", 
+      description: "Browse ready-to-use prompts",
+      isNav: true,
+      color: "text-emerald-500"
     },
     { 
       id: "search", 
@@ -119,6 +127,14 @@ export const EnhancedPlusMenu = ({
       description: "English ↔ Hausa ↔ Pidgin",
       isModal: true,
       color: "text-cyan-500"
+    },
+    { 
+      id: "export_chat", 
+      icon: <FileDown size={22} />, 
+      label: "Export Chat", 
+      description: "Download as PDF or Markdown",
+      isModal: true,
+      color: "text-orange-500"
     },
     { 
       id: "custom_gpt", 
