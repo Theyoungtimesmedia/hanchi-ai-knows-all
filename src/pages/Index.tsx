@@ -70,7 +70,7 @@ export default function Index() {
   const { isGenerating: isGeneratingImage, generateImage } = useImageGeneration();
   const [pendingImagePrompt, setPendingImagePrompt] = useState<string | null>(null);
 
-  const { conversations, isLoading: loadingHistory, createConversation, deleteConversation } = 
+  const { conversations, isLoading: loadingHistory, createConversation, deleteConversation, pinConversation } = 
     useConversationHistory(user?.id || null);
   
   const chatOptions = {

@@ -24,6 +24,68 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "next-themes";
 
+// Add Memory inline form component
+function AddMemoryForm({ userId, onAdded }: { userId: string | null; onAdded: (mem: any) => void }) {
+  const [open, setOpen] = useState(false);
+  const [key, setKey] = useState("");
+  const [value, setValue] = useState("");
+  const [category, setCategory] = useState("general");
+  const { toast } = useToast();
+
+  const handleAdd = async () => {
+    if (!userId || !key.trim() || !value.trim()) return;
+    try {
+      const { data, error } = await supabase.from("user_memory").insert({
+        user_id: userId,
+        memory_key: key.trim(),
+        memory_value: value.trim(),
+        category,
+      }).select().single();
+      if (error) throw error;
+      onAdded(data);
+      setOpen(false);
+      setKey(""); setValue(""); setCategory("general");
+      toast({ title: "Memory added ✨" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to add memory", variant: "destructive" });
+    }
+  };
+
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="w-full mb-4 rounded-xl gap-2">
+        <Plus size={14} /> Add Memory
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader><DialogTitle>Add Memory</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label className="text-xs">Key (what to remember)</Label>
+              <Input placeholder="e.g. Name, School, Goal" value={key} onChange={(e) => setKey(e.target.value)} className="rounded-xl mt-1" /></div>
+            <div><Label className="text-xs">Value</Label>
+              <Input placeholder="e.g. Adamu, UNILAG, Pass JAMB" value={value} onChange={(e) => setValue(e.target.value)} className="rounded-xl mt-1" /></div>
+            <div><Label className="text-xs">Category</Label>
+              <div className="grid grid-cols-3 gap-2 mt-1">
+                {["general", "personal", "academic", "work", "health", "preferences"].map((cat) => (
+                  <button key={cat} onClick={() => setCategory(cat)}
+                    className={`text-xs p-2 rounded-xl capitalize ${category === cat ? "bg-primary text-primary-foreground" : "bg-muted/50 hover:bg-muted"}`}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAdd} disabled={!key.trim() || !value.trim()} className="rounded-xl gap-2">
+              <Plus size={14} /> Add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 const LANGUAGES = [
   { code: "en", name: "English (Nigeria)", flag: "🇳🇬" },
   { code: "en-us", name: "English (US)", flag: "🇺🇸" },
