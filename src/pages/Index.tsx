@@ -135,6 +135,12 @@ export default function Index() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Load announcements
+  useEffect(() => {
+    supabase.from("announcements").select("id, title, content").eq("is_active", true)
+      .then(({ data }) => { if (data) setAnnouncements(data); });
+  }, []);
+
   useEffect(() => {
     if (!isInitialized || !user) return;
     const prefillPrompt = sessionStorage.getItem('hanchi_prefill_prompt');
