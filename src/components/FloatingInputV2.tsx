@@ -270,7 +270,14 @@ export const FloatingInputV2 = ({
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*,audio/*,.pdf,.doc,.docx,.txt"
+            accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={mediaInputRef}
+            onChange={handleMediaFileChange}
+            accept="audio/*,video/*,.opus,.ogg,.webm,.mp3,.wav,.m4a,.mp4,.mov,.avi,.mkv"
             className="hidden"
           />
 

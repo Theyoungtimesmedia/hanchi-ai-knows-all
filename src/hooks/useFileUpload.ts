@@ -45,6 +45,7 @@ export const useFileUpload = () => {
         size: file.size,
         data: base64,
         text: extractedText,
+        isMedia,
       };
 
       setFiles((prev) => [...prev, uploadedFile]);
