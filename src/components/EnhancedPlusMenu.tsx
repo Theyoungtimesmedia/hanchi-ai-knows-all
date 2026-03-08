@@ -2,7 +2,7 @@ import { useState } from "react";
 import { 
   Plus, X, Camera, Image as ImageIcon, FileText, Wand2, Lightbulb, 
   Search, Globe, BookOpen, Sticker, Shield, Mic, Brain, 
-  GraduationCap, Bot, Sparkles, FileAudio, FileVideo
+  GraduationCap, Bot, Sparkles, FileAudio, FileVideo, Palette, FileDown
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
