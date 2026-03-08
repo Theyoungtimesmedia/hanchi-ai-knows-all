@@ -15,7 +15,8 @@ import {
   Download,
   ExternalLink,
   Code,
-  FileText
+  FileText,
+  FolderHeart
 } from "lucide-react";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { Button } from "./ui/button";
