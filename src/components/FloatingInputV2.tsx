@@ -258,11 +258,12 @@ export const FloatingInputV2 = ({
         <div className="flex items-end gap-2 p-3">
           {/* Plus Menu Button */}
           <EnhancedPlusMenu
-            disabled={disabled}
+            disabled={disabled || isMediaProcessing}
             activeAddons={activeAddons}
             onToggleAddon={handleToggleAddon}
             onImageUpload={handleImageClick}
             onFileUpload={handleImageClick}
+            onMediaUpload={handleMediaUploadClick}
             onAction={handleAction}
           />
 
