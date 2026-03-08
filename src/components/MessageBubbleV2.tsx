@@ -62,6 +62,7 @@ export const MessageBubbleV2 = ({
   sources,
   onRegenerate,
   onEdit,
+  onSaveToCollection,
   language = "en",
 }: MessageBubbleV2Props) => {
   const [showThought, setShowThought] = useState(false);
