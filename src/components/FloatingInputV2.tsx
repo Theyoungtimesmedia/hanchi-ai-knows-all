@@ -130,9 +130,46 @@ export const FloatingInputV2 = ({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    
+    const isMedia = file.type.startsWith('audio/') || file.type.startsWith('video/');
+    if (isMedia) {
+      setPendingMediaFile({ name: file.name, type: file.type });
+      const result = await processMedia(file, 'transcribe', language);
+      setPendingMediaFile(null);
+      if (result) {
+        onMediaResult?.(result);
+        // Auto-populate input with transcription context
+        const prefix = file.type.startsWith('video/') ? '🎬 Video' : '🎵 Audio';
+        const contextMsg = `${prefix} transcription of "${file.name}":\n\n${result.text}`;
+        onSend(contextMsg);
+      }
+    } else {
       await handleImageUpload(file);
     }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleMediaUploadClick = () => {
+    mediaInputRef.current?.click();
+  };
+
+  const handleMediaFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setPendingMediaFile({ name: file.name, type: file.type });
+    const action = file.type.startsWith('video/') ? 'analyze' : 'transcribe';
+    const result = await processMedia(file, action, language);
+    setPendingMediaFile(null);
+    if (result) {
+      onMediaResult?.(result);
+      const prefix = file.type.startsWith('video/') ? '🎬 Video analysis' : '🎵 Audio transcription';
+      const contextMsg = `${prefix} of "${file.name}":\n\n${result.analysis || result.text}`;
+      onSend(contextMsg);
+    }
+    e.target.value = '';
   };
 
   const adjustTextareaHeight = () => {
