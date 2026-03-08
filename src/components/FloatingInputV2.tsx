@@ -26,6 +26,7 @@ export const FloatingInputV2 = ({
   placeholder = "Message Hanchi...",
   onInputChange,
   inputValue,
+  onMediaResult,
 }: FloatingInputV2Props) => {
   const [input, setInput] = useState("");
   
