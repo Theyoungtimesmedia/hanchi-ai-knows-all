@@ -180,12 +180,11 @@ export const EnhancedPlusMenu = ({
         setStickerMode(false);
         setShowImageGen(true);
         setIsOpen(false);
-      } else if (item.id === "create_sticker") {
-        setStickerMode(true);
-        setShowImageGen(true);
-        setIsOpen(false);
       } else if (item.id === "voice_translate") {
         setShowTranslation(true);
+        setIsOpen(false);
+      } else if (item.id === "export_chat") {
+        onAction?.("export_chat");
         setIsOpen(false);
       }
       return;
