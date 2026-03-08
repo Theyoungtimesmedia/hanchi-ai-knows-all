@@ -225,20 +225,20 @@ export const AppSidebar = ({
         <Button
           variant="outline"
           size="sm"
-           onClick={() => { navigate("/projects"); onClose(); }}
+          onClick={() => { navigate("/sticker-studio"); onClose(); }}
            className="h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
         >
-           <Folder size={14} />
-           Projects
-         </Button>
+          <Palette size={14} />
+          Stickers
+        </Button>
          <Button
            variant="outline"
            size="sm"
-           onClick={() => { navigate("/apps"); onClose(); }}
+           onClick={() => { navigate("/collections"); onClose(); }}
            className="h-9 text-xs rounded-xl gap-1.5 border-border/50 hover:bg-muted hover:border-primary/30"
          >
-           <Grid size={14} />
-           Apps
+           <FolderHeart size={14} />
+           Collections
          </Button>
          <Button
            variant="outline"
