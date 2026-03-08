@@ -27,6 +27,7 @@ interface EnhancedPlusMenuProps {
   onToggleAddon: (addon: keyof ActiveAddons, enabled: boolean) => void;
   onImageUpload?: () => void;
   onFileUpload?: () => void;
+  onMediaUpload?: () => void;
 }
 
 interface MenuItem {
