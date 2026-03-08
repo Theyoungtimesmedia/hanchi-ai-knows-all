@@ -60,6 +60,7 @@ export const EnhancedPlusMenu = ({
     { icon: <Camera size={22} />, label: "Camera", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
     { icon: <ImageIcon size={22} />, label: "Gallery", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
     { icon: <FileText size={22} />, label: "Files", onClick: () => { onFileUpload?.(); setIsOpen(false); } },
+    { icon: <FileAudio size={22} />, label: "Audio/Video", onClick: () => { onMediaUpload?.(); setIsOpen(false); } },
   ];
 
   const menuItems: MenuItem[] = [

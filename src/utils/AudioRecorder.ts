@@ -6,8 +6,19 @@ export class AudioRecorder {
   async startRecording(): Promise<void> {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Prefer Opus codec for better quality and compression
+      const mimeTypes = [
+        'audio/webm;codecs=opus',
+        'audio/ogg;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+      ];
+      const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || '';
+      
       this.mediaRecorder = new MediaRecorder(this.stream, {
-        mimeType: 'audio/webm',
+        mimeType,
+        audioBitsPerSecond: 128000,
       });
 
       this.audioChunks = [];
