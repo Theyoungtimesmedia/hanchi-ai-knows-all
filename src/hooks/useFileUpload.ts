@@ -7,6 +7,7 @@ export interface UploadedFile {
   size: number;
   data: string; // base64 encoded
   text?: string; // extracted text for text files
+  isMedia?: boolean; // audio or video file
 }
 
 export const useFileUpload = () => {
