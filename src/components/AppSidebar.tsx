@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { 
   MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, 
   BookOpen, HelpCircle, Folder, Bot, Palette, FolderHeart,
-  Compass, Sparkles, Image as ImageIcon, Wand2, Mic, FileDown, Shield
+  Compass, Sparkles, Image as ImageIcon, Wand2, Mic, FileDown, Shield,
+  ChevronDown, ChevronRight
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -10,6 +11,7 @@ import { Input } from "./ui/input";
 import { useNavigate } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface Conversation {
   id: string;
@@ -60,11 +62,12 @@ export const AppSidebar = ({
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
   
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const userAvatar = user?.user_metadata?.avatar_url;
 
-  // Check admin status once
   useState(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -127,11 +130,12 @@ export const AppSidebar = ({
 
   const ConversationItem = ({ conv, isPinned }: { conv: Conversation; isPinned: boolean }) => (
     <div
-      className={`group flex items-center gap-2.5 w-full text-left p-3 rounded-xl transition-all duration-200 cursor-pointer ${
+      className={cn(
+        "group flex items-center gap-2.5 w-full text-left p-3 rounded-xl transition-all duration-200 cursor-pointer",
         currentConversationId === conv.id
           ? 'bg-primary/10 text-primary border border-primary/20'
           : 'hover:bg-muted text-foreground border border-transparent'
-      }`}
+      )}
       onClick={() => onSelectConversation(conv.id)}
     >
       <MessageSquare size={16} className={
@@ -140,7 +144,7 @@ export const AppSidebar = ({
       <span className="text-sm font-medium truncate flex-1">{conv.title}</span>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button variant="ghost" size="icon"
-          className={`h-7 w-7 rounded-lg ${isPinned ? 'opacity-100' : ''}`}
+          className={cn("h-7 w-7 rounded-lg", isPinned && 'opacity-100')}
           onClick={(e) => handlePin(conv.id, isPinned, e)}>
           <Pin size={14} className={isPinned ? "text-primary fill-primary" : "text-muted-foreground"} />
         </Button>
@@ -153,20 +157,26 @@ export const AppSidebar = ({
     </div>
   );
 
-  const navItem = (icon: React.ReactNode, label: string, onClick: () => void) => (
-    <button
-      onClick={() => { onClick(); onClose(); }}
-      className="flex items-center gap-2.5 w-full p-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-    >
-      {icon}
-      <span className="font-medium">{label}</span>
-    </button>
-  );
+  const exploreItems = [
+    { icon: <Compass size={16} />, label: "Discover", path: "/discover", color: "text-sky-500" },
+    { icon: <BookOpen size={16} />, label: "Prompts", path: "/prompts", color: "text-amber-500" },
+    { icon: <Palette size={16} />, label: "Stickers", path: "/sticker-studio", color: "text-pink-500" },
+    { icon: <FolderHeart size={16} />, label: "Collections", path: "/collections", color: "text-violet-500" },
+    { icon: <Bot size={16} />, label: "Custom GPT", path: "/custom-gpt", color: "text-emerald-500" },
+  ];
+
+  const toolItems = [
+    { icon: <Wand2 size={16} />, label: "Create Image", onClick: onOpenImageGen, color: "text-purple-500" },
+    { icon: <Mic size={16} />, label: "Translate", onClick: onOpenVoiceTranslation, color: "text-blue-500" },
+    { icon: <FileDown size={16} />, label: "Export", onClick: onExportChat, color: "text-orange-500" },
+  ];
 
   return (
-    <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-card transform transition-transform duration-300 ease-out ${
-      isOpen ? 'translate-x-0' : '-translate-x-full'
-    } md:relative md:translate-x-0 flex flex-col border-r border-border/50 shadow-xl md:shadow-none`}>
+    <div className={cn(
+      "fixed inset-y-0 left-0 z-50 w-72 bg-card transform transition-transform duration-300 ease-out",
+      isOpen ? 'translate-x-0' : '-translate-x-full',
+      "md:relative md:translate-x-0 flex flex-col border-r border-border/50 shadow-xl md:shadow-none"
+    )}>
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-border/50">
         <div className="flex items-center gap-2.5">
@@ -191,6 +201,65 @@ export const AppSidebar = ({
         </Button>
       </div>
 
+      {/* Collapsible Explore & Tools - Horizontal at top */}
+      <div className="px-3 pb-2 space-y-1">
+        {/* Explore Toggle */}
+        <button 
+          onClick={() => setExploreOpen(!exploreOpen)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Compass size={16} className="text-primary" />
+            <span>Explore</span>
+          </div>
+          {exploreOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+        </button>
+        {exploreOpen && (
+          <div className="grid grid-cols-3 gap-1.5 px-1 pb-1">
+            {exploreItems.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => { navigate(item.path); onClose(); }}
+                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-muted/70 transition-colors group"
+              >
+                <div className={cn("w-9 h-9 rounded-xl bg-muted flex items-center justify-center group-hover:scale-105 transition-transform", item.color)}>
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Tools Toggle */}
+        <button 
+          onClick={() => setToolsOpen(!toolsOpen)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-primary" />
+            <span>Tools</span>
+          </div>
+          {toolsOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+        </button>
+        {toolsOpen && (
+          <div className="grid grid-cols-3 gap-1.5 px-1 pb-1">
+            {toolItems.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => { item.onClick?.(); onClose(); }}
+                className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl hover:bg-muted/70 transition-colors group"
+              >
+                <div className={cn("w-9 h-9 rounded-xl bg-muted flex items-center justify-center group-hover:scale-105 transition-transform", item.color)}>
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Search */}
       <div className="px-3 pb-2">
         <div className="relative">
@@ -201,28 +270,6 @@ export const AppSidebar = ({
       </div>
 
       <ScrollArea className="flex-1 px-2">
-        {/* Explore Section */}
-        <div className="mb-3 mt-1">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1.5">Explore</p>
-          <div className="space-y-0.5">
-            {navItem(<Compass size={16} />, "Discover", () => navigate("/discover"))}
-            {navItem(<BookOpen size={16} />, "Prompts", () => navigate("/prompts"))}
-            {navItem(<Palette size={16} />, "Sticker Studio", () => navigate("/sticker-studio"))}
-            {navItem(<FolderHeart size={16} />, "Collections", () => navigate("/collections"))}
-            {navItem(<Bot size={16} />, "Custom GPTs", () => navigate("/custom-gpt"))}
-          </div>
-        </div>
-
-        {/* Tools Section */}
-        <div className="mb-3">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1.5">Tools</p>
-          <div className="space-y-0.5">
-            {onOpenImageGen && navItem(<Wand2 size={16} />, "Create Image", onOpenImageGen)}
-            {onOpenVoiceTranslation && navItem(<Mic size={16} />, "Voice Translation", onOpenVoiceTranslation)}
-            {onExportChat && navItem(<FileDown size={16} />, "Export Chat", onExportChat)}
-          </div>
-        </div>
-
         {/* Pinned */}
         {pinnedConversations.length > 0 && (
           <div className="mb-3">
