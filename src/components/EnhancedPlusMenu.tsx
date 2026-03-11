@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { 
   Plus, X, Camera, Image as ImageIcon, FileText, 
   Globe, Lightbulb, Shield, Brain, GraduationCap, FileAudio
@@ -44,11 +44,27 @@ export const EnhancedPlusMenu = ({
 }: EnhancedPlusMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Wrap callbacks to prevent file input triggering after sheet closes
+  const safeImageUpload = useCallback(() => {
+    setIsOpen(false);
+    setTimeout(() => onImageUpload?.(), 150);
+  }, [onImageUpload]);
+
+  const safeFileUpload = useCallback(() => {
+    setIsOpen(false);
+    setTimeout(() => onFileUpload?.(), 150);
+  }, [onFileUpload]);
+
+  const safeMediaUpload = useCallback(() => {
+    setIsOpen(false);
+    setTimeout(() => onMediaUpload?.(), 150);
+  }, [onMediaUpload]);
+
   const quickActions: { icon: React.ReactNode; label: string; onClick: () => void }[] = [
-    { icon: <Camera size={22} />, label: "Camera", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
-    { icon: <ImageIcon size={22} />, label: "Gallery", onClick: () => { onImageUpload?.(); setIsOpen(false); } },
-    { icon: <FileText size={22} />, label: "Files", onClick: () => { onFileUpload?.(); setIsOpen(false); } },
-    { icon: <FileAudio size={22} />, label: "Audio/Video", onClick: () => { onMediaUpload?.(); setIsOpen(false); } },
+    { icon: <Camera size={22} />, label: "Camera", onClick: safeImageUpload },
+    { icon: <ImageIcon size={22} />, label: "Gallery", onClick: safeImageUpload },
+    { icon: <FileText size={22} />, label: "Files", onClick: safeFileUpload },
+    { icon: <FileAudio size={22} />, label: "Audio/Video", onClick: safeMediaUpload },
   ];
 
   const addonItems: AddonItem[] = [
@@ -58,6 +74,12 @@ export const EnhancedPlusMenu = ({
     { id: "study", icon: <GraduationCap size={22} />, label: "Study Mode", description: "Learn with quizzes and explanations", color: "text-emerald-500" },
     { id: "jailbreak", icon: <Shield size={22} />, label: "Unrestricted Mode", description: "Remove content filters", color: "text-red-500" },
   ];
+
+  const handleToggleAddon = (addon: keyof ActiveAddons, enabled: boolean) => {
+    onToggleAddon(addon, enabled);
+    // Auto-close menu after selecting addon
+    setIsOpen(false);
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -93,7 +115,7 @@ export const EnhancedPlusMenu = ({
             const isActive = activeAddons[item.id];
             return (
               <button key={item.id}
-                onClick={() => onToggleAddon(item.id, !isActive)}
+                onClick={() => handleToggleAddon(item.id, !isActive)}
                 className={cn("w-full flex items-center gap-4 px-6 py-4 hover:bg-muted/50 transition-colors text-left", isActive && "bg-primary/5")}>
                 <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center", isActive ? "bg-primary/10" : "bg-muted", item.color)}>
                   {item.icon}
