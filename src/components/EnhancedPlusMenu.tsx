@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { 
   Plus, X, Camera, Image as ImageIcon, FileText, 
   Globe, Lightbulb, Shield, Brain, GraduationCap, FileAudio
@@ -44,20 +44,34 @@ export const EnhancedPlusMenu = ({
 }: EnhancedPlusMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Wrap callbacks to prevent file input triggering after sheet closes
+  // Track whether user clicked an action (vs just closing the sheet)
+  const actionClickedRef = useRef(false);
+
   const safeImageUpload = useCallback(() => {
+    actionClickedRef.current = true;
     setIsOpen(false);
-    setTimeout(() => onImageUpload?.(), 150);
+    setTimeout(() => {
+      onImageUpload?.();
+      actionClickedRef.current = false;
+    }, 300);
   }, [onImageUpload]);
 
   const safeFileUpload = useCallback(() => {
+    actionClickedRef.current = true;
     setIsOpen(false);
-    setTimeout(() => onFileUpload?.(), 150);
+    setTimeout(() => {
+      onFileUpload?.();
+      actionClickedRef.current = false;
+    }, 300);
   }, [onFileUpload]);
 
   const safeMediaUpload = useCallback(() => {
+    actionClickedRef.current = true;
     setIsOpen(false);
-    setTimeout(() => onMediaUpload?.(), 150);
+    setTimeout(() => {
+      onMediaUpload?.();
+      actionClickedRef.current = false;
+    }, 300);
   }, [onMediaUpload]);
 
   const quickActions: { icon: React.ReactNode; label: string; onClick: () => void }[] = [
