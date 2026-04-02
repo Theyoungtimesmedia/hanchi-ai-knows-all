@@ -37,14 +37,15 @@ export const AddonChips = ({ activeAddons, onRemove }: AddonChipsProps) => {
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               onClick={() => onRemove(key)}
               className={cn(
-                "flex items-center gap-2.5 px-4 py-2.5 rounded-2xl text-sm font-bold border-2 transition-all",
-                "bg-gradient-to-r shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-[0.97]",
+                "flex items-center gap-3 px-5 py-3 rounded-2xl text-base font-bold border-2 transition-all",
+                "bg-gradient-to-r shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.97]",
                 config.gradient
               )}
             >
+              <span className="text-lg">{config.emoji}</span>
               <span className="flex-shrink-0">{config.icon}</span>
-              <span>{config.label}</span>
-              <X size={15} className="ml-1 opacity-60 hover:opacity-100 transition-opacity" />
+              <span className="text-sm">{config.label}</span>
+              <X size={16} className="ml-1.5 opacity-60 hover:opacity-100 transition-opacity" />
             </motion.button>
           );
         })}

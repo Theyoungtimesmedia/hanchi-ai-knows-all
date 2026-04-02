@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { 
   Plus, X, Camera, Image as ImageIcon, FileText, 
   Globe, Lightbulb, Shield, Brain, GraduationCap, FileAudio
