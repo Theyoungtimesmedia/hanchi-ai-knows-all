@@ -8,12 +8,12 @@ interface AddonChipsProps {
   onRemove: (addon: keyof ActiveAddons) => void;
 }
 
-const addonConfig: Record<keyof ActiveAddons, { icon: React.ReactNode; label: string; gradient: string }> = {
-  search: { icon: <Globe size={16} />, label: "Web Search", gradient: "from-sky-500/20 to-blue-500/10 border-sky-500/30 text-sky-600 dark:text-sky-400" },
-  thinking: { icon: <Lightbulb size={16} />, label: "Think Deeper", gradient: "from-amber-500/20 to-yellow-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400" },
-  jailbreak: { icon: <Shield size={16} />, label: "Unrestricted", gradient: "from-red-500/20 to-rose-500/10 border-red-500/30 text-red-600 dark:text-red-400" },
-  deepResearch: { icon: <Brain size={16} />, label: "Deep Research", gradient: "from-indigo-500/20 to-purple-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400" },
-  study: { icon: <GraduationCap size={16} />, label: "Study Mode", gradient: "from-emerald-500/20 to-green-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400" },
+const addonConfig: Record<keyof ActiveAddons, { icon: React.ReactNode; label: string; gradient: string; emoji: string }> = {
+  search: { icon: <Globe size={20} />, label: "Web Search", emoji: "🌐", gradient: "from-sky-500/20 to-blue-500/10 border-sky-500/40 text-sky-600 dark:text-sky-400" },
+  thinking: { icon: <Lightbulb size={20} />, label: "Think Deeper", emoji: "💡", gradient: "from-amber-500/20 to-yellow-500/10 border-amber-500/40 text-amber-600 dark:text-amber-400" },
+  jailbreak: { icon: <Shield size={20} />, label: "Unrestricted", emoji: "🔓", gradient: "from-red-500/20 to-rose-500/10 border-red-500/40 text-red-600 dark:text-red-400" },
+  deepResearch: { icon: <Brain size={20} />, label: "Deep Research", emoji: "🧠", gradient: "from-indigo-500/20 to-purple-500/10 border-indigo-500/40 text-indigo-600 dark:text-indigo-400" },
+  study: { icon: <GraduationCap size={20} />, label: "Study Mode", emoji: "📚", gradient: "from-emerald-500/20 to-green-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400" },
 };
 
 export const AddonChips = ({ activeAddons, onRemove }: AddonChipsProps) => {
