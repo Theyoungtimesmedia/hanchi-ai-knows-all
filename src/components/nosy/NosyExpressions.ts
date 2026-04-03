@@ -1,166 +1,152 @@
-export type NosyMood = "idle" | "curious" | "thinking" | "happy" | "worried" | "bored" | "waving" | "typing-help" | "excited" | "sleepy" | "laughing";
+export type NosyMood =
+  | "idle" | "curious" | "thinking" | "happy" | "worried"
+  | "bored" | "waving" | "typing-help" | "excited"
+  | "sleepy" | "laughing";
 
-export interface BodyPartState {
-  eyeScaleY: number;
+export interface FaceState {
+  visorGlow: string;          // CSS color for visor glow
+  visorPulse: boolean;
+  pupilScale: number;
   pupilOffsetX: number;
   pupilOffsetY: number;
-  eyebrowY: number;
-  eyebrowRotate: number;
-  mouthPath: string;
-  mouthScale: number;
-  leftArmRotate: number;
-  rightArmRotate: number;
-  leftArmY: number;
-  rightArmY: number;
-  bodyRotate: number;
-  bodyY: number;
-  bodyScale: number;
-  leftLegRotate: number;
-  rightLegRotate: number;
-  showSweatDrop?: boolean;
-  showSparkles?: boolean;
-  showThoughtDots?: boolean;
-  showPhone?: boolean;
+  mouthArc: number;           // -1 (frown) to 1 (smile), 0 = flat
+  mouthOpen: number;          // 0 (closed) to 1 (wide open)
+  antennaAngle: number;
+  antennaBob: boolean;
+  leftArmAngle: number;
+  rightArmAngle: number;
+  bodyTilt: number;
+  bodyBounce: number;
+  hoverHeight: number;
+  jetIntensity: number;       // 0-1
+  showSparks: boolean;
+  showZzz: boolean;
+  showExclamation: boolean;
+  showHeart: boolean;
+  showSweat: boolean;
 }
 
-const MOUTHS = {
-  smile: "M -6 0 Q 0 6 6 0",
-  grin: "M -8 -1 Q 0 10 8 -1",
-  flat: "M -5 0 L 5 0",
-  frown: "M -6 3 Q 0 -4 6 3",
-  o: "M -3 -3 Q -3 3 0 4 Q 3 3 3 -3 Q 3 -4 0 -4 Q -3 -4 -3 -3",
-  smirk: "M -5 1 Q 0 3 5 -2",
-  laugh: "M -9 -2 Q 0 12 9 -2",
-  sleepyMouth: "M -4 0 Q 0 2 4 0",
-};
-
-export const EXPRESSIONS: Record<NosyMood, BodyPartState> = {
+export const EXPRESSIONS: Record<NosyMood, FaceState> = {
   idle: {
-    eyeScaleY: 1, pupilOffsetX: 0, pupilOffsetY: 0,
-    eyebrowY: 0, eyebrowRotate: 0,
-    mouthPath: MOUTHS.smile, mouthScale: 1,
-    leftArmRotate: 15, rightArmRotate: -15,
-    leftArmY: 0, rightArmY: 0,
-    bodyRotate: 0, bodyY: 0, bodyScale: 1,
-    leftLegRotate: 5, rightLegRotate: -5,
+    visorGlow: "#00E5A0", visorPulse: false,
+    pupilScale: 1, pupilOffsetX: 0, pupilOffsetY: 0,
+    mouthArc: 0.3, mouthOpen: 0,
+    antennaAngle: 0, antennaBob: true,
+    leftArmAngle: 20, rightArmAngle: -20,
+    bodyTilt: 0, bodyBounce: 3, hoverHeight: 4, jetIntensity: 0.4,
+    showSparks: false, showZzz: false, showExclamation: false, showHeart: false, showSweat: false,
   },
   curious: {
-    eyeScaleY: 1.3, pupilOffsetX: -2, pupilOffsetY: -1,
-    eyebrowY: -5, eyebrowRotate: -5,
-    mouthPath: MOUTHS.o, mouthScale: 0.8,
-    leftArmRotate: 15, rightArmRotate: -50,
-    leftArmY: 0, rightArmY: -5,
-    bodyRotate: -6, bodyY: -3, bodyScale: 1.03,
-    leftLegRotate: 5, rightLegRotate: -5,
+    visorGlow: "#00D4FF", visorPulse: true,
+    pupilScale: 1.3, pupilOffsetX: -3, pupilOffsetY: -1,
+    mouthArc: 0, mouthOpen: 0.4,
+    antennaAngle: -15, antennaBob: false,
+    leftArmAngle: 15, rightArmAngle: -60,
+    bodyTilt: -8, bodyBounce: 2, hoverHeight: 8, jetIntensity: 0.6,
+    showSparks: false, showZzz: false, showExclamation: true, showHeart: false, showSweat: false,
   },
   thinking: {
-    eyeScaleY: 0.6, pupilOffsetX: 2, pupilOffsetY: -1,
-    eyebrowY: -2, eyebrowRotate: 8,
-    mouthPath: MOUTHS.flat, mouthScale: 0.9,
-    leftArmRotate: 15, rightArmRotate: -90,
-    leftArmY: 0, rightArmY: -20,
-    bodyRotate: 3, bodyY: -2, bodyScale: 1,
-    leftLegRotate: 5, rightLegRotate: -5,
-    showThoughtDots: true,
+    visorGlow: "#FFB800", visorPulse: true,
+    pupilScale: 0.8, pupilOffsetX: 2, pupilOffsetY: -2,
+    mouthArc: 0, mouthOpen: 0,
+    antennaAngle: 10, antennaBob: false,
+    leftArmAngle: 25, rightArmAngle: -100,
+    bodyTilt: 5, bodyBounce: 1, hoverHeight: 6, jetIntensity: 0.3,
+    showSparks: true, showZzz: false, showExclamation: false, showHeart: false, showSweat: false,
   },
   happy: {
-    eyeScaleY: 0.3, pupilOffsetX: 0, pupilOffsetY: 0,
-    eyebrowY: -4, eyebrowRotate: 0,
-    mouthPath: MOUTHS.grin, mouthScale: 1.2,
-    leftArmRotate: -60, rightArmRotate: 60,
-    leftArmY: -15, rightArmY: -15,
-    bodyRotate: 0, bodyY: -5, bodyScale: 1.05,
-    leftLegRotate: 10, rightLegRotate: -10,
-    showSparkles: true,
+    visorGlow: "#00FF88", visorPulse: false,
+    pupilScale: 0.7, pupilOffsetX: 0, pupilOffsetY: 0,
+    mouthArc: 1, mouthOpen: 0.5,
+    antennaAngle: 0, antennaBob: true,
+    leftArmAngle: -50, rightArmAngle: 50,
+    bodyTilt: 0, bodyBounce: 10, hoverHeight: 12, jetIntensity: 0.8,
+    showSparks: true, showZzz: false, showExclamation: false, showHeart: true, showSweat: false,
   },
   excited: {
-    eyeScaleY: 1.4, pupilOffsetX: 0, pupilOffsetY: -2,
-    eyebrowY: -6, eyebrowRotate: 0,
-    mouthPath: MOUTHS.grin, mouthScale: 1.3,
-    leftArmRotate: -80, rightArmRotate: 80,
-    leftArmY: -20, rightArmY: -20,
-    bodyRotate: 0, bodyY: -8, bodyScale: 1.08,
-    leftLegRotate: 15, rightLegRotate: -15,
-    showSparkles: true,
+    visorGlow: "#FF00FF", visorPulse: true,
+    pupilScale: 1.4, pupilOffsetX: 0, pupilOffsetY: -2,
+    mouthArc: 1, mouthOpen: 0.8,
+    antennaAngle: 0, antennaBob: true,
+    leftArmAngle: -80, rightArmAngle: 80,
+    bodyTilt: 0, bodyBounce: 15, hoverHeight: 16, jetIntensity: 1,
+    showSparks: true, showZzz: false, showExclamation: true, showHeart: true, showSweat: false,
   },
   laughing: {
-    eyeScaleY: 0.15, pupilOffsetX: 0, pupilOffsetY: 0,
-    eyebrowY: -5, eyebrowRotate: 0,
-    mouthPath: MOUTHS.laugh, mouthScale: 1.3,
-    leftArmRotate: -40, rightArmRotate: 40,
-    leftArmY: -10, rightArmY: -10,
-    bodyRotate: 0, bodyY: -3, bodyScale: 1.04,
-    leftLegRotate: 8, rightLegRotate: -8,
-    showSparkles: true,
+    visorGlow: "#00FF88", visorPulse: false,
+    pupilScale: 0.4, pupilOffsetX: 0, pupilOffsetY: 0,
+    mouthArc: 1, mouthOpen: 1,
+    antennaAngle: 0, antennaBob: true,
+    leftArmAngle: -40, rightArmAngle: 40,
+    bodyTilt: 0, bodyBounce: 8, hoverHeight: 10, jetIntensity: 0.7,
+    showSparks: true, showZzz: false, showExclamation: false, showHeart: false, showSweat: false,
   },
   worried: {
-    eyeScaleY: 1.2, pupilOffsetX: 0, pupilOffsetY: 1,
-    eyebrowY: -2, eyebrowRotate: 15,
-    mouthPath: MOUTHS.frown, mouthScale: 0.9,
-    leftArmRotate: 30, rightArmRotate: -30,
-    leftArmY: 5, rightArmY: 5,
-    bodyRotate: 0, bodyY: 2, bodyScale: 0.97,
-    leftLegRotate: 3, rightLegRotate: -3,
-    showSweatDrop: true,
+    visorGlow: "#FF6B6B", visorPulse: true,
+    pupilScale: 1.2, pupilOffsetX: 0, pupilOffsetY: 2,
+    mouthArc: -0.8, mouthOpen: 0.2,
+    antennaAngle: 20, antennaBob: false,
+    leftArmAngle: 35, rightArmAngle: -35,
+    bodyTilt: 0, bodyBounce: 1, hoverHeight: 2, jetIntensity: 0.2,
+    showSparks: false, showZzz: false, showExclamation: false, showHeart: false, showSweat: true,
   },
   bored: {
-    eyeScaleY: 0.5, pupilOffsetX: 1, pupilOffsetY: 2,
-    eyebrowY: 2, eyebrowRotate: 0,
-    mouthPath: MOUTHS.flat, mouthScale: 0.8,
-    leftArmRotate: 20, rightArmRotate: -45,
-    leftArmY: 5, rightArmY: 0,
-    bodyRotate: 5, bodyY: 5, bodyScale: 0.98,
-    leftLegRotate: 2, rightLegRotate: -2,
-    showPhone: true,
+    visorGlow: "#888888", visorPulse: false,
+    pupilScale: 0.6, pupilOffsetX: 3, pupilOffsetY: 3,
+    mouthArc: -0.2, mouthOpen: 0,
+    antennaAngle: 25, antennaBob: false,
+    leftArmAngle: 30, rightArmAngle: -45,
+    bodyTilt: 8, bodyBounce: 0, hoverHeight: 2, jetIntensity: 0.15,
+    showSparks: false, showZzz: true, showExclamation: false, showHeart: false, showSweat: false,
   },
   sleepy: {
-    eyeScaleY: 0.2, pupilOffsetX: 0, pupilOffsetY: 2,
-    eyebrowY: 3, eyebrowRotate: 0,
-    mouthPath: MOUTHS.sleepyMouth, mouthScale: 0.7,
-    leftArmRotate: 25, rightArmRotate: -25,
-    leftArmY: 8, rightArmY: 8,
-    bodyRotate: 8, bodyY: 6, bodyScale: 0.96,
-    leftLegRotate: 2, rightLegRotate: -2,
+    visorGlow: "#6B5CE7", visorPulse: false,
+    pupilScale: 0.3, pupilOffsetX: 0, pupilOffsetY: 3,
+    mouthArc: 0, mouthOpen: 0.3,
+    antennaAngle: 30, antennaBob: false,
+    leftArmAngle: 30, rightArmAngle: -30,
+    bodyTilt: 12, bodyBounce: 0, hoverHeight: 1, jetIntensity: 0.1,
+    showSparks: false, showZzz: true, showExclamation: false, showHeart: false, showSweat: false,
   },
   waving: {
-    eyeScaleY: 1, pupilOffsetX: -1, pupilOffsetY: 0,
-    eyebrowY: -3, eyebrowRotate: 0,
-    mouthPath: MOUTHS.grin, mouthScale: 1.1,
-    leftArmRotate: 15, rightArmRotate: -120,
-    leftArmY: 0, rightArmY: -25,
-    bodyRotate: -3, bodyY: -2, bodyScale: 1.02,
-    leftLegRotate: 5, rightLegRotate: -5,
+    visorGlow: "#00E5A0", visorPulse: false,
+    pupilScale: 1, pupilOffsetX: -1, pupilOffsetY: 0,
+    mouthArc: 0.8, mouthOpen: 0.3,
+    antennaAngle: -5, antennaBob: true,
+    leftArmAngle: 20, rightArmAngle: -140,
+    bodyTilt: -4, bodyBounce: 4, hoverHeight: 8, jetIntensity: 0.5,
+    showSparks: false, showZzz: false, showExclamation: false, showHeart: true, showSweat: false,
   },
   "typing-help": {
-    eyeScaleY: 1.1, pupilOffsetX: 3, pupilOffsetY: 0,
-    eyebrowY: -3, eyebrowRotate: -8,
-    mouthPath: MOUTHS.smirk, mouthScale: 1,
-    leftArmRotate: 15, rightArmRotate: -70,
-    leftArmY: 0, rightArmY: -10,
-    bodyRotate: -5, bodyY: -2, bodyScale: 1.02,
-    leftLegRotate: 5, rightLegRotate: -5,
+    visorGlow: "#00D4FF", visorPulse: true,
+    pupilScale: 1.1, pupilOffsetX: 4, pupilOffsetY: 0,
+    mouthArc: 0.2, mouthOpen: 0,
+    antennaAngle: -10, antennaBob: false,
+    leftArmAngle: 20, rightArmAngle: -70,
+    bodyTilt: -6, bodyBounce: 2, hoverHeight: 6, jetIntensity: 0.5,
+    showSparks: false, showZzz: false, showExclamation: true, showHeart: false, showSweat: false,
   },
 };
 
-export const COLOR_SCHEMES = [
-  { name: "Default", body: "#C68642", bodyDark: "#8D5524", accent: "#F4A460", highlight: "#FFCC80" },
-  { name: "Neon", body: "#00E5FF", bodyDark: "#0097A7", accent: "#76FF03", highlight: "#B2FF59" },
-  { name: "Earth", body: "#8D6E63", bodyDark: "#5D4037", accent: "#A5D6A7", highlight: "#C8E6C9" },
-  { name: "Ocean", body: "#42A5F5", bodyDark: "#1565C0", accent: "#80DEEA", highlight: "#B3E5FC" },
-  { name: "Sunset", body: "#FF7043", bodyDark: "#D84315", accent: "#FFD54F", highlight: "#FFE082" },
-  { name: "Galaxy", body: "#7E57C2", bodyDark: "#4527A0", accent: "#CE93D8", highlight: "#E1BEE7" },
-];
-
-export const MOOD_BODY_ANIMATIONS: Record<NosyMood, object> = {
-  idle: { y: [0, -4, 0], transition: { duration: 3, repeat: Infinity, ease: "easeInOut" } },
-  curious: { y: [0, -3, 0], rotate: [-6, -4, -6], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" } },
-  thinking: { y: [0, -5, 0], rotate: [3, 5, 3], transition: { duration: 2, repeat: Infinity, ease: "easeInOut" } },
-  happy: { y: [0, -12, 0, -8, 0], scale: [1, 1.08, 0.96, 1.04, 1], transition: { duration: 0.8, repeat: Infinity, ease: "easeOut" } },
-  excited: { y: [0, -15, 0, -10, 0], scale: [1, 1.1, 0.95, 1.06, 1], rotate: [0, -5, 5, -3, 0], transition: { duration: 0.6, repeat: Infinity, ease: "easeOut" } },
-  laughing: { y: [0, -6, 0, -4, 0], x: [-2, 2, -2], transition: { duration: 0.5, repeat: Infinity, ease: "easeInOut" } },
-  worried: { x: [-1, 1, -1], y: [0, -1, 0], transition: { duration: 0.4, repeat: Infinity, ease: "easeInOut" } },
-  bored: { y: [0, 2, 0], rotate: [5, 6, 5], transition: { duration: 4, repeat: Infinity, ease: "easeInOut" } },
-  sleepy: { y: [0, 3, 0], rotate: [8, 10, 8], transition: { duration: 5, repeat: Infinity, ease: "easeInOut" } },
-  waving: { y: [0, -3, 0], rotate: [-3, 0, -3], transition: { duration: 1, repeat: 3, ease: "easeInOut" } },
-  "typing-help": { y: [0, -2, 0], rotate: [-5, -4, -5], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" } },
+export const BODY_ANIMATIONS: Record<NosyMood, object> = {
+  idle:         { y: [0, -4, 0], transition: { duration: 3, repeat: Infinity, ease: "easeInOut" } },
+  curious:      { y: [0, -3, 0], rotate: [-6, -4, -6], transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" } },
+  thinking:     { y: [0, -5, 0], rotate: [3, 5, 3], transition: { duration: 2, repeat: Infinity, ease: "easeInOut" } },
+  happy:        { y: [0, -12, 0, -8, 0], scale: [1, 1.06, 0.97, 1.03, 1], transition: { duration: 0.8, repeat: Infinity, ease: "easeOut" } },
+  excited:      { y: [0, -15, 0, -10, 0], scale: [1, 1.08, 0.95, 1.05, 1], rotate: [0, -5, 5, -3, 0], transition: { duration: 0.6, repeat: Infinity } },
+  laughing:     { y: [0, -6, 0, -4, 0], x: [-2, 2, -2], transition: { duration: 0.5, repeat: Infinity } },
+  worried:      { x: [-1, 1, -1], y: [0, -1, 0], transition: { duration: 0.4, repeat: Infinity } },
+  bored:        { y: [0, 2, 0], rotate: [5, 7, 5], transition: { duration: 4, repeat: Infinity, ease: "easeInOut" } },
+  sleepy:       { y: [0, 3, 0], rotate: [8, 12, 8], transition: { duration: 5, repeat: Infinity, ease: "easeInOut" } },
+  waving:       { y: [0, -3, 0], rotate: [-3, 0, -3], transition: { duration: 1, repeat: 3, ease: "easeInOut" } },
+  "typing-help": { y: [0, -2, 0], rotate: [-5, -3, -5], transition: { duration: 1.5, repeat: Infinity } },
 };
+
+export const THEME_PALETTES = [
+  { name: "Hanchi", shell: "#1A1A2E", accent: "#00E5A0", glow: "#00E5A0" },
+  { name: "Neon",   shell: "#0D0D2B", accent: "#FF00FF", glow: "#FF00FF" },
+  { name: "Solar",  shell: "#2E1A00", accent: "#FFB800", glow: "#FFD54F" },
+  { name: "Ocean",  shell: "#0A1929", accent: "#00D4FF", glow: "#80DEEA" },
+  { name: "Berry",  shell: "#2E0A29", accent: "#E040FB", glow: "#EA80FC" },
+  { name: "Forest", shell: "#0A291A", accent: "#76FF03", glow: "#B2FF59" },
+];
