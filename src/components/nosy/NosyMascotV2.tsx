@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
 import { NosyCharacter } from "./NosyCharacter";
 import { NosyTypoDetector } from "./NosyTypoDetector";
-import { type NosyMood, THEME_PALETTES } from "./NosyExpressions";
+import { type NosyMood, TIPS } from "./NosyExpressions";
 
 interface NosyMascotV2Props {
   isLoading?: boolean;
@@ -15,18 +15,6 @@ interface NosyMascotV2Props {
   inputText?: string;
   onInputCorrection?: (corrected: string) => void;
 }
-
-const TIPS: Record<string, string[]> = {
-  code: ["Scanning code… looks clean! 🤖", "I'd refactor that, but you do you 💻", "Bug detector activated! 🐛"],
-  image: ["Creating something sick! 🎨", "Art mode: ON 🖼️", "Pixels assembling… ✨"],
-  first: ["First message! Let's gooo! 🚀", "Welcome aboard, fam! 🤝", "System online. Vibes: immaculate 🔥"],
-  greeting: ["Yo! What's good? 👋", "Eyin! Ready to build? 🤖"],
-  default: [
-    "Ask me anything — I literally know everything 👃", "Press ⌘K for shortcuts!", "I can generate images too 🎨",
-    "Need code help? Say less 💻", "Try: 'create an image of Lagos at sunset'", "I'm watching your every keystroke 👀",
-    "Fun fact: I never sleep. Never. 🤖", "Omo, type something already!",
-  ],
-};
 
 function pick(a: string[]) { return a[Math.floor(Math.random() * a.length)]; }
 
@@ -50,18 +38,10 @@ export const NosyMascotV2 = ({
   const [tipText, setTipText] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [paletteIdx, setPaletteIdx] = useState(0);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCount = useRef(messageCount);
   const constraintsRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", h);
-    return () => window.removeEventListener("mousemove", h);
-  }, []);
 
   // Landing wave
   useEffect(() => {
@@ -99,14 +79,6 @@ export const NosyMascotV2 = ({
     }
     return () => { if (idleTimer.current) clearTimeout(idleTimer.current); };
   }, [mood, isLoading, isStreaming, variant]);
-
-  // Palette cycle when bored
-  useEffect(() => {
-    if (mood === "bored") {
-      const iv = setInterval(() => setPaletteIdx(p => (p + 1) % THEME_PALETTES.length), 3000);
-      return () => clearInterval(iv);
-    } else { setPaletteIdx(0); }
-  }, [mood]);
 
   // Periodic tips
   useEffect(() => {
@@ -181,19 +153,6 @@ export const NosyMascotV2 = ({
           )}
         </AnimatePresence>
 
-        {/* Palette label */}
-        <AnimatePresence>
-          {mood === "bored" && paletteIdx > 0 && (
-            <motion.div key={paletteIdx}
-              initial={{ opacity: 0, y: -8, scale: 0.8 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.8 }}
-              className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[9px] font-bold px-2.5 py-0.5 rounded-full shadow-lg whitespace-nowrap z-10"
-            >
-              {THEME_PALETTES[paletteIdx].name} mode ✨
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Typo detector */}
         <div className="relative">
           <NosyTypoDetector inputText={inputText} onCorrection={onInputCorrection}
@@ -204,19 +163,9 @@ export const NosyMascotV2 = ({
 
         {/* Character */}
         <motion.div onClick={handleClick} animate={controls} className="relative select-none group">
-          <motion.div className="absolute inset-[-12px] rounded-full"
-            animate={{
-              boxShadow: mood === "thinking"
-                ? ["0 0 25px 10px hsl(var(--primary) / 0.25)", "0 0 45px 15px hsl(var(--primary) / 0.45)", "0 0 25px 10px hsl(var(--primary) / 0.25)"]
-                : mood === "happy"
-                ? ["0 0 20px 8px hsl(142 71% 45% / 0.2)", "0 0 35px 12px hsl(142 71% 45% / 0.35)", "0 0 20px 8px hsl(142 71% 45% / 0.2)"]
-                : "0 0 12px 4px hsl(var(--primary) / 0.1)",
-            }}
-            transition={{ duration: mood === "thinking" ? 1 : 2, repeat: (mood === "thinking" || mood === "happy") ? Infinity : 0 }}
-          />
+          <NosyCharacter mood={mood} size={charSize} />
 
-          <NosyCharacter mood={mood} size={charSize} mousePosition={mousePos} paletteIndex={paletteIdx} />
-
+          {/* Status dot */}
           <motion.div
             className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-background ${
               mood === "happy" ? "bg-emerald-400" : mood === "thinking" ? "bg-amber-400" :
