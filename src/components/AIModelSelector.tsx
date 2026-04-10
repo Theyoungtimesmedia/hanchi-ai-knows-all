@@ -62,8 +62,8 @@ export function AIModelSelector({ selectedModel, onModelChange }: AIModelSelecto
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 font-medium h-9 px-3">
-          <span className="text-lg">👃🏿</span>
+        <Button variant="ghost" className="flex items-center gap-1.5 font-medium h-8 px-2.5 text-sm">
+          <Sparkles className="w-4 h-4 text-primary" />
           <span className="hidden sm:inline">{currentModel.name}</span>
           <ChevronDown size={14} className="text-muted-foreground" />
         </Button>
