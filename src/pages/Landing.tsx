@@ -93,9 +93,9 @@ export default function Landing() {
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }}>
             <div className="rounded-xl bg-card border border-border/50 p-4 shadow-lg">
               <div className="flex items-center gap-1.5 mb-3 pb-2.5 border-b border-border/30">
-                <div className="w-2 h-2 rounded-full bg-red-400/60" />
-                <div className="w-2 h-2 rounded-full bg-yellow-400/60" />
-                <div className="w-2 h-2 rounded-full bg-green-400/60" />
+                <div className="w-2 h-2 rounded-full bg-destructive/40" />
+                <div className="w-2 h-2 rounded-full bg-accent-foreground/30" />
+                <div className="w-2 h-2 rounded-full bg-primary/60" />
                 <span className="ml-auto text-[10px] text-muted-foreground font-medium">Hanchi AI</span>
               </div>
               <div className="space-y-2.5">
