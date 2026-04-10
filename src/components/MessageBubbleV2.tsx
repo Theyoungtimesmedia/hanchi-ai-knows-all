@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Code,
   FileText,
-  FolderHeart
+  FolderHeart,
+  Sparkles
 } from "lucide-react";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { Button } from "./ui/button";
@@ -178,8 +179,8 @@ export const MessageBubbleV2 = ({
           isAI ? '' : 'flex-row-reverse'
         )}>
           {isAI ? (
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-              <span className="text-sm">👃🏿</span>
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
             </div>
           ) : (
             <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center border border-border/50">

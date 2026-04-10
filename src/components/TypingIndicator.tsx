@@ -10,7 +10,6 @@ export const TypingIndicator = () => {
       setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
     }, 500);
 
-    // Simulate different phases
     const phaseInterval = setInterval(() => {
       setPhase((prev) => {
         if (prev === "thinking") return "searching";
@@ -27,25 +26,21 @@ export const TypingIndicator = () => {
 
   const getPhaseText = () => {
     switch (phase) {
-      case "thinking":
-        return "Nosing out answers";
-      case "searching":
-        return "Searching Nigerian context";
-      case "responding":
-        return "Crafting response";
-      default:
-        return "Thinking";
+      case "thinking": return "Thinking";
+      case "searching": return "Searching";
+      case "responding": return "Writing";
+      default: return "Thinking";
     }
   };
 
   return (
-    <div className="flex items-center gap-3 p-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
-        <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
+    <div className="flex items-center gap-2.5 p-3">
+      <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+        <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
       </div>
       <div className="flex-1">
-        <div className="bg-card border border-border rounded-2xl px-4 py-3 shadow-sm">
-          <p className="text-sm text-muted-foreground animate-pulse">
+        <div className="bg-card border border-border/40 rounded-lg px-3 py-2">
+          <p className="text-xs text-muted-foreground animate-pulse">
             {getPhaseText()}{dots}
           </p>
         </div>

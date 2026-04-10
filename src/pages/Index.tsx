@@ -8,9 +8,8 @@ import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
 import { FloatingInputV2 } from "@/components/FloatingInputV2";
 import { ActiveAddons } from "@/components/EnhancedPlusMenu";
 import { AppSidebar } from "@/components/AppSidebar";
-import { NoseSphere } from "@/components/NoseSphere";
+import { EmptyState } from "@/components/EmptyState";
 import { ThinkingIndicatorV2 } from "@/components/ThinkingIndicatorV2";
-import { NosyMascotV2 } from "@/components/nosy";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SmartReplySuggestions } from "@/components/SmartReplySuggestions";
 import { AIModelSelector } from "@/components/AIModelSelector";
@@ -164,8 +163,8 @@ export default function Index() {
       setPendingImagePrompt(imageCommand.prompt);
       const result = await generateImage(imageCommand.prompt, isSticker ? 'sticker' : 'default', isSticker);
       setPendingImagePrompt(null);
-      if (result?.url) { addMessage({ role: "assistant", content: `Here's what I created for "${imageCommand.prompt}" 🎨`, images: [result.url] }); }
-      else { addMessage({ role: "assistant", content: "Sorry, I couldn't generate that image. Try again? 😅" }); }
+      if (result?.url) { addMessage({ role: "assistant", content: `Here's what I created for "${imageCommand.prompt}"`, images: [result.url] }); }
+      else { addMessage({ role: "assistant", content: "Sorry, I couldn't generate that image. Try again?" }); }
       return;
     }
     await sendMessage(content, images);
@@ -196,11 +195,15 @@ export default function Index() {
   if (!isInitialized) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <motion.div className="text-center" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-primary/25">
-            <span className="text-3xl">👃🏿</span>
+        <motion.div className="text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3">
+            <Sparkles className="w-5 h-5 text-primary-foreground" />
           </div>
-          <p className="text-sm text-muted-foreground">Loading Hanchi...</p>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
         </motion.div>
       </div>
     );
@@ -212,19 +215,8 @@ export default function Index() {
   const showEmptyState = messages.length === 0 && !isCreatingConversation;
 
   return (
-    <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+    <motion.div className="flex h-screen bg-background overflow-hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
       <OfflineIndicator />
-      <NosyMascotV2
-        isLoading={isLoading || isGeneratingImage}
-        isStreaming={isStreaming}
-        messageCount={messages.length}
-        hasError={false}
-        lastMessageContent={messages.length > 0 ? messages[messages.length - 1].content : undefined}
-        isFirstMessage={messages.length === 1}
-        variant="chat"
-        inputText={currentInputText}
-        onInputCorrection={setCurrentInputText}
-      />
       
       <KeyboardShortcutsModal open={showShortcuts} onOpenChange={setShowShortcuts} />
       <QuickSearchModal open={showQuickSearch} onOpenChange={setShowQuickSearch}
@@ -239,7 +231,7 @@ export default function Index() {
           onSendMessage={(msg) => handleSend(`Regarding the canvas content: ${msg}`)} />
       )}
       
-      {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
       
       <AppSidebar
         conversations={conversations}
@@ -270,101 +262,97 @@ export default function Index() {
         </DialogContent>
       </Dialog>
 
-      {/* Main content - flex column with sticky input */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col relative w-full max-w-full h-screen">
         {/* Announcement Banner */}
         {announcements.filter(a => !dismissedAnnouncements.has(a.id)).slice(0, 1).map((ann) => (
-          <div key={ann.id} className="bg-primary/10 border-b border-primary/20 px-4 py-2.5 flex items-center gap-3 flex-shrink-0">
-            <Bell size={16} className="text-primary flex-shrink-0" />
+          <div key={ann.id} className="bg-primary/6 border-b border-primary/10 px-4 py-2 flex items-center gap-2.5 flex-shrink-0">
+            <Bell size={14} className="text-primary flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">{ann.title}</p>
-              <p className="text-xs text-muted-foreground truncate">{ann.content}</p>
+              <p className="text-xs font-medium text-foreground">{ann.title}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{ann.content}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg flex-shrink-0"
+            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md flex-shrink-0"
               onClick={() => {
                 const newDismissed = new Set(dismissedAnnouncements);
                 newDismissed.add(ann.id);
                 setDismissedAnnouncements(newDismissed);
                 localStorage.setItem('hanchi_dismissed_announcements', JSON.stringify([...newDismissed]));
               }}>
-              <X size={14} />
+              <X size={12} />
             </Button>
           </div>
         ))}
 
-        {/* Header */}
-        <header className="h-14 flex items-center justify-between px-4 md:px-6 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="md:hidden rounded-lg h-9 w-9">
-              <Menu size={18} />
+        {/* Header — ultra thin */}
+        <header className="h-11 flex items-center justify-between px-3 md:px-4 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="md:hidden rounded-md h-8 w-8">
+              <Menu size={16} />
             </Button>
             {activeCustomGPT ? (
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
-                <span className="text-base">{activeCustomGPT.emoji}</span>
-                <span className="text-xs font-semibold text-primary">{activeCustomGPT.name}</span>
-                <button onClick={() => setActiveCustomGPT(null)} className="text-muted-foreground hover:text-foreground ml-1 w-4 h-4 rounded-full hover:bg-muted flex items-center justify-center text-xs">×</button>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/8 border border-primary/12">
+                <span className="text-sm">{activeCustomGPT.emoji}</span>
+                <span className="text-xs font-medium text-primary">{activeCustomGPT.name}</span>
+                <button onClick={() => setActiveCustomGPT(null)} className="text-muted-foreground hover:text-foreground ml-0.5 text-xs">×</button>
               </div>
             ) : (
               <AIModelSelector selectedModel={selectedModel} onModelChange={setSelectedModel} />
             )}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <ToneSelector selectedTone={selectedTone} onToneChange={setSelectedTone} />
-            <Button variant="ghost" size="icon" onClick={() => setShowVoiceMode(true)} className="rounded-lg h-9 w-9 text-muted-foreground hover:text-primary" title="Voice conversation"><Mic size={16} /></Button>
+            <Button variant="ghost" size="icon" onClick={() => setShowVoiceMode(true)} className="rounded-md h-8 w-8 text-muted-foreground hover:text-primary" title="Voice"><Mic size={14} /></Button>
             {messages.length > 0 && (
-              <Button variant="ghost" size="icon" onClick={handleOpenCanvas} className="rounded-lg h-9 w-9 text-muted-foreground hover:text-primary" title="Open Canvas"><Columns size={16} /></Button>
+              <Button variant="ghost" size="icon" onClick={handleOpenCanvas} className="rounded-md h-8 w-8 text-muted-foreground hover:text-primary" title="Canvas"><Columns size={14} /></Button>
             )}
-            <div className="hidden md:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border/40 text-[10px] font-medium">
-              <Globe size={12} className="text-primary" />
-              <span className="text-foreground">{language === 'en' ? 'EN' : language === 'ha' ? 'HA' : 'PID'}</span>
-            </div>
             <ThemeToggle />
           </div>
         </header>
 
-        {/* Chat Area - takes remaining space */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-6 scrollbar-thin scroll-smooth min-h-0">
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto px-3 md:px-4 scrollbar-thin scroll-smooth min-h-0">
           <AnimatePresence mode="wait">
             {showEmptyState ? (
-              <motion.div key="empty" className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto py-8"
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
-                <NoseSphere />
-                <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2 text-center">
+              <motion.div key="empty" className="h-full flex flex-col items-center justify-center max-w-lg mx-auto py-8"
+                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+                <EmptyState />
+                <h2 className="text-lg font-semibold text-foreground mb-1 text-center tracking-tight">
                   {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I help with?"}
                 </h2>
-                <p className="text-sm text-muted-foreground text-center max-w-md mb-8">
-                  {activeCustomGPT?.description || "Ask me anything — chat, create, translate, code 👃🏿"}
+                <p className="text-xs text-muted-foreground text-center max-w-sm mb-8">
+                  {activeCustomGPT?.description || "Ask anything — chat, create, translate, code"}
                 </p>
-                <div className="grid grid-cols-2 gap-2.5 w-full max-w-lg mx-auto">
+                <div className="grid grid-cols-2 gap-2 w-full max-w-md mx-auto">
                   {[
-                    { icon: <ImagePlus className="w-4 h-4" />, title: "Create image", desc: "Describe what you want", action: () => handleSend("Create an image of a beautiful Nigerian landscape") },
-                    { icon: <Sparkles className="w-4 h-4" />, title: "Surprise me", desc: "Random Nigerian fact", action: () => handleSend("Tell me an interesting fact about Nigeria") },
-                    { icon: <PenLine className="w-4 h-4" />, title: "Help me write", desc: "Emails, essays & more", action: () => handleSend("Help me write a professional email") },
-                    { icon: <BookOpen className="w-4 h-4" />, title: "Prompt Library", desc: "Browse templates", action: () => navigate("/prompts") },
+                    { icon: <ImagePlus className="w-4 h-4" />, title: "Create image", desc: "From a text prompt", action: () => handleSend("Create an image of a beautiful Nigerian landscape") },
+                    { icon: <Sparkles className="w-4 h-4" />, title: "Surprise me", desc: "Random fact", action: () => handleSend("Tell me an interesting fact about Nigeria") },
+                    { icon: <PenLine className="w-4 h-4" />, title: "Help me write", desc: "Emails & essays", action: () => handleSend("Help me write a professional email") },
+                    { icon: <BookOpen className="w-4 h-4" />, title: "Prompts", desc: "Browse templates", action: () => navigate("/prompts") },
                   ].map((item, i) => (
                     <button key={i} onClick={item.action} disabled={isLoading || isGeneratingImage}
-                      className="card-premium p-3.5 flex flex-col items-start gap-1.5 text-left group hover:border-primary/20">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all text-primary">
+                      className="p-3 rounded-lg border border-border/40 bg-card/50 hover:border-border hover:bg-card text-left transition-all duration-150 group">
+                      <div className="w-7 h-7 rounded-md bg-primary/8 flex items-center justify-center mb-2 group-hover:bg-primary/12 transition-colors text-primary">
                         {item.icon}
                       </div>
-                      <span className="text-xs font-semibold text-foreground">{item.title}</span>
+                      <span className="text-xs font-medium text-foreground block">{item.title}</span>
                       <span className="text-[10px] text-muted-foreground">{item.desc}</span>
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 mt-6">
-                  <Button variant="outline" onClick={() => navigate("/custom-gpt")} className="gap-1.5 rounded-lg border-border/40 text-xs h-8"><Bot size={14} /> Build Custom GPT</Button>
-                  <Button variant="outline" onClick={() => setShowVoiceMode(true)} className="gap-1.5 rounded-lg border-border/40 text-xs h-8"><Mic size={14} /> Voice Chat</Button>
+                <div className="flex items-center gap-2 mt-5">
+                  <Button variant="outline" size="sm" onClick={() => navigate("/custom-gpt")} className="gap-1.5 rounded-md border-border/40 text-xs h-7"><Bot size={12} /> Custom GPT</Button>
+                  <Button variant="outline" size="sm" onClick={() => setShowVoiceMode(true)} className="gap-1.5 rounded-md border-border/40 text-xs h-7"><Mic size={12} /> Voice</Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-5">
-                  Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[9px] border border-border/40">⌘K</kbd> for quick actions
+                <p className="text-[10px] text-muted-foreground mt-4">
+                  <kbd className="px-1 py-0.5 rounded bg-muted font-mono text-[9px] border border-border/40">⌘K</kbd> quick actions
                 </p>
               </motion.div>
             ) : (
-              <motion.div key="messages" className="max-w-3xl mx-auto pt-4 pb-4"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              <motion.div key="messages" className="max-w-2xl mx-auto pt-3 pb-3"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
                 {messages.map((msg, index) => (
-                  <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: index * 0.03 }}>
+                  <motion.div key={index} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.15, delay: index * 0.02 }}>
                     <MessageBubbleV2
                       role={msg.role}
                       content={msg.content}
@@ -380,26 +368,30 @@ export default function Index() {
                 ))}
                 
                 {pendingImagePrompt && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20"><span className="text-sm">👃🏿</span></div>
-                      <div className="rounded-2xl border border-border/60 bg-muted/30 p-6 flex flex-col items-center justify-center gap-3 min-h-[180px] flex-1 max-w-md">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        <p className="text-sm text-muted-foreground">Creating your image...</p>
-                        <p className="text-xs text-muted-foreground/70 max-w-[200px] text-center truncate">"{pendingImagePrompt}"</p>
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <div className="rounded-xl border border-border/40 bg-muted/20 p-5 flex flex-col items-center justify-center gap-2.5 min-h-[140px] flex-1 max-w-sm">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        <p className="text-xs text-muted-foreground">Creating image…</p>
+                        <p className="text-[10px] text-muted-foreground/60 max-w-[180px] text-center truncate">"{pendingImagePrompt}"</p>
                       </div>
                     </div>
                   </motion.div>
                 )}
 
                 {isLoading && !pendingImagePrompt && (
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20"><span className="text-sm">👃🏿</span></div>
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    </div>
                     <ThinkingIndicatorV2 />
                     {isStreaming && (
                       <Button variant="outline" size="sm" onClick={stopGeneration}
-                        className="ml-auto flex items-center gap-1.5 rounded-lg border-border/40 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 text-xs">
-                        <Square size={10} className="fill-current" /> Stop
+                        className="ml-auto flex items-center gap-1 rounded-md border-border/40 hover:bg-destructive/8 hover:text-destructive hover:border-destructive/20 text-xs h-7">
+                        <Square size={8} className="fill-current" /> Stop
                       </Button>
                     )}
                   </div>
@@ -415,13 +407,13 @@ export default function Index() {
           </AnimatePresence>
         </div>
 
-        {/* Sticky Input - always visible at bottom */}
-        <div className="flex-shrink-0 px-4 md:px-6 py-3 bg-background/95 backdrop-blur-xl border-t border-border/30">
+        {/* Input */}
+        <div className="flex-shrink-0 px-3 md:px-4 py-2.5 bg-background/80 backdrop-blur-xl border-t border-border/20">
           <FloatingInputV2
             onSend={handleSend}
             disabled={isLoading || isGeneratingImage}
             language={language}
-            placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Message Hanchi..."}
+            placeholder={activeCustomGPT ? `Ask ${activeCustomGPT.name}...` : "Message Hanchi…"}
             onInputChange={setCurrentInputText}
             inputValue={currentInputText}
           />

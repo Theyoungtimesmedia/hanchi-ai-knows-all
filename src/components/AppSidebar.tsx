@@ -179,9 +179,9 @@ export const AppSidebar = ({
     )}>
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-border/50">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-            <span className="text-lg">👃🏿</span>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
             <span className="font-bold text-foreground">Hanchi AI</span>
