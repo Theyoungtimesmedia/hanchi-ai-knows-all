@@ -45,7 +45,7 @@ export const FloatingInputV2 = ({
   
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecording(language);
   const { imagePreview, imageBase64, isUploading, handleImageUpload, clearImage } = useImageUpload();
-  const { isProcessing: isMediaProcessing, processMedia } = useMediaUpload();
+  const { isProcessing: isMediaProcessing, processMedia, processMediaUrl } = useMediaUpload();
   const [pendingMediaFile, setPendingMediaFile] = useState<{ name: string; type: string } | null>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 

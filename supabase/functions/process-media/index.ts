@@ -5,12 +5,124 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+const textDecoder = new TextDecoder();
+
+const normalizeSegments = (segments: any[] = []) => segments
+  .filter((segment) => segment?.text)
+  .map((segment) => ({ start: segment.start ?? null, end: segment.end ?? null, text: String(segment.text) }));
+
+async function summarizeTranscript(LOVABLE_API_KEY: string, sourceLabel: string, transcript: string) {
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-3-flash-preview',
+      messages: [
+        { role: 'system', content: 'Summarize transcripts cleanly. Return markdown with two sections only: ## Summary and ## Key Points.' },
+        { role: 'user', content: `Source: ${sourceLabel}\n\nTranscript:\n${transcript}` },
+      ],
+    }),
+  });
+
+  if (!response.ok) return '';
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || '';
+}
+
+async function extractLinkTranscript(LOVABLE_API_KEY: string, FIRECRAWL_API_KEY: string | null, url: string) {
+  if (!FIRECRAWL_API_KEY) {
+    throw new Error('Link transcription needs the Firecrawl connector to be available.');
+  }
+
+  const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      formats: ['markdown', 'html', 'summary'],
+      onlyMainContent: true,
+      waitFor: 2000,
+    }),
+  });
+
+  if (!scrapeResponse.ok) {
+    const errText = await scrapeResponse.text();
+    throw new Error(`Could not inspect link (${scrapeResponse.status}): ${errText}`);
+  }
+
+  const scrapeData = await scrapeResponse.json();
+  const page = scrapeData.data || scrapeData;
+  const rawPageContent = [page.summary, page.markdown, page.html].filter(Boolean).join('\n\n');
+  const title = page.metadata?.title || page.title || 'Untitled video';
+
+  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-pro',
+      messages: [
+        {
+          role: 'system',
+          content: 'Extract transcript-like content from scraped YouTube, TikTok, or Facebook video pages. Return strict JSON with title, provider, transcript, summary, analysis, and transcriptSegments. transcriptSegments must be an array of objects with start, end, text. If exact timestamps are unavailable, use null for start/end and keep transcript text in order. Never invent dialogue not supported by the page.',
+        },
+        {
+          role: 'user',
+          content: `URL: ${url}\n\nPage content:\n${rawPageContent}`,
+        },
+      ],
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errText = await aiResponse.text();
+    throw new Error(`Failed to extract transcript from link (${aiResponse.status}): ${errText}`);
+  }
+
+  const aiData = await aiResponse.json();
+  const parsed = JSON.parse(aiData.choices?.[0]?.message?.content || '{}');
+  return {
+    title: parsed.title || title,
+    provider: parsed.provider || new URL(url).hostname,
+    text: parsed.transcript || '',
+    summary: parsed.summary || page.summary || '',
+    analysis: parsed.analysis || '',
+    transcriptSegments: normalizeSegments(parsed.transcriptSegments),
+    sourceUrl: url,
+    type: 'link',
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
+
+    if (req.headers.get('content-type')?.includes('application/json')) {
+      const { url, action = 'transcribe_link' } = await req.json();
+      if (action === 'transcribe_link' && url) {
+        const result = await extractLinkTranscript(LOVABLE_API_KEY, FIRECRAWL_API_KEY, url);
+        return new Response(JSON.stringify(result), { headers: jsonHeaders });
+      }
+      throw new Error('Unsupported JSON request');
+    }
+
     const formData = await req.formData();
     const file = formData.get('file') as File;
     const action = formData.get('action') as string || 'transcribe';
@@ -18,14 +130,12 @@ serve(async (req) => {
 
     if (!file) throw new Error('No file provided');
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
-
     const fileType = file.type;
     const fileName = file.name || 'media';
     const isAudio = fileType.startsWith('audio/') || fileName.endsWith('.opus') || fileName.endsWith('.ogg');
     const isVideo = fileType.startsWith('video/');
     const isImage = fileType.startsWith('image/');
+    const isDocument = fileType.startsWith('text/') || ['application/pdf', 'application/json', 'text/csv'].includes(fileType) || /\.(txt|md|json|csv|pdf)$/i.test(fileName);
 
     // OCR - Image processing
     if (isImage || action === 'ocr') {
@@ -64,7 +174,19 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         text: result.choices?.[0]?.message?.content || '',
         type: 'ocr',
-      }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        extractedText: result.choices?.[0]?.message?.content || '',
+      }), { headers: jsonHeaders });
+    }
+
+    if (isDocument) {
+      const extractedText = textDecoder.decode(await file.arrayBuffer());
+      const summary = await summarizeTranscript(LOVABLE_API_KEY, fileName, extractedText.slice(0, 20000));
+      return new Response(JSON.stringify({
+        text: extractedText,
+        extractedText,
+        summary,
+        type: 'document',
+      }), { headers: jsonHeaders });
     }
 
     // Audio/Video transcription
@@ -95,12 +217,16 @@ serve(async (req) => {
         }
 
         const transcription = await transcribeRes.json();
+        const transcriptSegments = normalizeSegments(transcription.segments || []);
+        const summary = await summarizeTranscript(LOVABLE_API_KEY, fileName, transcription.text || '');
 
         if (action === 'transcribe') {
           return new Response(JSON.stringify({
             text: transcription.text,
+            summary,
+            transcriptSegments,
             type: 'transcription',
-          }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }), { headers: jsonHeaders });
         }
 
         // Step 2: Analyze with AI
@@ -128,15 +254,17 @@ serve(async (req) => {
         const analysis = await analysisRes.json();
         return new Response(JSON.stringify({
           text: transcription.text,
+          summary,
           analysis: analysis.choices?.[0]?.message?.content || '',
+          transcriptSegments,
           type: 'analysis',
-        }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }), { headers: jsonHeaders });
       }
     }
 
     throw new Error(`Unsupported file type: ${fileType}. Supported: images, audio, video files.`);
   } catch (error) {
     console.error('Enhanced media processing error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), { status: 500, headers: jsonHeaders });
   }
 });
