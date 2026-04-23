@@ -13,6 +13,81 @@ const normalizeSegments = (segments: any[] = []) => segments
   .filter((segment) => segment?.text)
   .map((segment) => ({ start: segment.start ?? null, end: segment.end ?? null, text: String(segment.text) }));
 
+const encodeBase64Chunked = (bytes: Uint8Array): string => {
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const sub = bytes.subarray(i, Math.min(i + CHUNK, bytes.length));
+    binary += String.fromCharCode.apply(null, Array.from(sub) as unknown as number[]);
+  }
+  return btoa(binary);
+};
+
+const normalizeAudioMime = (mime: string, fileName: string) => {
+  const lower = (mime || '').toLowerCase();
+  const name = (fileName || '').toLowerCase();
+  if (lower.includes('opus') || name.endsWith('.opus')) return 'audio/ogg';
+  if (lower.includes('ogg') || name.endsWith('.ogg')) return 'audio/ogg';
+  if (lower.includes('webm') || name.endsWith('.webm')) return 'audio/webm';
+  if (lower.includes('mpeg') || lower.includes('mp3') || name.endsWith('.mp3')) return 'audio/mpeg';
+  if (lower.includes('wav') || name.endsWith('.wav')) return 'audio/wav';
+  if (lower.includes('m4a') || name.endsWith('.m4a')) return 'audio/mp4';
+  if (lower.includes('mp4') || name.endsWith('.mp4')) return 'video/mp4';
+  return lower || 'audio/webm';
+};
+
+async function transcribeWithGemini(LOVABLE_API_KEY: string, bytes: Uint8Array, mime: string, language: string) {
+  const base64 = encodeBase64Chunked(bytes);
+  const langHint = language && language !== 'en'
+    ? `The speaker is most likely speaking ${language === 'ha' ? 'Hausa' : language === 'pid' ? 'Nigerian Pidgin' : language === 'yo' ? 'Yoruba' : language === 'ig' ? 'Igbo' : language}. `
+    : '';
+
+  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a precise audio/video transcription engine. Output ONLY a JSON object: {"text": string, "language": string, "segments": [{"start": number|null, "end": number|null, "text": string}]}. Use short segments (5-15s). No commentary.',
+        },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: `${langHint}Transcribe this media into clean timestamped segments. Return JSON only.` },
+            { type: 'image_url', image_url: { url: `data:${mime};base64,${base64}` } },
+          ],
+        },
+      ],
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error('Gemini transcription error:', response.status, errText);
+    if (response.status === 429) throw new Error('Rate limit exceeded.');
+    if (response.status === 402) throw new Error('AI credits exhausted.');
+    throw new Error(`Transcription failed (${response.status})`);
+  }
+
+  const data = await response.json();
+  let parsed: any = {};
+  try { parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}'); }
+  catch { parsed = { text: data.choices?.[0]?.message?.content || '', segments: [] }; }
+
+  const segments = normalizeSegments(parsed.segments || []);
+  return {
+    text: parsed.text || segments.map((s: any) => s.text).join(' '),
+    language: parsed.language || language || 'en',
+    segments,
+  };
+}
+
 async function summarizeTranscript(LOVABLE_API_KEY: string, sourceLabel: string, transcript: string) {
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -140,7 +215,7 @@ serve(async (req) => {
     // OCR - Image processing
     if (isImage || action === 'ocr') {
       const bytes = await file.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      const base64 = encodeBase64Chunked(new Uint8Array(bytes));
       const mimeType = fileType || 'image/jpeg';
 
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -189,48 +264,26 @@ serve(async (req) => {
       }), { headers: jsonHeaders });
     }
 
-    // Audio/Video transcription
+    // Audio/Video transcription via Gemini multimodal
     if (isAudio || isVideo) {
       if (action === 'transcribe' || action === 'analyze') {
-        // Step 1: Transcribe with Whisper
-        const apiFormData = new FormData();
-        apiFormData.append('file', file, fileName);
-        apiFormData.append('model', 'whisper-1');
-        apiFormData.append('response_format', 'verbose_json');
+        const audioBuf = await file.arrayBuffer();
+        const audioBytes = new Uint8Array(audioBuf);
+        const audioMime = normalizeAudioMime(fileType, fileName);
 
-        if (language && language !== 'en') {
-          const langMap: Record<string, string> = { ha: 'ha', pid: 'en', yo: 'yo', ig: 'ig' };
-          apiFormData.append('language', langMap[language] || language);
-        }
-
-        const transcribeRes = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}` },
-          body: apiFormData,
-        });
-
-        if (!transcribeRes.ok) {
-          const errText = await transcribeRes.text();
-          console.error('Transcription error:', transcribeRes.status, errText);
-          if (transcribeRes.status === 429) throw new Error('Rate limit exceeded.');
-          if (transcribeRes.status === 402) throw new Error('Credits exhausted.');
-          throw new Error(`Transcription failed (${transcribeRes.status})`);
-        }
-
-        const transcription = await transcribeRes.json();
-        const transcriptSegments = normalizeSegments(transcription.segments || []);
-        const summary = await summarizeTranscript(LOVABLE_API_KEY, fileName, transcription.text || '');
+        const transcription = await transcribeWithGemini(LOVABLE_API_KEY, audioBytes, audioMime, language);
+        const summary = await summarizeTranscript(LOVABLE_API_KEY, fileName, transcription.text);
 
         if (action === 'transcribe') {
           return new Response(JSON.stringify({
             text: transcription.text,
             summary,
-            transcriptSegments,
+            transcriptSegments: transcription.segments,
+            language: transcription.language,
             type: 'transcription',
           }), { headers: jsonHeaders });
         }
 
-        // Step 2: Analyze with AI
         const mediaType = isVideo ? 'video' : 'audio';
         const analysisRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -241,7 +294,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: 'google/gemini-2.5-flash',
             messages: [
-              { role: 'system', content: `You are an AI assistant analyzing transcribed ${mediaType} content. Provide a clear summary, key points, and any relevant insights. If content is in a Nigerian language, include both the original and English translation.` },
+              { role: 'system', content: `You are an AI assistant analyzing transcribed ${mediaType} content. Provide a clear summary, key points, and relevant insights. If content is in a Nigerian language, include both original and English translation.` },
               { role: 'user', content: `Analyze this transcribed ${mediaType} content:\n\n"${transcription.text}"\n\nProvide: 1) Summary 2) Key points 3) Notable insights or action items.` },
             ],
             max_tokens: 2000,
@@ -249,7 +302,12 @@ serve(async (req) => {
         });
 
         if (!analysisRes.ok) {
-          return new Response(JSON.stringify({ text: transcription.text, type: 'transcription', analysisError: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          return new Response(JSON.stringify({
+            text: transcription.text,
+            transcriptSegments: transcription.segments,
+            type: 'transcription',
+            analysisError: true,
+          }), { headers: jsonHeaders });
         }
 
         const analysis = await analysisRes.json();
@@ -257,7 +315,8 @@ serve(async (req) => {
           text: transcription.text,
           summary,
           analysis: analysis.choices?.[0]?.message?.content || '',
-          transcriptSegments,
+          transcriptSegments: transcription.segments,
+          language: transcription.language,
           type: 'analysis',
         }), { headers: jsonHeaders });
       }
