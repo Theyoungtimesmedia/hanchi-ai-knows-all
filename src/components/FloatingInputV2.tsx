@@ -8,6 +8,7 @@ import { EnhancedPlusMenu, ActiveAddons } from "./EnhancedPlusMenu";
 import { AddonChips } from "./AddonChips";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { buildStructuredMediaMessage, detectSupportedMediaUrl } from "@/lib/media";
 
 interface FloatingInputV2Props {
   onSend: (message: string, images?: string[], addons?: ActiveAddons) => void;
@@ -39,11 +40,12 @@ export const FloatingInputV2 = ({
   const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   const { isRecording, isTranscribing, startRecording, stopRecording } = useVoiceRecording(language);
   const { imagePreview, imageBase64, isUploading, handleImageUpload, clearImage } = useImageUpload();
-  const { isProcessing: isMediaProcessing, processMedia } = useMediaUpload();
+  const { isProcessing: isMediaProcessing, processMedia, processMediaUrl } = useMediaUpload();
   const [pendingMediaFile, setPendingMediaFile] = useState<{ name: string; type: string } | null>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,8 +95,19 @@ export const FloatingInputV2 = ({
 
   const command = detectCommand(input);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!input.trim() && !imageBase64) return;
+
+    const mediaUrl = !imageBase64 ? detectSupportedMediaUrl(input.trim()) : null;
+    if (mediaUrl) {
+      const result = await processMediaUrl(mediaUrl, language);
+      if (result) {
+        onMediaResult?.(result);
+        onSend(buildStructuredMediaMessage(result), undefined, activeAddons);
+        setInput("");
+      }
+      return;
+    }
     
     const images = imageBase64 ? [imageBase64] : undefined;
     onSend(input.trim(), images, activeAddons);
@@ -132,27 +145,17 @@ export const FloatingInputV2 = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    const isMedia = file.type.startsWith('audio/') || file.type.startsWith('video/');
-    if (isMedia) {
-      setPendingMediaFile({ name: file.name, type: file.type });
-      const result = await processMedia(file, 'transcribe', language);
-      setPendingMediaFile(null);
-      if (result) {
-        onMediaResult?.(result);
-        // Auto-populate input with transcription context
-        const prefix = file.type.startsWith('video/') ? '🎬 Video' : '🎵 Audio';
-        const contextMsg = `${prefix} transcription of "${file.name}":\n\n${result.text}`;
-        onSend(contextMsg);
-      }
-    } else {
-      await handleImageUpload(file);
-    }
+    await handleImageUpload(file);
     // Reset input so same file can be re-selected
     e.target.value = '';
   };
 
   const handleMediaUploadClick = () => {
     mediaInputRef.current?.click();
+  };
+
+  const handleDocumentUploadClick = () => {
+    documentInputRef.current?.click();
   };
 
   const handleMediaFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,9 +168,22 @@ export const FloatingInputV2 = ({
     setPendingMediaFile(null);
     if (result) {
       onMediaResult?.(result);
-      const prefix = file.type.startsWith('video/') ? '🎬 Video analysis' : '🎵 Audio transcription';
-      const contextMsg = `${prefix} of "${file.name}":\n\n${result.analysis || result.text}`;
-      onSend(contextMsg);
+      onSend(buildStructuredMediaMessage(result), undefined, activeAddons);
+    }
+    e.target.value = '';
+  };
+
+  const handleDocumentFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPendingMediaFile({ name: file.name, type: file.type || 'application/octet-stream' });
+    const action = file.type.startsWith('video/') ? 'analyze' : 'transcribe';
+    const result = await processMedia(file, action, language);
+    setPendingMediaFile(null);
+    if (result) {
+      onMediaResult?.(result);
+      onSend(buildStructuredMediaMessage(result), undefined, activeAddons);
     }
     e.target.value = '';
   };
@@ -279,7 +295,7 @@ export const FloatingInputV2 = ({
             activeAddons={activeAddons}
             onToggleAddon={handleToggleAddon}
             onImageUpload={handleImageClick}
-            onFileUpload={handleImageClick}
+            onFileUpload={handleDocumentUploadClick}
             onMediaUpload={handleMediaUploadClick}
             onAction={handleAction}
           />
@@ -288,7 +304,14 @@ export const FloatingInputV2 = ({
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
+            accept="image/*"
+            className="hidden"
+          />
+          <input
+            type="file"
+            ref={documentInputRef}
+            onChange={handleDocumentFileChange}
+            accept="audio/*,video/*,image/*,.opus,.ogg,.webm,.mp3,.wav,.m4a,.mp4,.mov,.avi,.mkv,.txt,.md,.json,.csv,.xml,.html,.js,.ts,.tsx,.css"
             className="hidden"
           />
           <input

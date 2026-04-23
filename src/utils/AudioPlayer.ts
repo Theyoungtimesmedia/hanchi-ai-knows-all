@@ -11,10 +11,10 @@ export class AudioPlayer {
     
     try {
       // Support multiple audio formats
-      const audioFormat = this.detectAudioFormat(base64Audio);
-      this.audio = new Audio(`data:audio/${audioFormat};base64,${base64Audio}`);
+      const audioMimeType = this.detectAudioMimeType(base64Audio);
+      this.audio = new Audio(`data:${audioMimeType};base64,${base64Audio}`);
       
-      console.log(`Playing audio (format: ${audioFormat}, size: ${base64Audio.length} bytes)`);
+      console.log(`Playing audio (format: ${audioMimeType}, size: ${base64Audio.length} bytes)`);
       
       this.audio.onended = () => {
         console.log('Audio playback ended');
@@ -43,17 +43,23 @@ export class AudioPlayer {
     }
   }
 
-  private detectAudioFormat(base64Audio: string): string {
+  private detectAudioMimeType(base64Audio: string): string {
     // Try to detect format from base64 magic bytes
-    const firstBytes = base64Audio.substring(0, 10);
+    const firstBytes = base64Audio.substring(0, 24);
     
-    // MP3 magic bytes (ID3 or MPEG frame sync)
-    if (firstBytes.includes('SUQz') || firstBytes.includes('//') || firstBytes.includes('AAAA')) {
-      return 'mpeg';
+    if (firstBytes.startsWith('SUQz') || firstBytes.startsWith('//')) {
+      return 'audio/mpeg';
+    }
+
+    if (firstBytes.startsWith('T2dnUw')) {
+      return 'audio/ogg';
+    }
+
+    if (firstBytes.startsWith('GkXf') || firstBytes.startsWith('AAAAHGZ0')) {
+      return 'audio/webm';
     }
     
-    // Default to mpeg (MP3)
-    return 'mpeg';
+    return 'audio/mpeg';
   }
 
   stop() {

@@ -80,7 +80,6 @@ export const useTextToSpeech = () => {
 
         console.log('YarnGPT TTS audio received, playing...');
 
-        setIsPlaying(true);
         playerRef.current.play(data.audioContent, () => {
           setIsPlaying(false);
           console.log('Audio playback completed');
