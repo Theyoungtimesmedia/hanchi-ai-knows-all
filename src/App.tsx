@@ -17,6 +17,9 @@ const StickerStudio = lazy(() => import("./pages/StickerStudio"));
 const SharedChat = lazy(() => import("./pages/SharedChat"));
 const Collections = lazy(() => import("./pages/Collections"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Artifacts = lazy(() => import("./pages/Artifacts"));
+const Personalization = lazy(() => import("./pages/Personalization"));
+const Memories = lazy(() => import("./pages/Memories"));
 
 const Loader = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
@@ -43,6 +46,9 @@ const App = () => (
       <Route path="/shared" element={<SharedChat />} />
       <Route path="/collections" element={<Collections />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/artifacts" element={<Artifacts />} />
+      <Route path="/personalization" element={<Personalization />} />
+      <Route path="/memories" element={<Memories />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Suspense>
