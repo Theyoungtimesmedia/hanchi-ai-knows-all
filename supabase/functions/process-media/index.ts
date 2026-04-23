@@ -135,7 +135,7 @@ serve(async (req) => {
     const isAudio = fileType.startsWith('audio/') || fileName.endsWith('.opus') || fileName.endsWith('.ogg');
     const isVideo = fileType.startsWith('video/');
     const isImage = fileType.startsWith('image/');
-    const isDocument = fileType.startsWith('text/') || ['application/pdf', 'application/json', 'text/csv'].includes(fileType) || /\.(txt|md|json|csv|pdf)$/i.test(fileName);
+    const isDocument = fileType.startsWith('text/') || ['application/json', 'text/csv'].includes(fileType) || /\.(txt|md|json|csv)$/i.test(fileName);
 
     // OCR - Image processing
     if (isImage || action === 'ocr') {
@@ -196,6 +196,7 @@ serve(async (req) => {
         const apiFormData = new FormData();
         apiFormData.append('file', file, fileName);
         apiFormData.append('model', 'whisper-1');
+        apiFormData.append('response_format', 'verbose_json');
 
         if (language && language !== 'en') {
           const langMap: Record<string, string> = { ha: 'ha', pid: 'en', yo: 'yo', ig: 'ig' };
