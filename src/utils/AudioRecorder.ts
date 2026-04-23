@@ -1,7 +1,14 @@
+export interface RecordedAudioPayload {
+  base64: string;
+  mimeType: string;
+  fileName: string;
+}
+
 export class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
   private stream: MediaStream | null = null;
+  private selectedMimeType = 'audio/webm';
 
   async startRecording(): Promise<void> {
     try {
@@ -14,7 +21,8 @@ export class AudioRecorder {
         'audio/webm',
         'audio/mp4',
       ];
-      const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || '';
+      const mimeType = mimeTypes.find(t => MediaRecorder.isTypeSupported(t)) || 'audio/webm';
+      this.selectedMimeType = mimeType.split(';')[0] || 'audio/webm';
       
       this.mediaRecorder = new MediaRecorder(this.stream, {
         mimeType,
@@ -36,7 +44,7 @@ export class AudioRecorder {
     }
   }
 
-  async stopRecording(): Promise<string> {
+  async stopRecording(): Promise<RecordedAudioPayload> {
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
         reject(new Error('No recording in progress'));
@@ -45,13 +53,18 @@ export class AudioRecorder {
 
       this.mediaRecorder.onstop = async () => {
         try {
-          const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+          const audioBlob = new Blob(this.audioChunks, { type: this.selectedMimeType });
           const base64Audio = await this.blobToBase64(audioBlob);
+          const extension = this.selectedMimeType.includes('ogg') ? 'ogg' : this.selectedMimeType.includes('mp4') ? 'm4a' : 'webm';
           
           // Clean up
           this.cleanup();
           
-          resolve(base64Audio);
+          resolve({
+            base64: base64Audio,
+            mimeType: this.selectedMimeType,
+            fileName: `voice-recording.${extension}`,
+          });
         } catch (error) {
           reject(error);
         }
@@ -85,6 +98,7 @@ export class AudioRecorder {
     }
     this.mediaRecorder = null;
     this.audioChunks = [];
+    this.selectedMimeType = 'audio/webm';
   }
 
   isRecording(): boolean {
