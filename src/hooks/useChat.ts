@@ -42,6 +42,15 @@ export const useChat = (
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  const extractErrorMessage = async (response: Response) => {
+    try {
+      const data = await response.json();
+      return data?.error || data?.message || "Failed to get response";
+    } catch {
+      return "Failed to get response";
+    }
+  };
+
   useEffect(() => {
     if (conversationId && userId) {
       loadMessages(conversationId);
@@ -180,10 +189,11 @@ export const useChat = (
         });
 
         if (!response.ok) {
+          const errorMessage = await extractErrorMessage(response);
           if (response.status === 429) {
             toast({
               title: "Rate limit exceeded",
-              description: "Please wait a moment and try again.",
+              description: errorMessage,
               variant: "destructive",
             });
             setMessages((prev) => prev.slice(0, -1));
@@ -192,13 +202,13 @@ export const useChat = (
           if (response.status === 402) {
             toast({
               title: "Service limit reached",
-              description: "Please contact support to continue.",
+              description: errorMessage,
               variant: "destructive",
             });
             setMessages((prev) => prev.slice(0, -1));
             return;
           }
-          throw new Error("Failed to get response");
+          throw new Error(errorMessage);
         }
 
         if (!response.body) {
@@ -209,6 +219,7 @@ export const useChat = (
         const decoder = new TextDecoder();
         let assistantContent = "";
         let assistantMetadata: { confidence?: number; sources?: Source[]; thought?: string } = {};
+        let textBuffer = "";
 
         setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
@@ -216,47 +227,44 @@ export const useChat = (
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
+          textBuffer += decoder.decode(value, { stream: true });
 
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
 
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content;
-                const metadata = parsed.metadata;
-                
-                if (content) {
-                  assistantContent += content;
-                }
-                
-                if (metadata) {
-                  if (metadata.confidence !== undefined) {
-                    assistantMetadata.confidence = metadata.confidence;
-                  }
-                  if (metadata.sources) {
-                    assistantMetadata.sources = metadata.sources;
-                  }
-                  if (metadata.thought) {
-                    assistantMetadata.thought = metadata.thought;
-                  }
-                }
-                
-                setMessages((prev) => {
-                  const newMessages = [...prev];
-                  newMessages[newMessages.length - 1] = {
-                    role: "assistant",
-                    content: assistantContent,
-                    ...assistantMetadata,
-                  };
-                  return newMessages;
-                });
-              } catch (e) {
-                // Skip invalid JSON
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line.startsWith("data: ")) continue;
+
+            const data = line.slice(6).trim();
+            if (!data || data === "[DONE]") continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              const metadata = parsed.metadata;
+
+              if (content) assistantContent += content;
+
+              if (metadata) {
+                if (metadata.confidence !== undefined) assistantMetadata.confidence = metadata.confidence;
+                if (metadata.sources) assistantMetadata.sources = metadata.sources;
+                if (metadata.thought) assistantMetadata.thought = metadata.thought;
               }
+
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                newMessages[newMessages.length - 1] = {
+                  role: "assistant",
+                  content: assistantContent,
+                  ...assistantMetadata,
+                };
+                return newMessages;
+              });
+            } catch {
+              textBuffer = `${line}\n${textBuffer}`;
+              break;
             }
           }
         }
