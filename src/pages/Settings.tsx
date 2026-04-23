@@ -399,9 +399,9 @@ export default function Settings() {
           </Button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-              <span className="text-base">👃🏿</span>
+              <Sparkles size={16} className="text-primary" />
             </div>
-            <h1 className="text-lg font-bold">{activeGroup ? settingsGroups.find(g => g.id === activeGroup)?.label || "Settings" : "Settings"}</h1>
+            <h1 className="text-lg font-serif-display font-semibold">{activeGroup ? settingsGroups.find(g => g.id === activeGroup)?.label || "Settings" : "Settings"}</h1>
           </div>
         </div>
       </div>
@@ -432,6 +432,19 @@ export default function Settings() {
                 <ChevronRight size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
               </motion.button>
             ))}
+
+            {/* Quick links to dedicated pages */}
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <button onClick={() => navigate("/personalization")} className="p-3 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all text-center">
+                <span className="text-xs font-medium block">Personalization</span>
+              </button>
+              <button onClick={() => navigate("/memories")} className="p-3 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all text-center">
+                <span className="text-xs font-medium block">Memories</span>
+              </button>
+              <button onClick={() => navigate("/artifacts")} className="p-3 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all text-center">
+                <span className="text-xs font-medium block">Artifacts</span>
+              </button>
+            </div>
 
             {/* Help Link */}
             <div className="mt-6 text-center">
