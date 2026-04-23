@@ -1,19 +1,62 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { ProcessedMediaContext, TranscriptSegment } from "@/lib/media";
 
-export interface MediaResult {
-  text: string;
-  analysis?: string;
-  type: 'transcription' | 'analysis';
-  fileName: string;
-  fileType: string;
-}
+export interface MediaResult extends ProcessedMediaContext {}
 
 export const useMediaUpload = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mediaResult, setMediaResult] = useState<MediaResult | null>(null);
   const { toast } = useToast();
+
+  const processMediaUrl = async (url: string, language: string = 'en'): Promise<MediaResult | null> => {
+    setIsProcessing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('process-media', {
+        body: { url, action: 'transcribe_link', language },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Link transcription failed');
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      const result: MediaResult = {
+        text: data.text || '',
+        summary: data.summary,
+        analysis: data.analysis,
+        type: data.type || 'link',
+        sourceUrl: data.sourceUrl || url,
+        title: data.title,
+        provider: data.provider,
+        transcriptSegments: (data.transcriptSegments || []) as TranscriptSegment[],
+      };
+
+      setMediaResult(result);
+      toast({
+        title: 'Link transcribed',
+        description: 'Transcript and summary are ready before the AI reply.',
+      });
+
+      return result;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Link transcription failed';
+      console.error('Media URL processing error:', msg);
+      toast({
+        title: 'Link Processing Failed',
+        description: msg,
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const processMedia = async (
     file: File,
@@ -64,8 +107,14 @@ export const useMediaUpload = () => {
       }
 
       const result: MediaResult = {
-        text: data.text,
+        text: data.text || '',
+        summary: data.summary,
         analysis: data.analysis,
+        extractedText: data.extractedText,
+        title: data.title,
+        provider: data.provider,
+        sourceUrl: data.sourceUrl,
+        transcriptSegments: (data.transcriptSegments || []) as TranscriptSegment[],
         type: data.type,
         fileName: file.name,
         fileType: file.type,
@@ -99,6 +148,7 @@ export const useMediaUpload = () => {
     isProcessing,
     mediaResult,
     processMedia,
+    processMediaUrl,
     clearResult,
   };
 };
