@@ -215,7 +215,7 @@ serve(async (req) => {
     // OCR - Image processing
     if (isImage || action === 'ocr') {
       const bytes = await file.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      const base64 = encodeBase64Chunked(new Uint8Array(bytes));
       const mimeType = fileType || 'image/jpeg';
 
       const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
