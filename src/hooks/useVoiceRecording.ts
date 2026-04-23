@@ -9,6 +9,19 @@ export const useVoiceRecording = (language: string) => {
   const recorderRef = useRef<AudioRecorder | null>(null);
   const { toast } = useToast();
 
+  const resolveLanguageHint = (code: string) => {
+    const map: Record<string, string> = {
+      en: 'en',
+      'en-us': 'en',
+      ha: 'ha',
+      yo: 'yo',
+      ig: 'ig',
+      pidgin: 'en',
+    };
+
+    return map[code] || 'en';
+  };
+
   const startRecording = async () => {
     try {
       if (!recorderRef.current) {
@@ -32,11 +45,16 @@ export const useVoiceRecording = (language: string) => {
       setIsRecording(false);
       setIsTranscribing(true);
 
-      const base64Audio = await recorderRef.current.stopRecording();
+      const recording = await recorderRef.current.stopRecording();
 
       // Transcribe using edge function
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-        body: { audio: base64Audio, language },
+        body: {
+          audio: recording.base64,
+          mimeType: recording.mimeType,
+          fileName: recording.fileName,
+          language: resolveLanguageHint(language),
+        },
       });
 
       setIsTranscribing(false);
