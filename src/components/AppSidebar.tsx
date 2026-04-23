@@ -3,8 +3,9 @@ import {
   MessageSquare, Settings, LogOut, X, Plus, User, Search, Trash2, Pin, 
   BookOpen, HelpCircle, Folder, Bot, Palette, FolderHeart,
   Compass, Sparkles, Image as ImageIcon, Wand2, Mic, FileDown, Shield,
-  ChevronDown, ChevronRight
+  ChevronDown, ChevronRight, Box, Brain
 } from "lucide-react";
+import { HanchiStar } from "./HanchiStar";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import { Input } from "./ui/input";
@@ -160,9 +161,12 @@ export const AppSidebar = ({
   const exploreItems = [
     { icon: <Compass size={16} />, label: "Discover", path: "/discover", color: "text-sky-500" },
     { icon: <BookOpen size={16} />, label: "Prompts", path: "/prompts", color: "text-amber-500" },
+    { icon: <Box size={16} />, label: "Artifacts", path: "/artifacts", color: "text-accent-warm" },
+    { icon: <Folder size={16} />, label: "Projects", path: "/projects", color: "text-indigo-500" },
     { icon: <Palette size={16} />, label: "Stickers", path: "/sticker-studio", color: "text-pink-500" },
     { icon: <FolderHeart size={16} />, label: "Collections", path: "/collections", color: "text-violet-500" },
     { icon: <Bot size={16} />, label: "Custom GPT", path: "/custom-gpt", color: "text-emerald-500" },
+    { icon: <Brain size={16} />, label: "Memories", path: "/memories", color: "text-rose-500" },
   ];
 
   const toolItems = [
@@ -178,14 +182,14 @@ export const AppSidebar = ({
       "md:relative md:translate-x-0 flex flex-col border-r border-border/50 shadow-xl md:shadow-none"
     )}>
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-border/50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary-foreground" />
+      <div className="p-4 flex items-center justify-between border-b border-border/40">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <HanchiStar size={18} className="text-primary" />
           </div>
           <div>
-            <span className="font-bold text-foreground">Hanchi AI</span>
-            <p className="text-[10px] text-muted-foreground">Nose AI</p>
+            <span className="font-serif-display text-lg font-semibold text-foreground leading-none">Hanchi</span>
+            <p className="text-[10px] text-muted-foreground mt-0.5">No suffer mode</p>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="md:hidden h-8 w-8 rounded-lg">

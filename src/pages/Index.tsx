@@ -317,10 +317,10 @@ export default function Index() {
               <motion.div key="empty" className="h-full flex flex-col items-center justify-center max-w-lg mx-auto py-8"
                 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
                 <EmptyState />
-                <h2 className="text-lg font-semibold text-foreground mb-1 text-center tracking-tight">
-                  {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "What can I help with?"}
+                <h2 className="font-serif-display text-3xl md:text-4xl font-medium text-foreground mb-2 text-center tracking-tight">
+                  {activeCustomGPT ? `Chat with ${activeCustomGPT.name}` : "How can I help you today?"}
                 </h2>
-                <p className="text-xs text-muted-foreground text-center max-w-sm mb-8">
+                <p className="text-sm text-muted-foreground text-center max-w-sm mb-8">
                   {activeCustomGPT?.description || "Ask anything — chat, create, translate, code"}
                 </p>
                 <div className="grid grid-cols-2 gap-2 w-full max-w-md mx-auto">
