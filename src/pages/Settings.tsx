@@ -162,11 +162,11 @@ export default function Settings() {
   const updatePreference = async (key: string, value: boolean | string | number) => {
     if (!userId) return;
     setPreferences((prev) => ({ ...prev, [key]: value }));
-    if (key === "voice_enabled" || key === "study_mode") {
-      const payload = key === "voice_enabled"
-        ? { user_id: userId, voice_enabled: Boolean(value) }
-        : { user_id: userId, study_mode: Boolean(value) };
-      try { await supabase.from("user_preferences").upsert(payload); }
+    if (key === "voice_enabled") {
+      try { await supabase.from("user_preferences").upsert({ user_id: userId, voice_enabled: Boolean(value) }); }
+      catch (error) { toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" }); }
+    } else if (key === "study_mode") {
+      try { await supabase.from("user_preferences").upsert({ user_id: userId, study_mode: Boolean(value) }); }
       catch (error) { toast({ title: "Error", description: "Failed to save preference.", variant: "destructive" }); }
     }
     toast({ title: "Updated", description: "Settings saved" });
