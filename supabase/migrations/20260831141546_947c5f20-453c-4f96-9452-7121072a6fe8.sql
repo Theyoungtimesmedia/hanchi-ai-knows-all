@@ -1,0 +1,14 @@
+REVOKE ALL ON FUNCTION public.handle_updated_at() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_user_memory_updated_at() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_user_preferences_updated_at() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_knowledge_search_vector() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.is_admin(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.match_nigerian_knowledge(text, integer, text) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.match_nigerian_knowledge(public.vector, double precision, integer, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.match_nigerian_knowledge(text, integer, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.match_nigerian_knowledge(public.vector, double precision, integer, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.handle_updated_at() TO service_role;
+GRANT EXECUTE ON FUNCTION public.update_user_memory_updated_at() TO service_role;
+GRANT EXECUTE ON FUNCTION public.update_user_preferences_updated_at() TO service_role;
+GRANT EXECUTE ON FUNCTION public.update_knowledge_search_vector() TO service_role;
