@@ -1,0 +1,2 @@
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
+ALTER EXTENSION vector SET SCHEMA extensions;
