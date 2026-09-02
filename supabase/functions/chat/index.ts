@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getProviderError, openAIChatCompletion } from "../_shared/openai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,26 +27,26 @@ serve(async (req) => {
       deepResearch = false
     } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
-    // Map user-friendly model names to actual Lovable AI model IDs
+    // Map the UI model names to models available through the external provider.
     const modelMap: Record<string, string> = {
-      "gemini-pro": "google/gemini-2.5-pro",
-      "gemini-flash": "google/gemini-3-flash-preview",
-      "gpt-5": "openai/gpt-5",
-      "gpt-5-mini": "openai/gpt-5-mini",
-      "gpt-5-nano": "openai/gpt-5-nano",
-      "deep-think": "openai/gpt-5.2",
+      "gemini-pro": "gpt-4o",
+      "gemini-flash": "gpt-4o-mini",
+      "gpt-5": "gpt-4o",
+      "gpt-5-mini": "gpt-4o-mini",
+      "gpt-5-nano": "gpt-4o-mini",
+      "deep-think": "gpt-4o",
     };
 
-    const selectedModel = modelMap[model] || "google/gemini-3-flash-preview";
+    const selectedModel = modelMap[model] || "gpt-4o-mini";
     
     console.log(`Chat request - Language: ${language}, Model: ${selectedModel}, Tone: ${tone}, ThinkMode: ${thinkMode}, Search: ${searchWeb}`);
 
@@ -201,41 +202,22 @@ When you learn something new:
       return msg;
     });
 
-    // Call Lovable AI
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...processedMessages,
-        ],
-        stream: true,
-      }),
+    const response = await openAIChatCompletion({
+      apiKey: OPENAI_API_KEY,
+      model: selectedModel,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...processedMessages,
+      ],
+      stream: true,
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add funds to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      const errorMessage = await getProviderError(response);
+      console.error("OpenAI chat error:", response.status, errorMessage);
       return new Response(
-        JSON.stringify({ error: "AI service error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: errorMessage }),
+        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -245,7 +227,14 @@ When you learn something new:
     // Stream response with metadata
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
-    const reader = response.body!.getReader();
+    if (!response.body) {
+      return new Response(
+        JSON.stringify({ error: "AI provider returned an empty response" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const reader = response.body.getReader();
     
     (async () => {
       try {
