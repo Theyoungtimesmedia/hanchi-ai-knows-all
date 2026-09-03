@@ -5,6 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
