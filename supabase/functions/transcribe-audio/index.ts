@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getProviderError, openAITranscription } from "../_shared/openai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,9 +45,9 @@ serve(async (req) => {
 
   try {
     const { audio, language, mimeType = 'audio/webm', fileName = 'audio.webm' } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
+    if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured');
     if (!audio) throw new Error('No audio data received');
 
     const bytes = decodeBase64(audio);
@@ -57,48 +58,21 @@ serve(async (req) => {
       ? `The speaker is most likely speaking ${language === 'ha' ? 'Hausa' : language === 'pid' ? 'Nigerian Pidgin' : language === 'yo' ? 'Yoruba' : language === 'ig' ? 'Igbo' : language}. `
       : '';
 
-    // Use Gemini multimodal audio understanding via Lovable AI Gateway
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a precise audio transcription engine. Output ONLY a JSON object matching this schema: {"text": string, "language": string, "segments": [{"start": number|null, "end": number|null, "text": string}]}. Preserve speaker meaning. If multiple speakers, prefix lines with "Speaker A:", "Speaker B:" inside text. No commentary outside JSON.',
-          },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: `${langHint}Transcribe this audio cleanly. Break into short timestamped segments where possible (each ~5-15 seconds). Return JSON only.` },
-              { type: 'image_url', image_url: { url: `data:${finalMime};base64,${base64Clean}` } },
-            ],
-          },
-        ],
-        response_format: { type: 'json_object' },
-      }),
+    const response = await openAITranscription({
+      apiKey: OPENAI_API_KEY,
+      bytes,
+      mimeType: finalMime,
+      fileName,
+      language,
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Transcription gateway error:', response.status, errorText);
-      if (response.status === 429) throw new Error('Rate limit exceeded. Please try again in a moment.');
-      if (response.status === 402) throw new Error('AI credits exhausted. Please add funds to continue.');
-      throw new Error('Failed to transcribe audio');
+      const errorText = await getProviderError(response);
+      console.error('OpenAI transcription error:', response.status, errorText);
+      throw new Error(errorText);
     }
 
-    const result = await response.json();
-    const raw = result.choices?.[0]?.message?.content || '{}';
-    let parsed: any = {};
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      parsed = { text: raw, segments: [] };
-    }
+    const parsed = await response.json();
 
     const segments = Array.isArray(parsed.segments)
       ? parsed.segments
@@ -106,7 +80,7 @@ serve(async (req) => {
           .map((s: any) => ({
             start: typeof s.start === 'number' ? s.start : null,
             end: typeof s.end === 'number' ? s.end : null,
-            text: String(s.text).trim(),
+        text: String(s.text).trim(),
           }))
       : [];
 
