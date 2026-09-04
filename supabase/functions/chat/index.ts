@@ -184,6 +184,7 @@ When you learn something new:
     const baseSystemPrompt = customSystemPrompt || buildSystemPrompt(language, tone, toneInstructions[tone] || "", thinkMode);
     
     const systemPrompt = baseSystemPrompt + 
+      `\n\n=== ACTIVE SKILLS ===\n${skillSelection.instructions}` +
       userLearningPrompt +
       nigerianContext + 
       webContext + 
@@ -206,9 +207,8 @@ When you learn something new:
       return msg;
     });
 
-    const response = await openAIChatCompletion({
-      apiKey: OPENAI_API_KEY,
-      model: selectedModel,
+    const response = await routedChat({
+      model: routedModel,
       messages: [
         { role: "system", content: systemPrompt },
         ...processedMessages,
@@ -217,13 +217,14 @@ When you learn something new:
     });
 
     if (!response.ok) {
-      const errorMessage = await getProviderError(response);
-      console.error("OpenAI chat error:", response.status, errorMessage);
+      const errorMessage = await routerError(response);
+      console.error(`${routedModel.provider} chat error:`, response.status, errorMessage);
       return new Response(
         JSON.stringify({ error: errorMessage }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
 
     // Combine all sources
     const allSources = [...webSources, ...contextSources];
