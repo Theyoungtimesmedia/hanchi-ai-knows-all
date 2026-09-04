@@ -90,13 +90,22 @@ serve(async (req) => {
       }
     }
 
+    // Skill engine: pick the instruction packs that fit this message.
+    const latestUserText = (() => {
+      const raw = messages.filter((m: any) => m.role === 'user').pop()?.content;
+      return typeof raw === 'string' ? raw : '';
+    })();
+    const skillSelection = selectSkills(latestUserText);
+    console.log(`Skills selected: ${skillSelection.ids.join(', ')}`);
+
     // Get Nigerian knowledge context
     let nigerianContext = "";
     let contextSources: any[] = [];
     let confidence = 75;
     let thoughtProcess = "";
     
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && skillSelection.needsKnowledge) {
+
       try {
         const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content;
         if (lastUserMessage && typeof lastUserMessage === 'string') {
