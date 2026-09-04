@@ -138,7 +138,9 @@ serve(async (req) => {
     // Build thought process
     const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
     thoughtProcess = `🧠 Processing: "${typeof lastUserMessage === 'string' ? lastUserMessage.substring(0, 50) : ''}..."
+• Provider: ${routedModel.provider}
 • Model: ${selectedModel}
+• Skills: ${skillSelection.ids.join(', ')}
 • Tone: ${tone}
 • Think Mode: ${thinkMode ? 'ON' : 'OFF'}
 • Deep Research: ${deepResearch ? 'ON' : 'OFF'}
