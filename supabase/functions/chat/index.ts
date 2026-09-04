@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { getProviderError, openAIChatCompletion } from "../_shared/openai.ts";
+import { resolveModel, routedChat, routerError, type Capability } from "../_shared/ai-router.ts";
+import { selectSkills } from "../_shared/skills.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,28 +28,20 @@ serve(async (req) => {
       deepResearch = false
     } = await req.json();
     
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const FIRECRAWL_API_KEY = Deno.env.get("FIRECRAWL_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
-    }
 
-    // Map the UI model names to models available through the external provider.
-    const modelMap: Record<string, string> = {
-      "gemini-pro": "gpt-4o",
-      "gemini-flash": "gpt-4o-mini",
-      "gpt-5": "gpt-4o",
-      "gpt-5-mini": "gpt-4o-mini",
-      "gpt-5-nano": "gpt-4o-mini",
-      "deep-think": "gpt-4o",
-    };
+    // Capability-based routing: the router picks a provider that can actually
+    // serve this request instead of hardcoding a vendor.
+    const requiredCapabilities: Capability[] = ["text", "streaming"];
+    if (images && images.length > 0) requiredCapabilities.push("image_input");
 
-    const selectedModel = modelMap[model] || "gpt-4o-mini";
-    
-    console.log(`Chat request - Language: ${language}, Model: ${selectedModel}, Tone: ${tone}, ThinkMode: ${thinkMode}, Search: ${searchWeb}`);
+    const routedModel = resolveModel(model, requiredCapabilities);
+    const selectedModel = routedModel.id;
+
+    console.log(`Chat request - Language: ${language}, Provider: ${routedModel.provider}, Model: ${selectedModel}, Tone: ${tone}, ThinkMode: ${thinkMode}, Search: ${searchWeb}`);
+
 
     // Web search with Firecrawl if enabled
     let webContext = "";
@@ -97,13 +90,22 @@ serve(async (req) => {
       }
     }
 
+    // Skill engine: pick the instruction packs that fit this message.
+    const latestUserText = (() => {
+      const raw = messages.filter((m: any) => m.role === 'user').pop()?.content;
+      return typeof raw === 'string' ? raw : '';
+    })();
+    const skillSelection = selectSkills(latestUserText);
+    console.log(`Skills selected: ${skillSelection.ids.join(', ')}`);
+
     // Get Nigerian knowledge context
     let nigerianContext = "";
     let contextSources: any[] = [];
     let confidence = 75;
     let thoughtProcess = "";
     
-    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && skillSelection.needsKnowledge) {
+
       try {
         const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content;
         if (lastUserMessage && typeof lastUserMessage === 'string') {
@@ -136,7 +138,9 @@ serve(async (req) => {
     // Build thought process
     const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop()?.content || '';
     thoughtProcess = `🧠 Processing: "${typeof lastUserMessage === 'string' ? lastUserMessage.substring(0, 50) : ''}..."
+• Provider: ${routedModel.provider}
 • Model: ${selectedModel}
+• Skills: ${skillSelection.ids.join(', ')}
 • Tone: ${tone}
 • Think Mode: ${thinkMode ? 'ON' : 'OFF'}
 • Deep Research: ${deepResearch ? 'ON' : 'OFF'}
@@ -180,6 +184,7 @@ When you learn something new:
     const baseSystemPrompt = customSystemPrompt || buildSystemPrompt(language, tone, toneInstructions[tone] || "", thinkMode);
     
     const systemPrompt = baseSystemPrompt + 
+      `\n\n=== ACTIVE SKILLS ===\n${skillSelection.instructions}` +
       userLearningPrompt +
       nigerianContext + 
       webContext + 
@@ -202,9 +207,8 @@ When you learn something new:
       return msg;
     });
 
-    const response = await openAIChatCompletion({
-      apiKey: OPENAI_API_KEY,
-      model: selectedModel,
+    const response = await routedChat({
+      model: routedModel,
       messages: [
         { role: "system", content: systemPrompt },
         ...processedMessages,
@@ -213,13 +217,14 @@ When you learn something new:
     });
 
     if (!response.ok) {
-      const errorMessage = await getProviderError(response);
-      console.error("OpenAI chat error:", response.status, errorMessage);
+      const errorMessage = await routerError(response);
+      console.error(`${routedModel.provider} chat error:`, response.status, errorMessage);
       return new Response(
         JSON.stringify({ error: errorMessage }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
 
     // Combine all sources
     const allSources = [...webSources, ...contextSources];

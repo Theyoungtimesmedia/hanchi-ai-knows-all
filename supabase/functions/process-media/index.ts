@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getProviderError, openAIChatCompletion, openAITranscription } from "../_shared/openai.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,72 +37,35 @@ const normalizeAudioMime = (mime: string, fileName: string) => {
   return lower || 'audio/webm';
 };
 
-async function transcribeWithGemini(LOVABLE_API_KEY: string, bytes: Uint8Array, mime: string, language: string) {
-  const base64 = encodeBase64Chunked(bytes);
-  const langHint = language && language !== 'en'
-    ? `The speaker is most likely speaking ${language === 'ha' ? 'Hausa' : language === 'pid' ? 'Nigerian Pidgin' : language === 'yo' ? 'Yoruba' : language === 'ig' ? 'Igbo' : language}. `
-    : '';
-
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a precise audio/video transcription engine. Output ONLY a JSON object: {"text": string, "language": string, "segments": [{"start": number|null, "end": number|null, "text": string}]}. Use short segments (5-15s). No commentary.',
-        },
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: `${langHint}Transcribe this media into clean timestamped segments. Return JSON only.` },
-            { type: 'image_url', image_url: { url: `data:${mime};base64,${base64}` } },
-          ],
-        },
-      ],
-      response_format: { type: 'json_object' },
-    }),
-  });
+/** Transcribe audio/video with Whisper on the user-owned OpenAI account. */
+async function transcribeMedia(apiKey: string, bytes: Uint8Array, mime: string, fileName: string, language: string) {
+  const response = await openAITranscription({ apiKey, bytes, mimeType: mime, fileName, language });
 
   if (!response.ok) {
-    const errText = await response.text();
-    console.error('Gemini transcription error:', response.status, errText);
-    if (response.status === 429) throw new Error('Rate limit exceeded.');
-    if (response.status === 402) throw new Error('AI credits exhausted.');
-    throw new Error(`Transcription failed (${response.status})`);
+    const message = await getProviderError(response);
+    console.error('Transcription error:', response.status, message);
+    if (response.status === 429) throw new Error('Rate limit exceeded. Please try again shortly.');
+    throw new Error(message);
   }
 
   const data = await response.json();
-  let parsed: any = {};
-  try { parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}'); }
-  catch { parsed = { text: data.choices?.[0]?.message?.content || '', segments: [] }; }
-
-  const segments = normalizeSegments(parsed.segments || []);
+  const segments = normalizeSegments(data.segments || []);
   return {
-    text: parsed.text || segments.map((s: any) => s.text).join(' '),
-    language: parsed.language || language || 'en',
+    text: data.text || segments.map((s: any) => s.text).join(' '),
+    language: data.language || language || 'en',
     segments,
   };
 }
 
-async function summarizeTranscript(LOVABLE_API_KEY: string, sourceLabel: string, transcript: string) {
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
-      messages: [
-        { role: 'system', content: 'Summarize transcripts cleanly. Return markdown with two sections only: ## Summary and ## Key Points.' },
-        { role: 'user', content: `Source: ${sourceLabel}\n\nTranscript:\n${transcript}` },
-      ],
-    }),
+async function summarizeTranscript(apiKey: string, sourceLabel: string, transcript: string) {
+  const response = await openAIChatCompletion({
+    apiKey,
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: 'Summarize transcripts cleanly. Return markdown with two sections only: ## Summary and ## Key Points.' },
+      { role: 'user', content: `Source: ${sourceLabel}\n\nTranscript:\n${transcript}` },
+    ],
+    maxTokens: 800,
   });
 
   if (!response.ok) return '';
@@ -109,9 +73,9 @@ async function summarizeTranscript(LOVABLE_API_KEY: string, sourceLabel: string,
   return data.choices?.[0]?.message?.content || '';
 }
 
-async function extractLinkTranscript(LOVABLE_API_KEY: string, FIRECRAWL_API_KEY: string | null, url: string) {
+async function extractLinkTranscript(apiKey: string, FIRECRAWL_API_KEY: string | null, url: string) {
   if (!FIRECRAWL_API_KEY) {
-    throw new Error('Link transcription needs the Firecrawl connector to be available.');
+    throw new Error('Link transcription needs FIRECRAWL_API_KEY to be configured.');
   }
 
   const scrapeResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
@@ -138,35 +102,31 @@ async function extractLinkTranscript(LOVABLE_API_KEY: string, FIRECRAWL_API_KEY:
   const rawPageContent = [page.summary, page.markdown, page.html].filter(Boolean).join('\n\n');
   const title = page.metadata?.title || page.title || 'Untitled video';
 
-  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-pro',
-      messages: [
-        {
-          role: 'system',
-          content: 'Extract transcript-like content from scraped YouTube, TikTok, or Facebook video pages. Return strict JSON with title, provider, transcript, summary, analysis, and transcriptSegments. transcriptSegments must be an array of objects with start, end, text. If exact timestamps are unavailable, use null for start/end and keep transcript text in order. Never invent dialogue not supported by the page.',
-        },
-        {
-          role: 'user',
-          content: `URL: ${url}\n\nPage content:\n${rawPageContent}`,
-        },
-      ],
-      response_format: { type: 'json_object' },
-    }),
+  const aiResponse = await openAIChatCompletion({
+    apiKey,
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: 'Extract transcript-like content from scraped YouTube, TikTok, or Facebook video pages. Return strict JSON with title, provider, transcript, summary, analysis, and transcriptSegments. transcriptSegments must be an array of objects with start, end, text. If exact timestamps are unavailable, use null for start/end and keep transcript text in order. Never invent dialogue not supported by the page.',
+      },
+      {
+        role: 'user',
+        content: `URL: ${url}\n\nPage content:\n${rawPageContent.slice(0, 40000)}`,
+      },
+    ],
+    responseFormat: { type: 'json_object' },
   });
 
   if (!aiResponse.ok) {
-    const errText = await aiResponse.text();
-    throw new Error(`Failed to extract transcript from link (${aiResponse.status}): ${errText}`);
+    const message = await getProviderError(aiResponse);
+    throw new Error(`Failed to extract transcript from link: ${message}`);
   }
 
   const aiData = await aiResponse.json();
-  const parsed = JSON.parse(aiData.choices?.[0]?.message?.content || '{}');
+  let parsed: any = {};
+  try { parsed = JSON.parse(aiData.choices?.[0]?.message?.content || '{}'); } catch { parsed = {}; }
+
   return {
     title: parsed.title || title,
     provider: parsed.provider || new URL(url).hostname,
@@ -185,14 +145,14 @@ serve(async (req) => {
   }
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
+    if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured');
 
     if (req.headers.get('content-type')?.includes('application/json')) {
       const { url, action = 'transcribe_link' } = await req.json();
       if (action === 'transcribe_link' && url) {
-        const result = await extractLinkTranscript(LOVABLE_API_KEY, FIRECRAWL_API_KEY, url);
+        const result = await extractLinkTranscript(OPENAI_API_KEY, FIRECRAWL_API_KEY, url);
         return new Response(JSON.stringify(result), { headers: jsonHeaders });
       }
       throw new Error('Unsupported JSON request');
@@ -212,50 +172,40 @@ serve(async (req) => {
     const isImage = fileType.startsWith('image/');
     const isDocument = fileType.startsWith('text/') || ['application/json', 'text/csv'].includes(fileType) || /\.(txt|md|json|csv)$/i.test(fileName);
 
-    // OCR - Image processing
+    // OCR / image understanding
     if (isImage || action === 'ocr') {
       const bytes = await file.arrayBuffer();
       const base64 = encodeBase64Chunked(new Uint8Array(bytes));
       const mimeType = fileType || 'image/jpeg';
 
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            { role: 'system', content: 'You are an OCR and image analysis expert. Extract ALL text from the image accurately. If there is no text, describe the image in detail. For documents, preserve formatting and structure.' },
-            { role: 'user', content: [
-              { type: 'text', text: 'Extract all text from this image. If it\'s a document, preserve the structure. If no text, provide a detailed description.' },
-              { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }
-            ]},
-          ],
-          max_tokens: 4000,
-        }),
+      const response = await openAIChatCompletion({
+        apiKey: OPENAI_API_KEY,
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: 'You are an OCR and image analysis expert. Extract ALL text from the image accurately. If there is no text, describe the image in detail. For documents, preserve formatting and structure.' },
+          { role: 'user', content: [
+            { type: 'text', text: 'Extract all text from this image. If it\'s a document, preserve the structure. If no text, provide a detailed description.' },
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } }
+          ]},
+        ],
+        maxTokens: 4000,
       });
 
       if (!response.ok) {
-        const errText = await response.text();
-        console.error('OCR error:', response.status, errText);
+        const message = await getProviderError(response);
+        console.error('OCR error:', response.status, message);
         if (response.status === 429) throw new Error('Rate limit exceeded. Please try again shortly.');
-        if (response.status === 402) throw new Error('Service credits exhausted.');
-        throw new Error(`OCR failed (${response.status})`);
+        throw new Error(message);
       }
 
       const result = await response.json();
-      return new Response(JSON.stringify({
-        text: result.choices?.[0]?.message?.content || '',
-        type: 'ocr',
-        extractedText: result.choices?.[0]?.message?.content || '',
-      }), { headers: jsonHeaders });
+      const text = result.choices?.[0]?.message?.content || '';
+      return new Response(JSON.stringify({ text, type: 'ocr', extractedText: text }), { headers: jsonHeaders });
     }
 
     if (isDocument) {
       const extractedText = textDecoder.decode(await file.arrayBuffer());
-      const summary = await summarizeTranscript(LOVABLE_API_KEY, fileName, extractedText.slice(0, 20000));
+      const summary = await summarizeTranscript(OPENAI_API_KEY, fileName, extractedText.slice(0, 20000));
       return new Response(JSON.stringify({
         text: extractedText,
         extractedText,
@@ -264,15 +214,15 @@ serve(async (req) => {
       }), { headers: jsonHeaders });
     }
 
-    // Audio/Video transcription via Gemini multimodal
+    // Audio/video transcription via Whisper
     if (isAudio || isVideo) {
       if (action === 'transcribe' || action === 'analyze') {
         const audioBuf = await file.arrayBuffer();
         const audioBytes = new Uint8Array(audioBuf);
         const audioMime = normalizeAudioMime(fileType, fileName);
 
-        const transcription = await transcribeWithGemini(LOVABLE_API_KEY, audioBytes, audioMime, language);
-        const summary = await summarizeTranscript(LOVABLE_API_KEY, fileName, transcription.text);
+        const transcription = await transcribeMedia(OPENAI_API_KEY, audioBytes, audioMime, fileName, language);
+        const summary = await summarizeTranscript(OPENAI_API_KEY, fileName, transcription.text);
 
         if (action === 'transcribe') {
           return new Response(JSON.stringify({
@@ -285,20 +235,14 @@ serve(async (req) => {
         }
 
         const mediaType = isVideo ? 'video' : 'audio';
-        const analysisRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              { role: 'system', content: `You are an AI assistant analyzing transcribed ${mediaType} content. Provide a clear summary, key points, and relevant insights. If content is in a Nigerian language, include both original and English translation.` },
-              { role: 'user', content: `Analyze this transcribed ${mediaType} content:\n\n"${transcription.text}"\n\nProvide: 1) Summary 2) Key points 3) Notable insights or action items.` },
-            ],
-            max_tokens: 2000,
-          }),
+        const analysisRes = await openAIChatCompletion({
+          apiKey: OPENAI_API_KEY,
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: `You are an AI assistant analyzing transcribed ${mediaType} content. Provide a clear summary, key points, and relevant insights. If content is in a Nigerian language, include both original and English translation.` },
+            { role: 'user', content: `Analyze this transcribed ${mediaType} content:\n\n"${transcription.text}"\n\nProvide: 1) Summary 2) Key points 3) Notable insights or action items.` },
+          ],
+          maxTokens: 2000,
         });
 
         if (!analysisRes.ok) {
@@ -322,9 +266,9 @@ serve(async (req) => {
       }
     }
 
-    throw new Error(`Unsupported file type: ${fileType}. Supported: images, audio, video files.`);
+    throw new Error(`Unsupported file type: ${fileType}. Supported: images, audio, video, and text documents.`);
   } catch (error) {
-    console.error('Enhanced media processing error:', error);
+    console.error('Media processing error:', error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), { status: 500, headers: jsonHeaders });
   }
 });
