@@ -54,8 +54,8 @@ self.addEventListener('fetch', (event) => {
   // Skip Supabase API calls - these need fresh data
   if (event.request.url.includes('supabase.co')) return;
 
-  // Skip AI gateway calls
-  if (event.request.url.includes('ai.gateway.lovable.dev')) return;
+  // Skip AI provider calls — never cache API responses
+  if (event.request.url.includes('api.openai.com') || event.request.url.includes('api.replicate.com') || event.request.url.includes('generativelanguage.googleapis.com') || event.request.url.includes('api.anthropic.com')) return;
 
   // Skip authentication requests
   if (event.request.url.includes('/auth/')) return;

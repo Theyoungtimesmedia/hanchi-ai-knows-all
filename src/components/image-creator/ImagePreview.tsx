@@ -163,9 +163,9 @@ export const ImagePreview = ({
     }
   };
 
-  const providerLabel = provider === "giphy" ? "🎉 Giphy" : 
-                        provider === "replicate" ? "🎨 AI" : 
-                        provider === "lovable" ? "✨ Gemini" : null;
+  const providerLabel = provider === "giphy" ? "🎉 Giphy" :
+                        provider === "replicate" ? "🎨 AI" :
+                        provider === "openai" ? "🎨 AI" : null;
 
   return (
     <div className={cn("space-y-3", className)}>

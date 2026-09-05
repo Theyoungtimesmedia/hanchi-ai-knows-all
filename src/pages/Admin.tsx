@@ -48,22 +48,33 @@ export default function Admin() {
   };
 
   const loadData = async () => {
-    const [annRes, blockedRes, flaggedRes, convRes, msgRes, imgRes] = await Promise.all([
+    const [annRes, blockedRes, flaggedRes, statsRes] = await Promise.all([
       supabase.from("announcements").select("*").order("created_at", { ascending: false }),
       supabase.from("blocked_users").select("*").order("created_at", { ascending: false }),
       supabase.from("flagged_users").select("*").order("created_at", { ascending: false }),
-      supabase.from("conversations").select("id", { count: "exact", head: true }),
-      supabase.from("messages").select("id", { count: "exact", head: true }),
-      supabase.from("generated_images").select("id", { count: "exact", head: true }),
+      supabase.rpc("get_admin_stats"),
     ]);
 
     if (annRes.data) setAnnouncements(annRes.data);
     if (blockedRes.data) setBlockedUsers(blockedRes.data);
     if (flaggedRes.data) setFlaggedUsers(flaggedRes.data);
+
+    const s = statsRes.data as {
+      users?: number;
+      conversations?: number;
+      messages?: number;
+      documents?: number;
+      generated_images?: number;
+      admins?: number;
+      messages_last_24h?: number;
+      messages_last_7d?: number;
+      new_users_last_7d?: number;
+    } | null;
+
     setStats({
-      conversations: convRes.count || 0,
-      messages: msgRes.count || 0,
-      images: imgRes.count || 0,
+      conversations: s?.conversations ?? 0,
+      messages: s?.messages ?? 0,
+      images: s?.generated_images ?? 0,
     });
   };
 

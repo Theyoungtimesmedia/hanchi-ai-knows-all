@@ -122,7 +122,7 @@ serve(async (req) => {
     } = await req.json();
     
     const REPLICATE_API_KEY = Deno.env.get("REPLICATE_API_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     const GIPHY_API_KEY = Deno.env.get("GIPHY_API_KEY");
     
     if (!prompt) {
@@ -351,62 +351,73 @@ serve(async (req) => {
       }
     }
 
-    // Fallback to Lovable AI
-    if (!LOVABLE_API_KEY) {
-      throw new Error("No image generation API configured. Please add REPLICATE_API_KEY.");
-    }
+    // Fallback to OpenAI gpt-image-1
+    if (OPENAI_API_KEY) {
+      try {
+        console.log("Using OpenAI gpt-image-1 for image generation...");
 
-    console.log("Using Lovable AI for image generation...");
-    
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: enhancedPrompt }],
-        modalities: ["image", "text"]
-      }),
-    });
+        const response = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-image-1",
+            prompt: enhancedPrompt,
+            n: 1,
+            size: isSticker ? "512x512" : "1024x1024",
+          }),
+        });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error("OpenAI image error:", response.status, errorBody);
+          if (response.status === 429) {
+            return new Response(
+              JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
+              { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          if (response.status === 402) {
+            return new Response(
+              JSON.stringify({ error: "Payment required, please add funds to continue." }),
+              { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          throw new Error(`OpenAI image generation failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        // gpt-image-1 returns b64_json; dall-e-3 returns url
+        const imageUrl = data.data?.[0]?.b64_json
+          ? `data:image/png;base64,${data.data[0].b64_json}`
+          : data.data?.[0]?.url;
+
+        if (!imageUrl) {
+          throw new Error("No image generated from OpenAI");
+        }
+
+        console.log("Image generated successfully via OpenAI");
         return new Response(
-          JSON.stringify({ error: "Rate limits exceeded, please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({
+            success: true,
+            image_url: imageUrl,
+            message: "Image generated with OpenAI! 🎨",
+            prompt: enhancedPrompt,
+            style,
+            model: "gpt-image-1",
+            isSticker,
+            provider: "openai",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      } catch (openaiError) {
+        console.error("OpenAI image generation failed:", openaiError);
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required, please add funds to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      throw new Error(`Image generation failed: ${response.status}`);
     }
 
-    const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!imageUrl) {
-      throw new Error("No image generated from Lovable AI");
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        image_url: imageUrl,
-        message: "Image generated with Gemini! 🎨",
-        prompt: enhancedPrompt,
-        style,
-        model: "gemini",
-        isSticker,
-        provider: "lovable"
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    throw new Error("No image generation API configured. Configure REPLICATE_API_KEY or OPENAI_API_KEY.");
   } catch (error) {
     console.error("Image generation error:", error);
     return new Response(

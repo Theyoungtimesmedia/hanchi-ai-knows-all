@@ -1,0 +1,15 @@
+CREATE OR REPLACE FUNCTION public.update_user_preferences_updated_at()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  SET search_path TO 'public'
+  AS $function$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION "public"."update_user_preferences_updated_at"() TO "postgres", "service_role";
+
+REVOKE ALL ON FUNCTION "public"."update_user_preferences_updated_at"() FROM PUBLIC;

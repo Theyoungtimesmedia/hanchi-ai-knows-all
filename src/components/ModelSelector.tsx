@@ -16,7 +16,7 @@ export const ModelSelector = () => {
       </TooltipTrigger>
       <TooltipContent>
         <p className="text-xs">
-          Powered by Lovable AI - Fast, multilingual, Nigerian-optimized
+          Fast, multilingual, Nigerian-optimized
         </p>
       </TooltipContent>
     </Tooltip>
