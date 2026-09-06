@@ -191,8 +191,11 @@ When you learn something new:
       (userMemory ? `\n\nUSER MEMORY (What you remember about this user):\n${userMemory}` : '');
 
     // Process messages for multimodal content
-    const processedMessages = messages.map((msg: any) => {
-      if (images && images.length > 0 && msg.role === 'user') {
+    const latestUserIndex = messages.reduce((lastIndex: number, message: any, index: number) => (
+      message.role === 'user' ? index : lastIndex
+    ), -1);
+    const processedMessages = messages.map((msg: any, index: number) => {
+      if (images && images.length > 0 && index === latestUserIndex) {
         return {
           role: msg.role,
           content: [
