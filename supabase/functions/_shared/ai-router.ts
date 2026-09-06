@@ -181,7 +181,7 @@ export async function routedChat({
   if (!key) throw new Error(`${model.provider} API key is not configured`);
 
   if (model.provider === 'anthropic') {
-    return anthropicChat(key, model, messages, stream, maxTokens, temperature);
+    return anthropicChat(key, model, messages, stream, maxTokens, temperature, responseFormat);
   }
   if (model.provider === 'google') {
     return googleChat(key, model, messages, stream, maxTokens, temperature, responseFormat);
@@ -206,11 +206,14 @@ async function anthropicChat(
   stream: boolean,
   maxTokens?: number,
   temperature?: number,
+  responseFormat?: { type: 'json_object' },
 ): Promise<Response> {
   const system = messages.filter((m) => m.role === 'system').map((m) => String(m.content)).join('\n\n');
-  const rest = messages.filter((m) => m.role !== 'system');
-
-  return fetch('https://api.anthropic.com/v1/messages', {
+  const rest = messages.filter((m) => m.role !== 'system').map((message) => ({
+    role: message.role === 'assistant' ? 'assistant' : 'user',
+    content: toAnthropicContent(message.content),
+  }));
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': key,
@@ -219,12 +222,90 @@ async function anthropicChat(
     },
     body: JSON.stringify({
       model: model.id,
-      system: system || undefined,
+      system: responseFormat
+        ? `${system}\n\nReturn only valid JSON with no markdown fences.`.trim()
+        : system || undefined,
       messages: rest,
       max_tokens: maxTokens ?? 2048,
       temperature,
       stream,
     }),
+  });
+
+  if (!response.ok || !response.body) return response;
+  if (stream) return normalizeAnthropicStream(response);
+
+  const data = await response.json();
+  const content = Array.isArray(data.content)
+    ? data.content.filter((part: any) => part.type === 'text').map((part: any) => part.text).join('')
+    : '';
+  return new Response(JSON.stringify({
+    choices: [{ message: { role: 'assistant', content }, finish_reason: data.stop_reason || 'stop' }],
+    usage: data.usage,
+  }), { status: response.status, headers: { 'Content-Type': 'application/json' } });
+}
+
+function toAnthropicContent(content: unknown): unknown {
+  if (!Array.isArray(content)) return content;
+
+  return content.flatMap((part: any) => {
+    if (part?.type === 'text') return [{ type: 'text', text: String(part.text || '') }];
+    if (part?.type === 'image_url' && typeof part.image_url?.url === 'string') {
+      const match = part.image_url.url.match(/^data:([^;]+);base64,(.+)$/);
+      if (!match) return [];
+      return [{
+        type: 'image',
+        source: { type: 'base64', media_type: match[1], data: match[2] },
+      }];
+    }
+    return [];
+  });
+}
+
+function normalizeAnthropicStream(response: Response): Response {
+  const reader = response.body?.getReader();
+  if (!reader) return response;
+
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = '';
+
+  const stream = new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      const { done, value } = await reader.read();
+      if (done) {
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        controller.close();
+        return;
+      }
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const raw = line.slice(5).trim();
+        if (!raw || raw === '[DONE]') continue;
+        try {
+          const event = JSON.parse(raw);
+          const text = event.delta?.text;
+          if (event.type === 'content_block_delta' && typeof text === 'string' && text.length > 0) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`));
+          }
+        } catch {
+          // Ignore incomplete or provider keep-alive events.
+        }
+      }
+    },
+    cancel() {
+      reader.cancel();
+    },
+  });
+
+  return new Response(stream, {
+    status: response.status,
+    headers: { 'Content-Type': 'text/event-stream' },
   });
 }
 
