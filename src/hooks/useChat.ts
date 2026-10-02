@@ -28,6 +28,7 @@ interface ChatOptions {
   searchWeb?: boolean;
   deepResearch?: boolean;
   customSystemPrompt?: string;
+  userMemory?: string;
 }
 
 export const useChat = (
@@ -182,7 +183,7 @@ export const useChat = (
             language,
             images: images || [],
             searchWeb: options?.searchWeb ?? false,
-            userMemory: "",
+            userMemory: options?.userMemory || "",
             model: options?.model || "gemini-flash",
             tone: options?.tone || "default",
             thinkMode: options?.thinkMode ?? false,

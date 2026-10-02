@@ -104,6 +104,83 @@ export type Database = {
         }
         Relationships: []
       }
+      brain_records: {
+        Row: {
+          captured_at: string
+          company: string | null
+          confidence_score: number
+          content: string
+          created_at: string
+          domain: string | null
+          event_date: string | null
+          id: string
+          layer: string
+          person: string | null
+          project: string | null
+          provenance: string | null
+          record_type: string
+          source_name: string | null
+          source_type: string | null
+          status: string
+          superseded_by: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          captured_at?: string
+          company?: string | null
+          confidence_score?: number
+          content: string
+          created_at?: string
+          domain?: string | null
+          event_date?: string | null
+          id?: string
+          layer?: string
+          person?: string | null
+          project?: string | null
+          provenance?: string | null
+          record_type?: string
+          source_name?: string | null
+          source_type?: string | null
+          status?: string
+          superseded_by?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          captured_at?: string
+          company?: string | null
+          confidence_score?: number
+          content?: string
+          created_at?: string
+          domain?: string | null
+          event_date?: string | null
+          id?: string
+          layer?: string
+          person?: string | null
+          project?: string | null
+          provenance?: string | null
+          record_type?: string
+          source_name?: string | null
+          source_type?: string | null
+          status?: string
+          superseded_by?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brain_records_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "brain_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collection_items: {
         Row: {
           collection_id: string
