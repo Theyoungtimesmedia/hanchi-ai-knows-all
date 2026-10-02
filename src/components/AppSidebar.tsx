@@ -167,6 +167,7 @@ export const AppSidebar = ({
     { icon: <FolderHeart size={16} />, label: "Collections", path: "/collections", color: "text-violet-500" },
     { icon: <Bot size={16} />, label: "Custom GPT", path: "/custom-gpt", color: "text-emerald-500" },
     { icon: <Brain size={16} />, label: "Memories", path: "/memories", color: "text-rose-500" },
+    { icon: <Sparkles size={16} />, label: "Personal Brain", path: "/brain", color: "text-primary" },
   ];
 
   const toolItems = [

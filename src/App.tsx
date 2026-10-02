@@ -20,6 +20,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Artifacts = lazy(() => import("./pages/Artifacts"));
 const Personalization = lazy(() => import("./pages/Personalization"));
 const Memories = lazy(() => import("./pages/Memories"));
+const Brain = lazy(() => import("./pages/Brain"));
 
 const Loader = () => (
   <div className="flex items-center justify-center min-h-screen bg-background">
@@ -49,6 +50,7 @@ const App = () => (
       <Route path="/artifacts" element={<Artifacts />} />
       <Route path="/personalization" element={<Personalization />} />
       <Route path="/memories" element={<Memories />} />
+      <Route path="/brain" element={<Brain />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Suspense>

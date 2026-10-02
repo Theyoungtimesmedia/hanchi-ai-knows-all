@@ -72,6 +72,8 @@ export default function Index() {
   const { conversations, isLoading: loadingHistory, createConversation, deleteConversation, pinConversation } = 
     useConversationHistory(user?.id || null);
   
+  const { getMemoryContext, addMemory } = useUserMemory(user?.id || null);
+
   const chatOptions = {
     model: selectedModel,
     tone: selectedTone,
@@ -79,11 +81,11 @@ export default function Index() {
     searchWeb: activeAddons.search || false,
     deepResearch: activeAddons.deepResearch || false,
     customSystemPrompt: activeCustomGPT?.systemPrompt || "",
+    userMemory: getMemoryContext(),
   };
   
   const { messages, isLoading, isStreaming, sendMessage, addMessage, regenerateLastMessage, editMessage, stopGeneration } = 
     useChat(language, currentConversationId, user?.id || null, chatOptions);
-  const { getMemoryContext, addMemory } = useUserMemory(user?.id || null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('hanchi_active_custom_gpt');
