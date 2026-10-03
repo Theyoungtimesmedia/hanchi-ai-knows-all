@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useChat } from "@/hooks/useChat";
 import { useConversationHistory } from "@/hooks/useConversationHistory";
 import { useUserMemory } from "@/hooks/useUserMemory";
+import { useBrainContext } from "@/hooks/useBrainContext";
 import { useImageGeneration, detectImageCommand } from "@/hooks/useImageGeneration";
 import { MessageBubbleV2 } from "@/components/MessageBubbleV2";
 import { FloatingInputV2 } from "@/components/FloatingInputV2";
@@ -73,6 +74,7 @@ export default function Index() {
     useConversationHistory(user?.id || null);
   
   const { getMemoryContext, addMemory } = useUserMemory(user?.id || null);
+  const { getBrainContext } = useBrainContext(user?.id || null);
 
   const chatOptions = {
     model: selectedModel,
@@ -81,7 +83,7 @@ export default function Index() {
     searchWeb: activeAddons.search || false,
     deepResearch: activeAddons.deepResearch || false,
     customSystemPrompt: activeCustomGPT?.systemPrompt || "",
-    userMemory: getMemoryContext(),
+    userMemory: `${getMemoryContext()}${getBrainContext()}`,
   };
   
   const { messages, isLoading, isStreaming, sendMessage, addMessage, regenerateLastMessage, editMessage, stopGeneration } = 
