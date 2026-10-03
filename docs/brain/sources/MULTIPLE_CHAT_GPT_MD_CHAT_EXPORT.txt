@@ -1,0 +1,1835 @@
+OTHER CHAT GPT CHAT.MD
+# Personal AI Knowledge Base — Durable Context Extraction
+
+**Extraction scope:** Long-term information from the conversation and established context
+**Purpose:** Portable context for another AI system
+**Important:** Facts, decisions, project records, contradictions, and temporary information are deliberately separated.
+
+---
+
+# 1. PEOPLE
+
+## Joshua Omoniyi
+
+**Role / identity**
+
+* Preferred name: Joshua Omoniyi.
+* Works across web development, mobile app development, graphics/design, branding, research, and digital products.
+* Builds web applications and digital products using tools/frameworks including React and Supabase.
+* Has described himself as a “vibe coder” and prompt-driven builder rather than a traditional hand-coding developer.
+* Interested in expanding beyond websites into apps, SaaS, software products, and other digital products.
+* Does not want his identity reduced to a single professional label.
+* Wants his business/brand eventually to feel like a serious technology company rather than a small freelance web-development operation.
+
+**Communication preferences**
+
+* Wants Nigerian Standard English.
+* Does not want Nigerian Pidgin.
+* Prefers natural, human wording rather than corporate or obviously AI-generated language.
+* Likes direct, blunt, logical feedback.
+* Does not want agreement merely for politeness.
+* Wants assumptions challenged when necessary.
+* Prefers practical, actionable advice.
+* Does not want every WhatsApp conversation to begin with “Good morning” or “Good evening.”
+* Uses “Sir” respectfully with clients but does not want excessive deference or “butt-kissing.”
+* Wants a balance between professionalism and natural human communication.
+* Prefers messages that sound like something he would actually type rather than polished generic sales copy.
+* Strongly dislikes generic AI-generated business names and generic outreach messages.
+
+**Business positioning**
+
+* Wants to be perceived as someone who understands a client's problem and can provide a practical solution.
+* Does not want the business positioned primarily around being cheap.
+* Wants the eventual company to be capable of expanding beyond website development.
+* Website development is currently the most important category people should associate with the business.
+* SEO, app development, branding, software and related services can sit underneath the broader company.
+* Wants the eventual brand to have the potential to become a household-name-level technology brand.
+* Does not want a strongly traditional/cultural name merely for the sake of being Nigerian.
+* Has an interest in learning Yoruba better and learning Hausa, but does not want his business identity to be based primarily on culture.
+
+---
+
+# 2. PROJECTS
+
+## Compound Website Development / Business Rebrand
+
+**Purpose**
+
+* Joshua currently operates under the name **Compound Website Development / Compound Dev**.
+* The business provides website development and related digital services.
+* Joshua believes the current name has problems:
+
+  * It is difficult to find online.
+  * “Compound Dev” is generic.
+  * It can be confused with a real-estate company.
+  * It does not feel distinctive enough to become a strong long-term technology brand.
+
+**Current status**
+
+* Joshua is actively considering a new company name.
+* No final replacement name has been chosen.
+* The desired brand should:
+
+  * Be distinctive.
+  * Be easy to pronounce.
+  * Be memorable.
+  * Be searchable.
+  * Not already be heavily used by another business.
+  * Be broad enough for website development, apps, software, branding, SEO and future products.
+  * Still make website development the strongest immediate association.
+  * Feel human and problem-solving rather than flashy or generic.
+
+**Naming philosophy**
+
+* Joshua initially liked **Sense** because it “felt right.”
+* The attraction was emotional rather than purely analytical.
+* The word suggests understanding, perception, clarity, intuition and making things make sense.
+* Joshua does not necessarily want a name that literally explains the company's service.
+* He is interested in the naming approach used by major technology companies such as Google, Apple, Lenovo, OpenAI, Microsoft, etc.
+* He prefers the possibility of a short evocative/invented name whose meaning becomes associated with the company over time.
+* Joshua specifically rejects generic AI-style names such as “WebForge,” “BrandGrid,” “PagePilot,” etc.
+* **Sense is not currently a viable candidate because it is already heavily used by existing businesses/technology companies.**
+* An earlier “Niyi” idea was clever because it related to his surname, but Joshua did not feel strongly enough about it and found the pronunciation slightly awkward.
+* Joshua does not want to settle for a name simply because it is available.
+
+**Brand promise**
+The emotional goal of the brand is approximately:
+
+> “This person understands my problem and can provide a solution.”
+
+The company should feel:
+
+* Understanding.
+* Human.
+* Clear.
+* Solution-oriented.
+* Trustworthy.
+* Relatable.
+* Capable without pretending to be perfect.
+
+**Important branding insight**
+
+* The name does not need to contain “web.”
+* The descriptor/tagline can communicate the category, e.g. website development and digital solutions.
+* Website development should remain the strongest immediate association because that is what most prospective clients are likely to be looking for.
+* SEO should be treated as a supporting service/outcome rather than the primary category of the brand.
+
+---
+
+## Image Makers Nursery and Primary School — School Management System
+
+**Client**
+
+* Otuagoma Joseph.
+* Owner/decision-maker associated with Image Makers Nursery and Primary School.
+* Also a pastor and has repeatedly mentioned being very busy.
+
+**Service provider**
+
+* Joshua Omoniyi.
+* Owner of Compound Website Development.
+
+**Project**
+
+* Custom school management system for Image Makers Nursery and Primary School.
+* The school management system was agreed at **₦200,000**.
+* Separate CBT software was agreed at **₦30,000**.
+* The system is intended to be fully online.
+* Setup, training and handoff will be handled remotely.
+* Students and other records can be added digitally after launch.
+* QR-code ID cards are part of the agreed school-management-system scope for attendance.
+* Target is to have the school ready for use around September/resumption.
+
+**Agreed system scope**
+The school management system includes:
+
+* Super Admin dashboard.
+* Teacher dashboard.
+* Student dashboard.
+* Parent dashboard.
+* Attendance.
+* Results.
+* Fees.
+* Announcements.
+* Reports.
+* Student records.
+* Staff records.
+* Bulk upload.
+* QR-code ID cards for attendance.
+* Ability for the school to add new students and records after launch.
+
+**CBT**
+
+* Separate CBT software.
+* Agreed price: **₦30,000**.
+* Handles objective examinations.
+* Automatic marking.
+* Intended to work alongside the school management system.
+
+**Delivery**
+
+* Entire system is delivered online.
+* Setup/training/handoff can be performed through WhatsApp calls or screen sharing.
+* Contract specifies approximately one month for delivery, with a possible two-week extension if additional time is required.
+
+**Current status**
+
+* Contract has been prepared and sent.
+* Otuagoma Joseph has read the contract and indicated he has no questions.
+* He was busy because the school was writing examinations.
+* He indicated that he would sign during the relevant week.
+* Image Makers was prioritised before another school-management project because Joseph wanted Image Makers completed first.
+* Information collection has begun but remains incomplete.
+
+---
+
+## Image Makers School — Information Already Provided
+
+### School profile
+
+* Official school name: **Imagemakers Nursery and Primary School**
+* Motto: **Imparting Wisdom and Morals**
+* Registration: **LASG APPROVAL NO: SLR/14097**
+* Academic session: **2026/2027**
+
+### Academic structure
+
+* Three terms:
+
+  1. Wisdom Term — September–December.
+  2. Excellent Term — January–April.
+  3. Glorious Term — April–July.
+* Mentioned holidays/calendar events:
+
+  * Christmas Holiday.
+  * Easter Holiday.
+  * Muslim Holidays.
+  * Democracy Day.
+  * Independence Day.
+
+### Subjects
+
+Provided examples include:
+
+* Mathematics.
+* English Language.
+* Quantitative Aptitude.
+* Verbal Aptitude.
+* IRK.
+* CRK.
+* Basic Science.
+* Coding.
+* ICT.
+* Creative Art.
+* Vocational Aptitude.
+* French.
+* Diction.
+* Music.
+* Abacus.
+* Yoruba.
+* Other subjects.
+
+### Results
+
+* Promotion criterion: **60% average**.
+* Grading supplied:
+
+  * 90–100: Outstanding.
+  * 80–89: Excellent.
+  * 70–79: Very Good.
+  * 60–69: Very Good.
+  * 50–59: Good.
+  * 40–49: Fair.
+  * Below 40: Poor.
+* The report-card template was subsequently sent to Joshua through WhatsApp.
+* The continuous-assessment/examination percentage breakdown was still requested.
+
+### Data migration
+
+* School stated that there are no existing Excel files, registers or documents for migration.
+* They want new digital records created.
+
+### Users
+
+The school specified:
+
+* Administrator.
+* School Bursar.
+
+### Finance
+
+The school said:
+
+* Bank details are available.
+* Fee categories are available.
+* Receipt information is available.
+* Discounts and scholarships exist.
+* Exact financial details were to be obtained from the school office.
+
+### Branding/documents
+
+The school said it already has:
+
+* Certificates.
+* ID-card design.
+* Letterhead.
+* School forms.
+
+It requested creation/design of:
+
+* Admission Form.
+* Receipt.
+* Attendance Register.
+* Leave Form.
+* Transfer Certificate.
+* School Leaving Certificate.
+
+These should use the school's official logo and colours.
+
+### Communication
+
+* School requested standard SMS/email templates.
+
+### Information still needed / outstanding
+
+* School logo file.
+* School colours.
+* School location/address.
+* School email.
+* Exact fee categories and amounts.
+* Continuous assessment/exam breakdown.
+* Clear copies/photos of certificates.
+* Clear copy/photo of ID-card design.
+* Clear copy/photo of letterhead.
+* Copies/photos of existing school forms.
+* Training contact person.
+* Preferred training method.
+* Any remaining academic/admin information needed to configure the system.
+
+**Practical collection rule**
+
+* The school can photograph physical documents with a phone as long as the images are clear and readable.
+* Existing documents are valuable because they reveal the school's actual workflow instead of forcing Joshua to invent processes.
+
+---
+
+## Royalfield School — School Management System
+
+**Client**
+
+* Otuagoma Joseph.
+* Royalfield School secretary/bursar: Miss Okikiola.
+
+**History**
+
+* Joseph originally discussed a school management system for a small school.
+* He stated the school had fewer than 70 pupils.
+* Initial quoted price: ₦250,000.
+* Joseph said the school could not pay ₦250,000 and said they could pay no more than ₦100,000.
+* Joshua progressively negotiated the price downward.
+* After further calls, the agreed school-management-system price became **₦200,000**, with CBT at **₦30,000**.
+* A contract was prepared and sent.
+* Joseph read the contract and had no questions.
+* He was busy with school examinations and said he would sign.
+
+**Relevant communication**
+
+* Joseph originally directed Joshua to contact Miss Okikiola.
+* Okikiola identified herself as the Royalfield School secretary and bursar.
+* She indicated that she could provide information regarding the school-management system.
+
+**Current relevance**
+
+* This project remains separate from Image Makers.
+* Image Makers was prioritised first.
+
+---
+
+# 3. COMPANIES / ORGANISATIONS
+
+## Compound Website Development
+
+* Joshua's current business identity.
+* Website development is its main current association.
+* Also involved in:
+
+  * Web applications.
+  * Mobile applications.
+  * Branding/graphics.
+  * SEO.
+  * Digital products.
+  * School-management software.
+  * Other software/digital solutions.
+* Current brand name is considered weak and potentially confusing.
+* Rebranding is an active unresolved project.
+
+## Image Makers Nursery and Primary School
+
+* Nursery and primary school.
+* Client/project for a custom school-management system.
+* Current session: 2026/2027.
+* Target deployment/use around September.
+
+## Royalfield School
+
+* School-management-system client/project associated with Otuagoma Joseph.
+* Smaller school, reported as fewer than 70 pupils.
+* Separate from Image Makers.
+
+## Gadgets360Ng
+
+* Previous client/business relationship.
+* Joshua has worked on a website-related project for them.
+* Joshua has considered asking them for a review of Compound Website Development.
+
+## Vicnovos
+
+* Previous client/business relationship.
+* Joshua has worked on a medical website/project and other digital work.
+* Joshua has considered asking them for a review of Compound Website Development.
+
+---
+
+# 4. DECISIONS
+
+## Rebrand Compound Website Development
+
+**Decision:** Consider replacing the current business name.
+
+**Reason**
+
+* Poor discoverability.
+* Generic.
+* Potential confusion with real-estate businesses.
+* Does not feel distinctive enough.
+
+**Desired direction**
+
+* Short.
+* Memorable.
+* Distinctive.
+* Human.
+* Broad.
+* Technology-company potential.
+* Website-development association through descriptor/brand positioning rather than necessarily through the name itself.
+
+**Current favourite concept**
+
+* “Sense” was emotionally appealing but is too crowded/taken to use directly.
+
+**Status:** UNRESOLVED.
+
+---
+
+## Website development as primary brand association
+
+**Decision:** Keep website development as the strongest customer-facing association.
+
+**Reason**
+
+* Clients are more likely to think “I need a website” than “I need SEO.”
+* SEO can be an important service but does not need to define the brand.
+
+---
+
+## Do not position the business around cheap pricing
+
+**Decision:** Do not make “cheap” part of the brand promise.
+
+**Reason**
+
+* Low price is not a sustainable differentiator.
+* The desired positioning is understanding + problem solving + useful outcomes.
+
+---
+
+## Image Makers first
+
+**Decision:** Prioritise Image Makers Nursery and Primary School before the other school project.
+
+**Reason**
+
+* Otuagoma Joseph specifically wanted Image Makers handled first.
+* Image Makers has a September/resumption target.
+
+---
+
+## School-management-system onboarding
+
+**Decision:** Collect the school's existing materials and workflows rather than inventing everything from scratch.
+
+**Reason**
+
+* Existing report cards, certificates, ID cards, forms, receipts, attendance records and other documents reveal how the school currently operates.
+* The system should reflect real school processes while improving them.
+
+---
+
+# 5. MEETINGS / CONVERSATIONS
+
+## Otuagoma Joseph — pricing negotiation
+
+**Dates:** 9 July 2026
+
+Important progression:
+
+* Joshua initially quoted ₦250,000 for the school management system.
+* CBT was quoted separately at ₦30,000.
+* Joseph stated the school had fewer than 70 pupils and could not pay ₦250,000.
+* Joseph initially said the maximum was ₦100,000.
+* Joshua explained that school size could influence pricing.
+* Joshua reduced the school-management-system price to ₦220,000.
+* Further discussion/calls occurred.
+* After two calls, approximately five minutes and eleven minutes respectively, the final agreement became:
+
+  * School management system: **₦200,000**
+  * CBT software: **₦30,000**
+* Joshua considered the call successful and used a structured explanation of the system, pricing and scope.
+
+---
+
+## Contract discussion with Otuagoma Joseph
+
+**Dates:** 10–13 July 2026
+
+* Contract was sent.
+* Joshua provided an explanation of:
+
+  * Four dashboards.
+  * Attendance.
+  * Results.
+  * Fees.
+  * Announcements.
+  * Reports.
+  * Student/staff records.
+  * Bulk upload.
+  * QR-code ID cards.
+  * Separate CBT software.
+  * Online delivery.
+  * Remote training/handoff.
+* Joseph said he would get back later because he was busy.
+* Joshua considered calling to review the contract together rather than repeatedly asking him to read it alone.
+* Joseph eventually read the contract.
+* He stated he had no questions.
+* He was busy because the school was writing examinations.
+* He indicated that he would sign during the week.
+
+---
+
+## Information collection with Image Makers
+
+**July 2026**
+
+Joshua sent multiple information-request messages covering:
+
+* School profile.
+* Academic structure.
+* Classes and class arms.
+* Subjects.
+* Term dates.
+* Grading.
+* Fees.
+* Staff.
+* Students.
+* Attendance.
+* Migration data.
+* Library.
+* School policies.
+* Branding.
+* User accounts.
+* Training.
+* Existing forms/documents.
+
+Joseph was repeatedly busy and delayed sending the information.
+
+On 28 July, Joshua intentionally moved the process toward setup and asked Joseph to send whatever information was already available rather than waiting until everything was complete.
+
+Joseph replied:
+
+> “Yes. Thank u for your patience. I have been so so busy”
+
+This indicates that the delay was mainly due to his workload rather than necessarily lack of interest.
+
+---
+
+## Image Makers information submission
+
+**14 July 2026**
+
+The school supplied a structured document containing:
+
+* School identity.
+* Academic structure.
+* Subjects.
+* Promotion criteria.
+* Grading system.
+* Data migration status.
+* User accounts.
+* Finance availability.
+* Branding/document availability.
+* Forms required.
+* Communication requirements.
+
+The school later sent the report-card template through WhatsApp.
+
+---
+
+# 6. DAILY LIFE
+
+## General work pattern
+
+* Joshua balances business/client work with learning, technical projects and personal goals.
+* He sometimes works intensively on software projects and can become exhausted.
+* He has experienced periods where client work or technical work disrupts other planned goals.
+* He wants better systems for staying on track with weekly goals.
+
+## Personal development goals
+
+* Wants to improve Yoruba speaking ability.
+* Wants to learn Hausa.
+* Values reading, Bible study and consistent morning routines.
+* Has experimented with structured morning routines and daily Bible verses.
+* Wants to maintain exercise and other personal goals alongside work.
+
+**Note:** Specific recent missed goals and individual daily events are treated as temporary rather than permanent knowledge unless they reveal a durable pattern.
+
+---
+
+# 7. KNOWLEDGE
+
+## School-management-system implementation
+
+A professional school-management-system implementation should not begin by guessing how the school works.
+
+A useful onboarding framework includes:
+
+### School profile
+
+* Official name.
+* Logo.
+* Colours.
+* Motto.
+* Address.
+* Phone.
+* Email.
+* Website/social links.
+* School type.
+* Proprietor/administrator.
+* Registration number.
+
+### Academic structure
+
+* Academic session.
+* Terms.
+* Term dates.
+* Holidays.
+* Classes.
+* Class arms.
+* Subjects.
+* Subject combinations.
+* Timetable.
+* Lesson periods.
+* Opening/closing times.
+* Calendar/events.
+
+### Results/examinations
+
+* Report-card sample.
+* Result-sheet sample.
+* Grading scale.
+* Remarks.
+* Promotion criteria.
+* Pass mark.
+* CA/exam breakdown.
+* Subject-teacher assignment.
+
+### Student records
+
+* Admission number.
+* Full name.
+* Photograph.
+* Gender.
+* Date of birth.
+* Class.
+* Address.
+* Parent/guardian information.
+* Emergency contact.
+* Other relevant optional fields depending on the school's requirements.
+
+### Staff records
+
+* Staff ID.
+* Full name.
+* Photograph.
+* Contact details.
+* Qualification.
+* Department.
+* Position.
+* Subjects.
+* Employment details.
+* Other relevant administrative fields.
+
+### Finance
+
+* Fee categories.
+* Class fees.
+* Discounts.
+* Scholarships.
+* Payment methods.
+* Bank details.
+* Previous balances.
+* Receipt format.
+
+### Attendance
+
+* Current attendance process.
+* Attendance policy.
+* Late-arrival rules.
+* QR-attendance workflow.
+* Staff attendance requirements if applicable.
+
+### Communication
+
+* SMS templates.
+* Email templates.
+* Announcement categories.
+* Parent-notification preferences.
+
+### Data migration
+
+Even when the school says it has no existing data, verify whether there are:
+
+* Excel files.
+* Student registers.
+* Staff records.
+* Previous results.
+* Fee records.
+* Attendance records.
+* Library records.
+* Existing ID numbers.
+* Paper documents.
+
+### Existing forms are especially useful
+
+Useful examples include:
+
+* Admission form.
+* Report card.
+* Receipt.
+* ID card.
+* Fee receipt.
+* Attendance register.
+* Leave form.
+* Transfer certificate.
+* School-leaving certificate.
+* Library borrowing card.
+* Other administrative forms.
+
+These documents can reveal the school's real workflow and prevent the developer from designing around assumptions.
+
+---
+
+## Client communication
+
+### Useful principle
+
+When a client is busy, repeatedly asking “Have you signed?” can create pressure without moving the project forward.
+
+A better approach is to remove friction:
+
+* Offer to review the contract together.
+* Break information collection into manageable pieces.
+* Ask them to send whatever is already available.
+* Organise incomplete information yourself where possible.
+* Avoid repeatedly restarting the same information request.
+
+### Tone
+
+The preferred client tone is:
+
+* Respectful.
+* Direct.
+* Human.
+* Calm.
+* Not submissive.
+* Not desperate.
+* Not excessively formal.
+
+---
+
+## Business naming
+
+### Useful naming framework
+
+A future business name should be evaluated for:
+
+* Distinctiveness.
+* Pronunciation.
+* Memorability.
+* Searchability.
+* Existing business usage.
+* Domain/social availability.
+* Ability to expand beyond the initial service.
+* Emotional response.
+* Visual identity potential.
+
+A name does not necessarily need to describe the service literally.
+
+The company can use a descriptive descriptor such as:
+
+> Website Development & Digital Solutions
+
+while maintaining a broader brand name.
+
+---
+
+## Hackathon positioning
+
+Joshua is interested in participating in hackathons.
+
+He wants outreach to:
+
+* Sound natural.
+* Avoid generic “Hey, I saw your post…” openings.
+* Establish useful technical capability.
+* Focus on the actual problem being solved.
+* Avoid exaggerating his backend expertise.
+* Sound like a builder rather than someone begging to be selected.
+
+Relevant capabilities he has described include:
+
+* Web development.
+* Mobile development.
+* React.
+* Supabase.
+* APIs.
+* Databases.
+* Product-building/problem-solving.
+
+---
+
+# 8. IDENTITY / USER CONTEXT
+
+## Professional identity
+
+Joshua is a multidisciplinary digital builder rather than someone who wants to be defined by a single job title.
+
+Relevant areas:
+
+* Website development.
+* Web applications.
+* Mobile applications.
+* Software.
+* Branding.
+* Graphics.
+* UI/UX.
+* SEO.
+* Digital products.
+* Research.
+* AI-assisted workflows.
+* Product/problem solving.
+
+He wants the freedom to branch into new technology areas rather than permanently branding himself as only a “website developer.”
+
+## Work philosophy
+
+* Solve the client's actual problem.
+* Understand the client's situation before building.
+* Prefer useful working solutions over impressive technical labels.
+* Be honest about limitations.
+* Improve through iteration.
+* Keep communication human.
+* Avoid pretending to be perfect.
+* Do not rely on low pricing as the primary value proposition.
+
+## Brand philosophy
+
+The ideal future company should communicate:
+
+> “We understand what you're trying to do, and we can help you make it work.”
+
+The emotional connection is important to Joshua. He tends to connect strongly with things—including fictional characters—when he recognises something of his own experience in them. He wants a business that creates a similar sense of recognition: **“They get my problem.”**
+
+## Communication philosophy
+
+* Natural > polished.
+* Specific > generic.
+* Human > corporate.
+* Confident > desperate.
+* Respectful > submissive.
+* Clear > unnecessarily sophisticated.
+* Honest > exaggerated.
+
+---
+
+# 9. CURRENT STATUS
+
+## Active
+
+1. **Compound Website Development rebrand**
+
+   * Current name is considered unsatisfactory.
+   * No final new name chosen.
+   * “Sense” is the strongest emotional reference point so far, but is too crowded.
+   * Searchability/availability is a major requirement.
+
+2. **Image Makers school-management system**
+
+   * Active.
+   * Contract prepared.
+   * Client has reviewed the contract and reportedly has no questions.
+   * Final signature/status should be verified.
+   * Information collection is underway.
+   * Report-card template received.
+   * Remaining branding, finance, academic and operational information still needs collection.
+   * September/resumption target is important.
+
+3. **Royalfield school-management system**
+
+   * Active/separate project.
+   * Agreed system/CBT pricing is ₦200,000 + ₦30,000 based on the later agreement.
+   * Image Makers is being prioritised first.
+
+4. **Client review acquisition**
+
+   * Joshua wants reviews from Gadgets360Ng and Vicnovos.
+   * This remains a business-development activity.
+
+5. **Hackathon opportunity**
+
+   * Joshua is interested in joining suitable hackathons.
+   * Positioning should emphasise actual product-building ability and problem-solving.
+
+---
+
+# 10. TEMPORARY / DO NOT MIGRATE
+
+The following should **not** become permanent AI knowledge unless explicitly reintroduced:
+
+* Exact day/time of individual WhatsApp messages.
+* Temporary delays caused by a client's work schedule.
+* One-off missed weekly goals.
+* One-off exhaustion from working late.
+* Individual recent meals.
+* Specific daily routines that are not established long-term habits.
+* Temporary location information such as being in Suleja on a particular day.
+* Temporary plans to buy a PC.
+* Individual conversations about whether a client will sign on a specific day.
+* One-off WhatsApp wording.
+* Temporary hackathon outreach.
+* Specific phone numbers unless they are necessary as durable business contact records.
+* Individual school student information.
+* Student medical information or other sensitive personal records.
+* Passwords, financial credentials or other confidential access information.
+* Speculation about future life choices that has not become an established plan.
+* Emotional or health details that are not necessary for long-term assistance.
+
+---
+
+# A. INFORMATION THAT SHOULD BECOME PERMANENT KNOWLEDGE
+
+### High priority
+
+1. Joshua Omoniyi is a multidisciplinary digital builder.
+2. He does not want to be confined to a single professional label.
+3. Website development is currently the main customer-facing business category.
+4. He wants the company eventually to expand into apps, software, SaaS and other digital products.
+5. He wants a distinctive, searchable, memorable company name.
+6. He dislikes generic AI-generated names.
+7. He liked “Sense” because of its emotional/conceptual feel, not because it was an obvious technology name.
+8. The eventual brand should communicate understanding + problem solving.
+9. He prefers natural Nigerian Standard English.
+10. He dislikes excessive formality, excessive deference and generic sales language.
+11. He prefers direct, practical and honest feedback.
+12. Client communication should be respectful without sounding submissive or desperate.
+13. School-management-system projects are an important current business line.
+14. Image Makers is the current priority school-management-system project.
+15. Royalfield is a separate school-management-system project.
+16. Agreed school-management-system price for the relevant projects is ₦200,000, with CBT at ₦30,000, subject to project-specific contract verification.
+17. The school-management-system scope includes four dashboards, attendance, results, fees, announcements, reports, records, bulk upload and QR attendance IDs.
+18. CBT is a separate objective-exam/automatic-marking component.
+19. School-system onboarding should be based on the school's real documents/workflows.
+20. Existing forms and report cards are valuable implementation references.
+
+---
+
+# B. INFORMATION THAT SHOULD REMAIN PROJECT-SPECIFIC
+
+### Image Makers
+
+* School name.
+* Motto.
+* Registration number.
+* Academic session.
+* Terms.
+* Subjects.
+* Grading rules.
+* School contacts.
+* User roles.
+* Forms required.
+* Report-card template.
+* Branding materials.
+* Fee structure.
+* September target.
+* Remaining information requests.
+
+### Royalfield
+
+* School size.
+* Secretary/bursar.
+* Client communication.
+* Negotiation history.
+* Contract status.
+* Project-specific scope and pricing.
+
+### Compound rebrand
+
+* Candidate names.
+* Search results.
+* Domain availability.
+* Brand strategy experiments.
+* Naming shortlist.
+* Final naming decision once made.
+
+### Hackathon
+
+* Specific organiser.
+* Specific hackathon.
+* Specific team.
+* Specific project.
+* Individual outreach messages.
+
+---
+
+# C. CONTRADICTIONS / INFORMATION REQUIRING VERIFICATION
+
+## Education/status
+
+There are conflicting descriptions of Joshua's education/status in the broader context:
+
+* Some older context describes him as a secondary-school student preparing for JAMB.
+* Other later context describes a B.Sc. Economics and work with the Federal Ministry of Agriculture.
+* These cannot safely be treated as one continuous factual timeline without clarification.
+
+**Action:** Do not use either as current identity information unless Joshua confirms the current situation.
+
+## Age
+
+There are conflicting age-related records in older context.
+
+**Action:** Do not retain a specific age unless verified.
+
+## Business name
+
+* Older records use “Web Spark” / “Website Spark.”
+* Current conversation uses “Compound Website Development” / “Compound Dev.”
+* Joshua now considers Compound Dev unsuitable and is actively exploring a replacement.
+
+**Action:** Treat Compound Website Development as the current working business identity, but treat the rebrand as active and unresolved.
+
+## Royalfield pricing
+
+* Earlier quoted price: ₦250,000.
+* Negotiated intermediate price: ₦220,000.
+* Later agreed price: ₦200,000 + ₦30,000 CBT.
+
+**Action:** Treat ₦200,000 + ₦30,000 as the later agreement, but rely on the signed contract for the legally operative terms.
+
+## Image Makers vs Royalfield
+
+The same client, Otuagoma Joseph, is associated with both schools/projects.
+
+**Action:** Keep the projects completely separate. Do not assume that information belonging to one school applies to the other.
+
+---
+
+# D. INFORMATION THAT SHOULD NOT BE MIGRATED
+
+1. Sensitive health information and dental treatment details.
+2. Specific medical information about students or other people.
+3. Personal phone numbers that are not necessary for the AI's long-term work.
+4. Financial account details/bank credentials.
+5. Passwords or authentication information.
+6. Precise personal location information.
+7. One-off emotional states.
+8. One-off missed goals.
+9. Temporary exhaustion or sleep disruption.
+10. Speculative future family/life plans that have not become established decisions.
+11. Individual food consumption.
+12. Temporary client delays.
+13. One-off WhatsApp messages unless they establish a durable communication preference.
+14. Unverified assumptions about people's intentions.
+15. Old information that conflicts with confirmed current information.
+
+---
+
+## PORTABILITY NOTE
+
+The most valuable long-term context is **not a transcript of everything that happened**. It is the stable layer underneath the conversations:
+
+**Who Joshua is → how he works → what he values → how he communicates → what businesses/projects are active → what has been decided → what remains unresolved.**
+
+That structure is preferable to dumping every historical interaction into another AI's memory. Current AI-memory guidance similarly recommends using memory for recurring context and stable preferences while keeping one-off details in project-specific material.
+
+
+
+DATA EXPORT JANNUARY 27 FROM CHAT GPT
+
+[date not available] - Preferred name: Josh. Also okay with Jake or Jack sometimes. Likes giving nicknames and may change his name someday.
+
+[date not available] - Preferences and style: likes direct, honest feedback and wants to be challenged when wrong. He prefers American English in some contexts, but overall wants natural Nigerian English with short plain sentences and no AI-sounding filler. He dislikes being prematurely called 'boss'. He likes Marvel, Ben 10, Miraculous Ladybug, and similar shows, and dislikes Die Hard. He wants practical systems, not hype.
+
+[date not available] - Family and social: mom wants him to study medicine and put him in science class. Brother is away at school. Best friend is in boarding school. He feels lonely sometimes but guards it emotionally. He has an Indian friend online who owes him money since December. He has a classmate who wants to learn vibe coding from him.
+
+[date not available] - Projects and skills: he is a vibe coder and designer focused on web design, UI/UX, graphics, logo work, prompt engineering, AI, research, and building apps. Main tools include Lovable.dev, Supabase, Vercel, Netlify, GitHub Spaces, Paystack, Brevo, Gemini, Claude, ReadyAI/Readdy.AI, Manus AI, Gamma.app, and YouTube Data API. He presents himself to clients as a full-stack developer who uses React and Supabase, but he actually builds through Lovable prompt engineering and does not write code manually or use Figma. He prefers fast shipping, mobile-first premium UI, and hates stock-image aesthetics.
+
+[date not available] - Schedule and constraints: chores are usually 7–10am. JAMB lessons are Mon/Thu/Fri 3–6:30pm and Sat 7–11:30am. Best internet is 1–7am, with the fastest speed around 3–4am, but he prefers not to sacrifice sleep. He often vibe-codes late at night. He shares parents’ phones, has limited laptop access, and network is unreliable except early morning. His main apps are VLC, Chrome beta, Claude, ChatGPT, and YouTube. He uses multiple Lovable accounts and remixes projects when free credits expire by updating GitHub repos. He watches series and shorts on VLC and YouTube as his main distractions.
+
+[date not available] - Interests and taste: likes Marvel, Wonder Man, Spider-Man, Ben 10, DC, Miraculous Ladybug, Adventure Time: Fionna and Cake, Ben 10 Alien Force, Ben 10 Ultimate Alien, Rick and Morty, Invincible, Harley Quinn, Wednesday, Ted, Watson, The Boys, Bob Hearts Abishola, Young Sheldon, Big Bang Theory, and IT/Welcome to Derry. He dislikes Die Hard. He likes Nigerian gospel music, minimalist fashion, plain shirts and clean trousers under ₦10k, and philosophical ideas like optimistic nihilism and 'life as a video game.' He likes deep talks about society, trends, individuality, and authenticity. He has no TikTok installed and is skeptical of influencer-driven norms. He values intellectual conversation and calls himself different or weird at times. He wants direct, honest feedback and no fake friendliness.
+
+[date not available] - Writing style memory: Natural Writing Style. Use simple language and short plain sentences. Avoid AI phrases like 'dive into,' 'unleash,' and 'game-changing.' Be direct and concise. Keep it honest. No fluff, no fake friendliness, no exaggerated hype. Casual simplified grammar is fine when it feels human. Ask clarifying questions before starting if needed. Apply this style to posts, articles, and essays unless he says otherwise.
+
+[date not available] - He has also created AI prompts for creative ideation, including a short one-liner, a system-level prompt, and a creative-engineering prompt with safety guardrails. The tone is warm, playful, optimistic, and practical, with clear mechanisms, implementation pathways, obstacles, and mitigations. There is a safety filter to refuse harmful or illegal requests and provide safe alternatives.
+
+[date not available] - Personality and mindset: user is restless, ambitious, impatient, self-aware, opinionated, philosophical, and strongly anti-mediocrity. He wants to be taken seriously as a businessperson. He values authenticity, quality, honesty, and practical action over validation. He often tests whether the assistant remembers context and follows instructions.
+
+[date not available] - Social and emotional patterns: user can feel lonely and guarded, but still wants real connection. He dislikes emotional flattery and wants honest pushback when he is wrong. He may ask existential questions when stuck or frustrated. He gets annoyed quickly when responses sound robotic or ignore his exact request.
+
+[date not available] - Core context: user is in Nigeria, not currently in school, already wrote NECO GCE, and is preparing for JAMB 2027. Left school during SS2 second term. He needs to cover remaining SS2 and SS3 syllabus. Use blunt, practical coaching. Do not call him 'boss'. Use Nigerian Standard English, not pidgin.
+
+[date not available] - Interests and work: user is a vibe coder and designer focused on web design, UI/UX, graphics, logo work, prompt engineering, AI, research, and building apps. Main tools include Lovable.dev, Supabase, Vercel, Netlify, GitHub Spaces, Paystack, Brevo, Gemini, Claude, and related AI/web tools. He prefers fast shipping, mobile-first premium UI, and hates stock-image aesthetics. He does not want to learn HTML/CSS now and prefers to focus on using Lovable.dev and AI tools.
+
+[date not available] - Business/projects: user runs or works on WebSpark and several client/personal projects including music apps, dating apps, newsletter SaaS, school management systems, church and solar websites, parcel tracking, and other Nigerian-market web projects. He prefers contracts, demo-first selling, WhatsApp outreach, and Naira pricing. He is also working on Pope Technologies apps for Emmanuel, a church website, a school management system sales push, and other client projects.
+
+[date not available] - Joshua Omoniyi (Josh, 'The Compound Kid'), age 15, birthday 2011-03-30. Location is Kwakwashe, Fulani Road, Suleja, Niger State, Nigeria. About 40 minutes to Abuja. He is Yoruba. He is a Christian and attends RCCG City of David Area Parish, Kwakwashe, and gives talks/preaches to youth and children.
+
+[date not available] - Career and business: he runs WebSpark and works on WEBKAL, Addroit Tech, and The Young Times Media. WebSpark is his web development agency. He uses WhatsApp outreach, demo sites, and Google search leads to get clients, and he wants contracts because he has been burned by non-paying clients. He prefers Nigerian-market pricing, Paystack over Stripe, Naira pricing, cheap or free tools, and Google Business Profile ranking for 'website developer in Abuja.' He watches series and shorts a lot, and wants practical systems, not hype. His main priorities are: JAMB prep, fixing his inconsistency, building The Compound blog/newsletter, growing his web/design work, and adding physical backup skills like satellite dish installation and later solar installation.
+
+[date not available] - Communication and learning style: user prefers direct, human Nigerian Standard English. He likes short answers first, then context only if needed. He hates AI filler, patronising language, and bullet overload. He learns best through worked examples, simple explanations, visual examples, and 'show me the method' teaching. He has asked for 'Explain like I am in Primary 5' style when needed. He is a visual learner and dislikes file-directory style code explanations. He wants help broken into phone-based tasks vs non-phone tasks because phone work is easier for him.
+
+[date not available] - Joshua Omoniyi (Josh, 'The Compound Kid') is a 15-year-old Christian in Kwakwashe/Suleja, Niger State, Nigeria, preparing for JAMB 2027. He is not currently in school, uses a Redmi 12 phone as his main tool, and has a used laptop he is still setting up. He wants to study Information Systems or Information Technology, not medicine. He is a vibe coder who builds websites and apps with Lovable.dev and AI tools, does not want to learn HTML/CSS now, and wants future responses to avoid suggesting that.
+
+[date not available] - User profile detail: preferred name Joshua Omoniyi; role includes “I’m currently not in school I wrote Neco Gce Last year I have ambitions—to become a medical doctor but am not all that fixed on it—while also wearing many creative and technical hats. I build and design websites (site maps, UI/UX) and create visual identities as a graphics and logo designer. I’m a “vibe coder” and prompt engineer, passionate about AI, technology, and solving new problems using tools like Lovable.dev and . Beyond coding and design, I’m a researcher and budding scientist. I use AI to write scripts.”
+
+[date not available] - User profile detail: the user says their responses and projects often require a balance of clarity, professionalism, and visual polish.
+
+[date not available] - User profile detail: the user identifies as a student with a strong creative and technical background, despite also saying they are not in school in another part of the profile.
+
+[date not available] - User profile detail: the user’s work style includes web design, logo design, web app development, graphics design, research, and science/technology interest.
+
+[date not available] - User profile detail: the user prefers “natural Writing Style” for posts, articles, and essays unless told otherwise.
+
+[date not available] - User profile detail: the user wants help with high-end website work, including site maps, UI/UX, and polished visual presentation.
+
+[date not available] - User profile detail: the user prefers practical, goal-focused help and dislikes empty praise.
+
+
+
+
+MY OLDEST CHAT GPT CHAT THAT I HAVENOT USED FOR A WHILE IT PREDATES THE JAN 27 DATA EXPORT CHAT 
+
+# PERSONAL KNOWLEDGE EXTRACTION & MIGRATION TASK
+
+You are helping me migrate my personal AI context into a structured, durable knowledge system.
+
+I am providing you with exported conversation history from another AI assistant. The files may be split into multiple parts because of upload-size limits.
+
+IMPORTANT:
+- The files may be named things like:
+  - chat.html.part1
+  - chat.html.part2
+  - chat.html.part3
+  - chat.html.part4
+  - conversations-003.json.part1
+  - conversations-003.json.part2
+- These are NOT separate conversations.
+- They are chunks of larger files.
+- Treat sequentially numbered parts as one original file.
+- Reconstruct the logical content across all parts before extracting information.
+- Do not assume that a part boundary represents the beginning or end of a conversation.
+- Do not duplicate information merely because it appears in multiple file parts.
+- If a file appears incomplete, say so rather than inventing missing content.
+
+Your task is NOT to summarise the conversations generally.
+
+Your task is to perform a careful knowledge extraction and create a durable personal knowledge base that another AI could use to understand me accurately over time.
+
+The distinction between:
+1. raw conversation history,
+2. temporary context,
+3. project information,
+4. durable personal knowledge,
+5. procedural instructions,
+6. current status,
+7. outdated information
+
+is extremely important.
+
+Do not turn everything you see into "memory."
+
+---
+
+# CORE RULES
+
+## 1. DO NOT INVENT
+
+Never invent:
+- facts
+- dates
+- people
+- relationships
+- projects
+- achievements
+- preferences
+- personality traits
+- motivations
+- locations
+- skills
+- opinions
+- decisions
+
+If something is unclear, mark it as uncertain.
+
+If something is merely implied, label it as an INFERENCE.
+
+If something is explicitly stated, label it as a FACT.
+
+---
+
+## 2. DISTINGUISH FACTS FROM INFERENCES
+
+For every important item, determine whether it is:
+
+**FACT**
+- Explicitly stated by me.
+
+**INFERENCE**
+- A reasonable interpretation based on repeated behaviour or statements, but not explicitly confirmed by me.
+
+**UNCERTAIN**
+- There is insufficient information to determine whether it is true.
+
+Never present an inference as though I explicitly told you it.
+
+---
+
+## 3. PRESERVE IMPORTANT WORDING
+
+Where my exact wording contains an important instruction, preference, correction, philosophy, decision, or recurring phrase, preserve the wording as closely as practical.
+
+Especially preserve wording for:
+
+- how I want AI assistants to communicate with me
+- things I explicitly told the assistant to stop doing
+- things I explicitly told the assistant to do
+- corrections I made after the assistant misunderstood me
+- recurring working preferences
+- important project requirements
+- important decisions
+- personal philosophies
+- descriptions of myself
+
+Do NOT reproduce enormous amounts of conversation unnecessarily.
+
+Preserve wording when the wording itself carries meaning.
+
+---
+
+# 4. IDENTIFY CONTRADICTIONS
+
+Do not silently resolve contradictions.
+
+If I said:
+
+> "I want to study medicine"
+
+and later said:
+
+> "I don't think I want medicine"
+
+do NOT choose one.
+
+Record the evolution:
+
+- Earlier position
+- Later position
+- Date/context if available
+- Current apparent position
+- Whether the issue remains unresolved
+
+Use labels such as:
+
+**SUPERSEDED**
+**CURRENT**
+**CONTRADICTORY**
+**NEEDS VERIFICATION**
+**OUTDATED**
+
+---
+
+# 5. DATES MATTER
+
+Preserve dates and timestamps whenever available.
+
+Use:
+
+[YYYY-MM-DD]
+
+or:
+
+[YYYY-MM-DD HH:MM]
+
+if the timestamp is available and useful.
+
+If a date cannot be determined:
+
+[unknown]
+
+Do not fabricate dates.
+
+If something was true in the past but is clearly no longer current, mark it:
+
+**OUTDATED**
+
+rather than treating it as current.
+
+---
+
+# 6. DO NOT OVER-MIGRATE
+
+This is extremely important.
+
+Do NOT store things simply because they appeared in a conversation.
+
+A piece of information should become durable knowledge only if it could realistically help another AI understand me, my projects, my decisions, my preferences, or my recurring workflows later.
+
+Do NOT preserve:
+
+- random jokes
+- casual small talk
+- one-off questions
+- temporary moods unless they reveal a durable pattern
+- irrelevant conversation
+- duplicated information
+- random facts I asked about
+- temporary research results
+- information that has clearly become obsolete
+- speculative claims about me
+- sensitive information that should not become permanent context
+
+Think like a professional knowledge-management system, not a transcript summariser.
+
+---
+
+# 7. PROJECT-SPECIFIC INFORMATION
+
+If something belongs to a project, keep it associated with that project.
+
+For example:
+
+PROJECT:
+WebSpark
+
+Then store:
+- purpose
+- services
+- pricing
+- decisions
+- technical details
+- current status
+- clients
+- outstanding work
+- problems
+- important conversations
+
+Do not mix project facts into my general personality unless they genuinely describe me generally.
+
+---
+
+# 8. PEOPLE
+
+When identifying people:
+
+- Identify who they are.
+- Identify my relationship to them.
+- Record relevant history.
+- Record important commitments or discussions.
+- Record project context if applicable.
+- Do not invent their identity.
+- Do not infer a relationship beyond what I explicitly stated.
+
+If a person's identity is uncertain, say so.
+
+---
+
+# 9. COMPANIES / ORGANISATIONS
+
+Record companies, businesses, schools, organisations, communities and other entities only when they are meaningfully connected to my life, work, projects, education, clients or goals.
+
+---
+
+# 10. PERSONAL INFORMATION
+
+Be selective.
+
+The objective is to help another AI understand me, not to create a surveillance dossier.
+
+Prioritise:
+- durable preferences
+- communication style
+- work style
+- career direction
+- education goals
+- long-term projects
+- recurring interests
+- important relationships
+- important decisions
+- recurring challenges
+- recurring workflows
+- ambitions
+- values
+- useful behavioural patterns
+
+Do not unnecessarily preserve highly sensitive personal information.
+
+---
+
+# REQUIRED OUTPUT STRUCTURE
+
+Create the following sections IN THIS EXACT ORDER.
+
+# 1. PEOPLE
+
+For every important person:
+
+## Person: [Name / identifier]
+
+- **Who they are:**
+- **Relationship to me:**
+- **Relevant history:**
+- **Important conversations:**
+- **Commitments / agreements:**
+- **Current status:**
+- **Facts:**
+- **Inferences:**
+- **Needs verification:**
+
+If there are no meaningful details, do not create an entry.
+
+---
+
+# 2. PROJECTS
+
+Create ONE entry per meaningful project.
+
+For each:
+
+## Project: [Project name]
+
+- **Purpose:**
+- **What I am building / doing:**
+- **Origin / history:**
+- **Key decisions:**
+- **Technical details:**
+- **Business model:**
+- **People involved:**
+- **Current status:**
+- **What has been completed:**
+- **What failed / was abandoned:**
+- **Outstanding work:**
+- **Known blockers:**
+- **Important requirements:**
+- **Relevant dates:**
+- **Facts:**
+- **Inferences:**
+- **Outdated information:**
+
+Do not merge unrelated projects merely because they involve similar technology.
+
+---
+
+# 3. COMPANIES / ORGANISATIONS
+
+For each important company, school, organisation, business or community:
+
+## [Name]
+
+- **Type:**
+- **My relationship to it:**
+- **Relevant history:**
+- **Projects connected to it:**
+- **Important people:**
+- **Current status:**
+- **Important facts:**
+- **Outdated information:**
+
+---
+
+# 4. DECISIONS
+
+Record meaningful decisions I made.
+
+For each:
+
+## Decision: [short title]
+
+- **Date/context:**
+- **Decision:**
+- **Alternatives considered:**
+- **Why I chose it:**
+- **What influenced the decision:**
+- **Current status:**
+- **Was the decision later changed?**
+- **If changed, what replaced it and why?**
+
+Include decisions about:
+- education
+- career
+- projects
+- businesses
+- clients
+- technology
+- AI tools
+- workflows
+- personal goals
+- major changes in direction
+
+Do not treat casual thoughts as decisions.
+
+---
+
+# 5. MEETINGS / CONVERSATIONS
+
+Record conversations that contain durable information.
+
+For each:
+
+## Conversation: [Person/topic]
+
+- **Date:**
+- **Participants:**
+- **Context:**
+- **Important points:**
+- **Agreements:**
+- **Commitments:**
+- **Open questions:**
+- **Follow-up actions:**
+- **Current status:**
+
+Do not reproduce entire conversations.
+
+Extract what matters.
+
+---
+
+# 6. DAILY LIFE
+
+Only include recurring or historically useful information.
+
+Possible categories:
+
+### Routines
+### Education
+### Work
+### Hobbies
+### Social life
+### Personal goals
+### Recurring challenges
+### Major experiences
+### Habits
+### Long-term aspirations
+
+For every item:
+
+- **Date / period:**
+- **What happened:**
+- **Why it matters:**
+- **Current status:**
+
+Do not turn every ordinary day into permanent memory.
+
+---
+
+# 7. KNOWLEDGE
+
+Extract reusable knowledge I developed or repeatedly relied upon.
+
+This can include:
+
+- technical concepts
+- business lessons
+- sales lessons
+- AI workflows
+- prompting techniques
+- development workflows
+- design principles
+- research methods
+- education strategies
+- decision-making frameworks
+- lessons learned from failures
+- recurring client-management principles
+
+For each:
+
+## Knowledge: [topic]
+
+- **Lesson:**
+- **Where it came from:**
+- **Why it matters:**
+- **How it can be reused:**
+
+Distinguish knowledge I explicitly stated from knowledge you inferred.
+
+---
+
+# 8. IDENTITY / USER CONTEXT
+
+This section should give another AI a high-quality understanding of who I am.
+
+Include:
+
+## Basic identity
+
+- Name
+- Age when explicitly known
+- Location when explicitly known
+- Education
+- Career situation
+- Relevant background
+
+## Personality
+
+Only include traits supported by repeated evidence.
+
+Separate:
+
+**Explicitly stated traits**
+
+from:
+
+**Reasonable behavioural inferences**
+
+## Communication style
+
+Explain:
+- how I write
+- how I communicate
+- how I prefer answers
+- how direct I want the assistant to be
+- how much detail I like
+- how I react to poor responses
+- what makes me frustrated
+- what makes an answer useful to me
+- how I use humour/emojis
+- whether I prefer Nigerian Standard English, etc., ONLY if explicitly supported
+
+## Interests
+
+Identify recurring interests.
+
+## Goals
+
+Separate:
+
+### Short-term goals
+### Medium-term goals
+### Long-term goals
+
+## Values / worldview
+
+Only include views I explicitly expressed or that are strongly supported by repeated statements.
+
+## Recurring challenges
+
+Only include durable patterns.
+
+## Strengths
+
+Only include strengths supported by evidence.
+
+## Weaknesses / difficulties
+
+Only include them when useful and appropriate.
+
+---
+
+# 9. CURRENT STATUS
+
+Create a concise snapshot of what was still active or unresolved at the end of the available history.
+
+Separate:
+
+### Active projects
+
+### Active goals
+
+### Pending decisions
+
+### Blocked projects
+
+### Waiting on other people
+
+### Things I am currently learning
+
+### Things I recently abandoned
+
+### Things that need follow-up
+
+Every item should have a date/context where possible.
+
+Do NOT assume something is still active merely because it appeared somewhere in the history.
+
+---
+
+# 10. TEMPORARY / DO NOT MIGRATE
+
+This section is important.
+
+List information that appeared in the conversations but should NOT become permanent memory.
+
+Categories may include:
+
+- one-off questions
+- temporary moods
+- obsolete plans
+- abandoned projects
+- outdated information
+- casual conversations
+- jokes
+- speculation
+- information that is too sensitive to retain
+- information that would create unnecessary noise
+- information useful only within the original conversation
+
+Explain briefly why each category should not be migrated.
+
+---
+
+# FINAL AUDIT
+
+After the ten sections, provide:
+
+# A. PERMANENT KNOWLEDGE
+
+List the information that should definitely become durable long-term knowledge.
+
+Prioritise the highest-value information.
+
+---
+
+# B. PROJECT-SPECIFIC KNOWLEDGE
+
+List information that should be retained, but only inside the relevant project context.
+
+---
+
+# C. CONTRADICTIONS / NEEDS VERIFICATION
+
+Create a table:
+
+| Topic | Earlier information | Later information | Conflict | What needs verification |
+|---|---|---|---|---|
+
+Do not resolve conflicts yourself.
+
+---
+
+# D. DO NOT MIGRATE
+
+List information that should deliberately be excluded from permanent memory.
+
+---
+
+# E. INFORMATION QUALITY
+
+For each major category, give a confidence rating:
+
+- HIGH
+- MEDIUM
+- LOW
+
+Explain where the exported history is incomplete or ambiguous.
+
+---
+
+# F. MISSING INFORMATION
+
+Identify important things that another AI would probably need to know about me but which the available conversation history does NOT establish reliably.
+
+Do not guess the answers.
+
+Instead write:
+
+**Unknown — should ask user**
+
+followed by the question that should be asked.
+
+---
+
+# IMPORTANT: DO NOT CONFUSE MEMORY WITH TRANSCRIPT
+
+The final output should NOT simply be a summary of everything I ever said.
+
+It should function as a curated personal knowledge base.
+
+A useful test:
+
+"If this fact disappeared tomorrow, would another AI become meaningfully worse at helping me?"
+
+If NO → probably do not migrate it.
+
+If YES → consider preserving it.
+
+Also remember:
+
+- A project can be important without being part of my identity.
+- A preference can be durable without being a project.
+- A temporary goal is not automatically a permanent goal.
+- A past decision may be superseded.
+- A repeated behaviour is not necessarily a preference.
+- A statement made during an emotional moment should not automatically become a permanent belief.
+- An inference is not a fact.
+- A conversation is not automatically a memory.
+
+---
+
+# FINAL REQUIREMENT
+
+Do a second-pass audit after extracting everything.
+
+During the second pass:
+
+1. Remove duplicates.
+2. Remove low-value information.
+3. Remove temporary information.
+4. Identify contradictions.
+5. Mark outdated information.
+6. Separate facts from inferences.
+7. Check dates.
+8. Check project ownership.
+9. Check whether important instructions/preferences were actually stated by me.
+10. Make sure you have not accidentally converted your own assumptions into facts about me.
+
+The final result should be detailed, but it should be a HIGH-SIGNAL knowledge base rather than a giant transcript.
+
+Accuracy is more important than completeness.
+
+If the uploaded files are incomplete, say so explicitly.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
