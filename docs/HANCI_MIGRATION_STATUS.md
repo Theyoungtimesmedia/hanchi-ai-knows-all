@@ -70,3 +70,15 @@ Migrated to a user-owned Supabase project. Lovable Cloud and Lovable AI are disc
 - This file: status.
 - `docs/HANCI_RESTORE_RUNBOOK.md` — restore procedures.
 - `docs/CHANGELOG_AGENTIC.md` — dated agentic change log.
+
+## 6. Private Brain layer
+
+| Area | Status | Evidence |
+|---|---|---|
+| Brain storage | LIVE | `public.brain_records` is user-owned, RLS-protected, indexed, and deployed through the Supabase migration workflow. |
+| Me profile | IMPLEMENTED | `/brain` seeds current identity, JAMB 2027, Figure, J&E schedule, and flexible planning rules from the supplied handoff. |
+| Historical archive | IMPLEMENTED | `/brain` imports `.txt`, `.md`, `.json`, and `.csv` files into `context_rot` records marked `needs_verification`; source name and provenance are retained. |
+| Default chat context | IMPLEMENTED | Only non-`needs_verification` `high_signal` Brain records are loaded into chat. Historical archive records are excluded from normal replies. |
+| Source files | PRESERVED | Supplied handoff, ChatGPT/Claude exports, architecture notes, and continuation prompts are kept under `docs/brain/sources/`. |
+
+The Brain is intentionally a first safe layer, not a claim that every historical export has been fully fact-extracted or deduplicated. Older material must be searched and verified before it becomes current context.
