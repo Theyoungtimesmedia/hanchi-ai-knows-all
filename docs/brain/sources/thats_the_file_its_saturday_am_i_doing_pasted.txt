@@ -1,0 +1,603 @@
+thats the file its saturday am i doing a workers indution from 9am to 5pm or so right now  we are on break its 12:36pm and i have to laeve by 1:05pm i want to use my credits and my hanci ai project credits have been exhausted for the day but now its 23:33pm we should stop procastinating so right to the prompting now we use the remain hanci AI credits for today plus next motn ehich is soon also its hanchi not hanci now we use it to handle the features and backend but from there we use a free version of claude code or open claw or free version of codex to finish it becus its a big project free lovable credits even with premium cannot cover it okay but lets start u have what u need lest start also i am going to need t a new claude export prompt for my other chats and also is it okay if i pasted our conversations about lovable with the prompt or just make it super detailed remember agentic enginner prompting okay i will need to set up supabase and lovable cloud meaing should i export the current backend remove lovable cloud them upload the zip file and tell lovable to import it into the new supabase backend  # HANCI — Architecture & Lovable-Cloud Exit Plan 
+
+Planning document only. No code, database, connection, or configuration was changed.
+
+\\---
+
+\\## 1. CURRENT ARCHITECTURE
+
+\\\`\\\`\\\`text
+Browser (React 18 + Vite 5 + TS, react-router v6, 19 routes)
+  │
+  ├─ src/integrations/supabase/client.ts   (generated; anon key from VITE\\\_\\\* env)
+  │     └─ PostgREST  → 19 public tables, RLS on all
+  │     └─ GoTrue     → email/password only
+  │     └─ Storage    → NOT USED (no buckets exist)
+  │     └─ Realtime   → NOT USED (no .channel() / .on() subscriptions)
+  │
+  ├─ raw fetch: ${VITE\\\_SUPABASE\\\_URL}/functions/v1/chat   (useChat.ts, manual SSE)
+  └─ supabase.functions.invoke(...)  → 7 other edge functions
+        │
+        ▼
+Lovable Cloud (managed Supabase project xtdedytqjulxctgkhpbe)
+  Deno edge functions: chat, process-media, transcribe-audio, generate-image,
+                       ai-smart-features, text-to-speech, yarngpt-tts, translate-voice
+        │
+        ├─ Lovable AI Gateway  [[https://ai.gateway.lovable.dev/v1/chat/completions\](https://ai.gateway.lovable.dev/v1/chat/completions)](https://ai.gateway.lovable.dev/v1/chat/completions]\(https://ai.gateway.lovable.dev/v1/chat/completions\))
+        │     Bearer LOVABLE\\\_API\\\_KEY  (auto-provisioned, workspace-metered)
+        │     → google/gemini-3-flash-preview | 2.5-pro | 2.5-flash | 2.5-flash-lite
+        │     → openai/gpt-5, gpt-5-mini, gpt-5-nano, gpt-5.2
+        │     → google/gemini-2.5-flash-image
+        │
+        └─ Direct third-party calls (bypass the gateway):
+              Replicate  api.replicate.com/v1/predictions   REPLICATE\\\_API\\\_KEY
+              Firecrawl  api.firecrawl.dev/v1/search, /v2/scrape  FIRECRAWL\\\_API\\\_KEY
+              Giphy      GIPHY\\\_API\\\_KEY
+              YarnGPT    YARNGPT\\\_API\\\_KEY
+              ElevenLabs ELEVENLABS\\\_API\\\_KEY
+              OpenAI     OPENAI\\\_API\\\_KEY (secret present; no confirmed live call path)
+\\\`\\\`\\\`
+
+Two independent exits are therefore required: \\\*\\\*backend exit\\\*\\\* (Lovable Cloud → managed Supabase) and \\\*\\\*AI exit\\\*\\\* (Lovable AI Gateway → Hanci model router). They are separable and should not be attempted together.
+
+\\---
+
+\\## 2. LOVABLE CLOUD DEPENDENCIES
+
+\\### 2.1 \\\`.env\\\` / build-time environment
+
+\\\*\\\*FILE:\\\*\\\* \\\`.env\\\`, \\\`src/vite-env.d.ts\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* \\\`VITE\\\_SUPABASE\\\_URL\\\`, \\\`VITE\\\_SUPABASE\\\_PUBLISHABLE\\\_KEY\\\`, \\\`VITE\\\_SUPABASE\\\_PROJECT\\\_ID\\\`, plus non-prefixed \\\`SUPABASE\\\_URL\\\` / \\\`SUPABASE\\\_PUBLISHABLE\\\_KEY\\\`. This file is Lovable-generated and rewritten by the platform.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Points the browser client at the Lovable-managed project.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Replace with the new project's URL + anon key, sourced from a \\\`.env\\\` the platform no longer owns (or a build-time secret in the new host). The duplicate non-prefixed keys should be dropped.
+\\\*\\\*RISK:\\\*\\\* HIGH — while the project still lives in Lovable, edits here are overwritten. Env swap must be the \\\*last\\\* backend step, or done after the repo leaves Lovable.
+
+\\### 2.2 Generated Supabase client
+
+\\\*\\\*FILE:\\\*\\\* \\\`src/integrations/supabase/client.ts\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* Auto-generated, marked do-not-edit; hardcodes \\\`localStorage\\\` auth storage.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Single browser client used by \\\~30 call sites.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Becomes a hand-owned file after the exit. Signature stays identical, so no call site changes.
+\\\*\\\*RISK:\\\*\\\* LOW after exit, HIGH before (regeneration reverts edits).
+
+\\### 2.3 Generated database types
+
+\\\*\\\*FILE:\\\*\\\* \\\`src/integrations/supabase/types.ts\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* Regenerated by Lovable after each approved migration.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Type safety for every \\\`.from()\\\` call.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Switch to \\\`supabase gen types typescript --project-id \\\<new>\\\` in a script; commit the output.
+\\\*\\\*RISK:\\\*\\\* MEDIUM — a stale types file produces silent \\\`any\\\` drift and compile errors across most pages.
+
+\\### 2.4 \\\`LOVABLE\\\_API\\\_KEY\\\` in edge functions
+
+\\\*\\\*FILE:\\\*\\\* \\\`supabase/functions/chat/index.ts\\\`, \\\`process-media\\\`, \\\`transcribe-audio\\\`, \\\`generate-image\\\`, \\\`ai-smart-features\\\`, \\\`text-to-speech\\\`, \\\`translate-voice\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* \\\`Deno.env.get("LOVABLE\\\_API\\\_KEY")\\\` + hardcoded \\\`[[https://ai.gateway.lovable.dev/v1/chat/completions\](https://ai.gateway.lovable.dev/v1/chat/completions)\\](https://ai.gateway.lovable.dev/v1/chat/completions]\(https://ai.gateway.lovable.dev/v1/chat/completions\)\\)\`, with Lovable-specific model ids (\\\`google/gemini-3-flash-preview\\\`, \\\`openai/gpt-5.2\\\`, \\\`google/gemini-2.5-flash-image\\\`).
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* All first-party AI: chat, transcription, OCR, summarization, tagging, image fallback.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Route every call through the Hanci model router (section 4). The key itself does not migrate — it is workspace-scoped and stops being provisioned once outside Lovable.
+\\\*\\\*RISK:\\\*\\\* HIGHEST — this is the app's core loop. Nine call sites, three different response shapes (SSE stream, JSON completion, multimodal image response).
+
+\\### 2.5 Lovable-managed secrets store
+
+\\\*\\\*FILE:\\\*\\\* platform-managed (surfaced as \\\`Deno.env\\\` in functions)
+\\\*\\\*DEPENDENCY:\\\*\\\* \\\`LOVABLE\\\_API\\\_KEY\\\`, \\\`SUPABASE\\\_SERVICE\\\_ROLE\\\_KEY\\\`, \\\`SUPABASE\\\_URL\\\`, \\\`SUPABASE\\\_ANON\\\_KEY\\\`, \\\`SUPABASE\\\_DB\\\_URL\\\` are injected automatically; \\\`FIRECRAWL\\\_API\\\_KEY\\\` is connector-managed and only editable through Lovable Connectors.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Server-side credentials.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* On managed Supabase the four \\\`SUPABASE\\\_\\\*\\\` values are still auto-injected — no action. \\\`FIRECRAWL\\\_API\\\_KEY\\\` must be re-obtained directly from Firecrawl because the connector-managed value is not exportable. \\\`LOVABLE\\\_API\\\_KEY\\\` is replaced by per-provider keys.
+\\\*\\\*RISK:\\\*\\\* MEDIUM — Firecrawl silently degrades (web search returns nothing, link transcription throws) rather than failing loudly if the key is absent.
+
+\\### 2.6 \\\`supabase/config.toml\\\`
+
+\\\*\\\*FILE:\\\*\\\* \\\`supabase/config.toml\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* Lovable-generated, pins \\\`project\\\_id\\\` and sets \\\`verify\\\_jwt = false\\\` on six functions.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Function deploy config.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Rewrite \\\`project\\\_id\\\`; flip \\\`verify\\\_jwt\\\` per section 12; add \\\`[api]\\\`/\\\`[auth]\\\` blocks that Lovable currently manages implicitly.
+\\\*\\\*RISK:\\\*\\\* MEDIUM — mis-set \\\`verify\\\_jwt\\\` either breaks every AI call or leaves the endpoints open.
+
+\\### 2.7 Automatic edge-function deployment
+
+\\\*\\\*FILE:\\\*\\\* all of \\\`supabase/functions/\\\*\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* Lovable deploys on write; there is no CI, no \\\`supabase functions deploy\\\` step, no tests.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Zero-friction deploys.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Add an explicit deploy path (Supabase CLI in GitHub Actions, or manual \\\`supabase functions deploy \\\<name>\\\`), plus a \\\`supabase link\\\`ed local repo.
+\\\*\\\*RISK:\\\*\\\* MEDIUM — the first post-exit change silently does nothing until a deploy pipeline exists.
+
+\\### 2.8 Lovable-specific authentication behaviour
+
+\\\*\\\*FILE:\\\*\\\* \\\`src/integrations/supabase/previewAuthStorage.ts\\\` (platform file), \\\`src/pages/Auth.tsx\\\`
+\\\*\\\*DEPENDENCY:\\\*\\\* The Lovable preview injects a session into localStorage for in-editor testing. Auth itself is plain GoTrue — no Lovable-specific auth API is used.
+\\\*\\\*CURRENT PURPOSE:\\\*\\\* Preview convenience only.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Delete the preview storage shim after exit; nothing else.
+\\\*\\\*RISK:\\\*\\\* LOW.
+
+\\### 2.9 Lovable-specific storage
+
+\\\*\\\*DEPENDENCY:\\\*\\\* None. There are zero buckets and zero \\\`storage.from()\\\` calls.
+\\\*\\\*MIGRATION REQUIRED:\\\*\\\* Nothing to migrate — storage is greenfield, which is fortunate.
+\\\*\\\*RISK:\\\*\\\* NONE for migration; HIGH as a product gap.
+
+\\### 2.10 Non-Lovable but co-migrating dependencies
+
+Replicate, Giphy, YarnGPT, ElevenLabs, OpenAI keys are ordinary secrets the user owns. They are re-entered into the new project's secret store verbatim. \\\*\\\*RISK: LOW.\\\*\\\*
+
+\\---
+
+\\## 3. SUPABASE MIGRATION (Lovable Cloud → managed Supabase)
+
+\\### AUTOMATIC / MIGRATION-FRIENDLY
+
+\\| Item | Method | Notes |
+\\|---|---|---|
+\\| Schema (19 tables, types, constraints) | \\\`pg\\\_dump --schema-only\\\` → \\\`psql\\\` into the new project | \\\`pgvector\\\` must be enabled first: \\\`create extension vector\\\`. |
+\\| RLS policies, grants | Included in the schema dump | Verify the \\\`public\\\`-role policies survive; see 3.1. |
+\\| DB functions | Included | \\\`is\\\_admin\\\`, \\\`handle\\\_updated\\\_at\\\`, \\\`match\\\_nigerian\\\_knowledge\\\` ×2, tsvector fns. |
+\\| Triggers | Included | 6 triggers across 4 tables. |
+\\| Indexes | Included | Sparse today; add the new ones during migration, not after. |
+\\| Table data (\\\~360 rows total) | \\\`pg\\\_dump --data-only --column-inserts\\\` | Trivial volume. Restore \\\`auth.users\\\` \\\*before\\\* any table with a user FK. |
+\\| Realtime | N/A | Not used anywhere. |
+\\| Storage | N/A | No buckets. |
+\\| Edge function source | \\\`git\\\` — the code is already in the repo | Only redeploy is needed. |
+\\| \\\`SUPABASE\\\_URL\\\` / \\\`ANON\\\_KEY\\\` / \\\`SERVICE\\\_ROLE\\\_KEY\\\` / \\\`DB\\\_URL\\\` in functions | Auto-injected by managed Supabase too | No code change. |
+
+\\### MANUAL MIGRATION REQUIRED
+
+\\| Item | Why manual | Action |
+\\|---|---|---|
+\\| \\\*\\\*\\\`auth.users\\\`\\\*\\\* | GoTrue schema is not covered by a normal public dump; password hashes are bcrypt in \\\`auth.users.encrypted\\\_password\\\`. | Either (a) \\\`pg\\\_dump -n auth\\\` from the source DB and restore (preserves passwords and UUIDs — \\\*\\\*UUIDs must be preserved\\\*\\\*, every user-scoped table FKs to them), or (b) re-invite users. With \\\~2 real users, (a) is still preferred to avoid orphaning 96 conversations. |
+\\| Auth settings | Not in the DB dump | Re-set: email confirmation policy, redirect/site URLs, JWT expiry, rate limits. |
+\\| Auth providers | None configured today | Google OAuth is a \\\*new\\\* setup, not a migration. |
+\\| Email templates | Dashboard-held | Re-author or accept defaults. |
+\\| Secrets | Never exported | Re-enter: \\\`REPLICATE\\\_API\\\_KEY\\\`, \\\`GIPHY\\\_API\\\_KEY\\\`, \\\`YARNGPT\\\_API\\\_KEY\\\`, \\\`ELEVENLABS\\\_API\\\_KEY\\\`, \\\`OPENAI\\\_API\\\_KEY\\\`, and a \\\*\\\*freshly issued\\\*\\\* \\\`FIRECRAWL\\\_API\\\_KEY\\\`. |
+\\| \\\`LOVABLE\\\_API\\\_KEY\\\` | Not portable | Replaced by provider keys (section 4). |
+\\| Edge function deploys | No CLI pipeline exists | \\\`supabase link\\\` + \\\`supabase functions deploy\\\` (or CI). |
+\\| \\\`supabase/config.toml\\\` | Contains the old \\\`project\\\_id\\\` | Rewrite. |
+\\| Frontend env vars | Lovable-owned file | New URL + anon key at the new host. |
+\\| Storage buckets | Don't exist | Create fresh (section 6). |
+\\| Cron / pg\\\_cron | Not used | Add later for automation. |
+
+\\### 3.1 Migration-time schema corrections (do these in the dump, not after)
+
+\\- Restate policies that target the \\\`public\\\` role as \\\`TO authenticated\\\` where the intent is authenticated-only (conversations, messages, documents, generated\\\_images, message\\\_reactions, shared\\\_conversations, uploaded\\\_documents, user\\\_memory).
+\\- Add \\\`messages(conversation\\\_id, created\\\_at)\\\`, \\\`conversations(user\\\_id, updated\\\_at desc)\\\`, \\\`user\\\_memory(user\\\_id, memory\\\_key)\\\` indexes.
+\\- Decide the \\\`documents\\\` vs \\\`uploaded\\\_documents\\\` merge (section 5) before restoring — both are empty, so this is free now and expensive later.
+
+\\---
+
+\\## 4. AI PROVIDER MIGRATION — the Hanci model router
+
+\\### 4.1 Target flow
+
+\\\`\\\`\\\`text
+caller (edge fn / skill / agent)
+  → ModelRequest {capability, messages|input, modelHint?, projectId, userId,
+                  stream?, schema?, tools?, budget?}
+  → Router
+      · resolve model: explicit hint → skill preference → user setting → capability default
+      · quota check (user + provider), see §13
+      · select adapter
+  → Adapter (per provider: openai | anthropic | google | replicate | elevenlabs | local)
+      · translate ModelRequest → provider-native body
+      · call provider
+      · translate provider response → NormalizedResponse
+  → NormalizedResponse {text?, parts[], toolCalls[], structured?, media[],
+                        usage{inputTokens,outputTokens,cost}, model, provider,
+                        finishReason, raw?}
+  → caller (SSE re-encode for streaming)
+\\\`\\\`\\\`
+
+Adapters are the only place provider SDKs or wire formats may appear. The router never branches on provider name; it branches on \\\*\\\*declared capability\\\*\\\*.
+
+\\### 4.2 Capability registry
+
+Each \\\`(provider, model)\\\` entry declares what it can do, so the router can refuse or downgrade rather than fail at request time:
+
+\\\`\\\`\\\`
+capabilities: text\\\_in, image\\\_in, audio\\\_in, video\\\_in, document\\\_in,
+              text\\\_out, image\\\_out, audio\\\_out,
+              streaming, tool\\\_calls, parallel\\\_tool\\\_calls,
+              structured\\\_output {none|json\\\_mode|strict\\\_schema},
+              reasoning, context\\\_window, max\\\_output\\\_tokens,
+              cost\\\_per\\\_1k\\\_in, cost\\\_per\\\_1k\\\_out, free\\\_tier?
+\\\`\\\`\\\`
+
+\\### 4.3 Documented provider differences (as known today; verify against live docs before implementing)
+
+\\| Concern | OpenAI | Anthropic | Google Gemini | Replicate | ElevenLabs / YarnGPT |
+\\|---|---|---|---|---|---|
+\\| Endpoint style | Responses API for newer models; chat/completions for older | Messages API (\\\`/v1/messages\\\`), own SSE event names | Native \\\`generateContent\\\` \\\*\\\*and\\\*\\\* an OpenAI-compatible shim | Async predict + poll | REST, binary audio out |
+\\| Streaming | Yes | Yes, different event taxonomy | Yes | No — poll for completion | Yes (chunked audio) |
+\\| Structured output | Strict \\\`json\\\_schema\\\` (schema must be all-required, no format/bounds) | Tool-call-as-schema idiom; no native strict mode | \\\`responseSchema\\\` / \\\`responseMimeType\\\`; not identical to OpenAI strict | N/A | N/A |
+\\| Tool calls | \\\`tools\\\` + \\\`tool\\\_choice\\\`, parallel calls | \\\`tools\\\` with \\\`input\\\_schema\\\`, \\\`tool\\\_use\\\`/\\\`tool\\\_result\\\` blocks | \\\`functionDeclarations\\\`, differing arg encoding | N/A | N/A |
+\\| Image input | URL or base64 | base64 blocks; \\\*\\\*no URL fetch\\\*\\\* | URL or inline base64 | N/A | N/A |
+\\| Audio input | Whisper/dedicated STT endpoints | \\\*\\\*No native audio input\\\*\\\* | Native multimodal audio (this is what Hanci uses today) | Whisper models available | STT not applicable |
+\\| Video input | Not supported | Not supported | Native video understanding (limited duration) | Model-dependent | N/A |
+\\| Documents | PDF inline | PDF inline | PDF inline; non-PDF must be pre-extracted | N/A | N/A |
+\\| Image generation | Images API, multipart edits | \\\*\\\*None\\\*\\\* | Image-capable Gemini models | Wide model catalogue (SDXL etc.) | N/A |
+\\| Token param name | \\\`max\\\_completion\\\_tokens\\\` on newer models | \\\`max\\\_tokens\\\` (required) | \\\`maxOutputTokens\\\` | model-specific | N/A |
+\\| Temperature | Rejected on some newer models | Accepted | Accepted | model-specific | N/A |
+\\| Free tier | No | No | Yes, rate-limited | No (credit) | Limited |
+
+\\\*\\\*Consequences for Hanci:\\\*\\\* Anthropic cannot serve the audio/video transcription paths — those must stay on Gemini (or move to a dedicated STT provider). Anthropic cannot serve image generation — that stays Replicate/Gemini. So the router must support \\\*per-capability\\\* provider routing, not a single global "provider" setting.
+
+\\### 4.4 Migration mechanics
+
+1\\. Introduce \\\`supabase/functions/\\\_shared/model-router.ts\\\` with a single Lovable adapter that reproduces today's behaviour byte-for-byte.
+2\\. Convert call sites to the router one at a time, starting with the low-risk ones (\\\`ai-smart-features\\\`), ending with \\\`chat\\\`.
+3\\. Add OpenAI/Anthropic/Google adapters behind the same interface.
+4\\. Only then remove the Lovable adapter.
+
+This sequencing means the AI exit never requires a big-bang cutover, and it can happen either before or after the Supabase exit.
+
+\\---
+
+\\## 5. DATA MODEL FOR HANCI
+
+Legend: \\\*\\\*KEEP\\\*\\\* as-is · \\\*\\\*EVOLVE\\\*\\\* (add columns) · \\\*\\\*MERGE\\\*\\\* · \\\*\\\*NEW\\\*\\\* · \\\*\\\*RETIRE\\\*\\\*
+
+\\### Core
+
+\\| Entity | Source | Notes |
+\\|---|---|---|
+\\| \\\`auth.users\\\` | KEEP | Identity stays GoTrue. |
+\\| \\\`profiles\\\` | NEW | Display name, avatar, locale. Currently nowhere; Profile.tsx reads only the session. |
+\\| \\\`user\\\_settings\\\` | NEW (absorbs \\\`user\\\_preferences\\\` + the settings keys currently squatting in \\\`user\\\_memory\\\`) | Model routing prefs, default project, tone, custom instructions, UI prefs. Retires the \\\`user\\\_memory\\\` key/value overload. |
+\\| \\\`admin\\\_users\\\` | KEEP | Works; \\\`is\\\_admin()\\\` is correct. |
+
+\\### Workspace
+
+\\| Entity | Source | Notes |
+\\|---|---|---|
+\\| \\\`projects\\\` | NEW (migrate from \\\`localStorage: hanchi\\\_projects\\\`) | name, description, icon/colour, archived, system\\\_prompt, default\\\_model. |
+\\| \\\`conversations\\\` | EVOLVE | add \\\`project\\\_id nullable\\\`, \\\`summary\\\`, \\\`tags text[]\\\`, \\\`archived\\\`. Nullable project\\\_id is what keeps a chat usable without a project (section 7). |
+\\| \\\`messages\\\` | EVOLVE | add \\\`parent\\\_id\\\` (threading), \\\`model\\\`, \\\`provider\\\`, \\\`token\\\_in\\\`, \\\`token\\\_out\\\`, \\\`tool\\\_call\\\_id\\\`. \\\*\\\*Keep \\\`metadata\\\` jsonb\\\*\\\* but stop using it as schema — promote sources into \\\`message\\\_sources\\\`. |
+\\| \\\`message\\\_sources\\\` | KEEP, start actually writing to it | Ends the duplicate-truth problem with \\\`messages.metadata.sources\\\`. |
+\\| \\\`message\\\_reactions\\\` | KEEP | Low cost. |
+\\| \\\`shared\\\_conversations\\\` | KEEP | Verify end-to-end. |
+
+\\### Files & knowledge
+
+\\| Entity | Source | Notes |
+\\|---|---|---|
+\\| \\\`documents\\\` | \\\*\\\*MERGE\\\*\\\* \\\`documents\\\` + \\\`uploaded\\\_documents\\\` into one table | Both empty — merge now. Columns: user\\\_id, project\\\_id, conversation\\\_id, storage\\\_path, bucket, file\\\_name, mime\\\_type, size\\\_bytes, checksum, status (\\\`uploaded｜extracting｜chunking｜embedded｜failed\\\`), extracted\\\_text, summary, page\\\_count, duration\\\_s, metadata. |
+\\| \\\`document\\\_chunks\\\` | NEW | document\\\_id, ordinal, content, token\\\_count, page/timestamp span, \\\`embedding vector(N)\\\`, embedding\\\_model. HNSW index. |
+\\| \\\`knowledge\\\_items\\\` | NEW | The durable-memory table (section 8). |
+\\| \\\`entities\\\` | NEW | Single polymorphic table for people/companies/etc: \\\`kind\\\` enum (\\\`person｜company｜place｜product\\\`), name, aliases[], project\\\_id, attributes jsonb. One table beats three near-identical ones. |
+\\| \\\`entity\\\_links\\\` | NEW | Joins an entity to a document/message/knowledge\\\_item/project with a role. |
+\\| \\\`events\\\` | NEW | Event memory (section 8): title, event\\\_date, captured\\\_at, kind (\\\`decision｜meeting｜milestone｜note\\\`), status (\\\`current｜superseded\\\`), supersedes\\\_id, confidence, source\\\_ref. Decisions are events with \\\`kind='decision'\\\` — no separate table. |
+\\| \\\`generated\\\_images\\\` | EVOLVE | add \\\`project\\\_id\\\`, \\\`storage\\\_path\\\`; stop storing base64 in the row. |
+\\| \\\`nigerian\\\_knowledge\\\` | KEEP (retire later) | Domain-specific seed corpus; fold into \\\`knowledge\\\_items\\\` once retrieval is unified. |
+\\| \\\`collections\\\` / \\\`collection\\\_items\\\` | KEEP | Manual curation layer over the above. |
+
+\\### Execution
+
+\\| Entity | Source | Notes |
+\\|---|---|---|
+\\| \\\`skills\\\` | NEW (migrate from \\\`localStorage: hanchi\\\_custom\\\_gpts\\\`) | Section 9. |
+\\| \\\`skill\\\_runs\\\` | NEW | skill\\\_id, project\\\_id, input, output, status, model, cost, started/finished. |
+\\| \\\`connectors\\\` | NEW (replaces the hardcoded \\\`APPS[]\\\` array) | Section 10. |
+\\| \\\`connector\\\_credentials\\\` | NEW | Token \\\*reference\\\* only — never raw tokens in a normal table; store in Vault or an encrypted column with restricted grants. |
+\\| \\\`agent\\\_runs\\\` | NEW | Section 11. |
+\\| \\\`tool\\\_calls\\\` | NEW | Shared by skill\\\_runs and agent\\\_runs: run\\\_id, run\\\_type, tool, input, output, status, duration, approved\\\_by. |
+\\| \\\`usage\\\_events\\\` | NEW | user\\\_id, provider, model, capability, tokens in/out, cost, request\\\_id, created\\\_at. |
+\\| \\\`quotas\\\` | NEW | scope (user/global), provider, window, limit, consumed, resets\\\_at. |
+\\| \\\`audit\\\_events\\\` | NEW | actor, action, target\\\_type, target\\\_id, metadata. Admin actions, connector auth, deletions, approvals. |
+
+\\### Retire
+
+\\- \\\`localStorage: hanchi\\\_projects\\\`, \\\`hanchi\\\_custom\\\_gpts\\\`, \\\`hanchi\\\_recent\\\_prompts\\\` (recents can stay local).
+\\- \\\`src/utils/pluginSystem.ts\\\` + \\\`src/plugins/\\\*\\\` — superseded by connectors/skills.
+\\- The hardcoded \\\`APPS[]\\\` in \\\`src/pages/Apps.tsx\\\`.
+\\- \\\`uploaded\\\_documents\\\` (merged).
+\\- \\\`match\\\_nigerian\\\_knowledge(vector,…)\\\` if unified retrieval replaces it.
+
+\\\*\\\*Table count:\\\*\\\* 19 today → \\\~26 after (11 new, 2 merged into 1, 1 eventually retired). Every new table earns its place; people/companies collapse into \\\`entities\\\`, decisions collapse into \\\`events\\\`.
+
+\\---
+
+\\## 6. FILE / KNOWLEDGE ARCHITECTURE
+
+\\\`\\\`\\\`text
+client picks file
+  → validate (type, size, per-user storage quota)
+  → upload to Storage bucket \\\`documents\\\`  path: {user\\\_id}/{project\\\_id|\\\_}/{doc\\\_id}/{filename}
+  → insert documents row (status=uploaded)
+  → invoke ingest-document (async, service-role)
+       ├─ extract   → text + page/timestamp map      (status=extracting)
+       ├─ chunk     → \\\~800 tokens, \\\~15% overlap,     (status=chunking)
+       │              respecting page/heading/segment boundaries
+       ├─ embed     → batch → document\\\_chunks.embedding (status=embedded)
+       └─ enrich    → optional: entity + event extraction → knowledge\\\_items/events
+  → client polls or subscribes to the documents row status
+\\\`\\\`\\\`
+
+\\\*\\\*Buckets (all private, RLS on \\\`storage.objects\\\` scoped to \\\`owner\\\`/path prefix):\\\*\\\*
+\\- \\\`documents\\\` — original uploads, retained permanently and always re-downloadable via signed URL.
+\\- \\\`generated\\\` — generated images/audio.
+\\- \\\`avatars\\\` — public-read is acceptable here only.
+
+\\\*\\\*Per-type extraction:\\\*\\\*
+
+\\| Type | Extraction | Preserved locators |
+\\|---|---|---|
+\\| PDF | text layer; OCR fallback via a vision model for scanned pages | page number |
+\\| DOCX | client- or server-side docx parser → text (vision models will not accept raw docx) | paragraph index |
+\\| TXT / Markdown | direct; keep heading hierarchy | heading path |
+\\| Images | vision model caption + OCR | region (optional) |
+\\| Audio / Video | STT (Gemini multimodal today) → timed segments; store duration + segment timestamps | timestamp span |
+
+\\\*\\\*Every chunk and knowledge item carries provenance:\\\*\\\* \\\`source\\\_document\\\_id\\\`, \\\`source\\\_locator\\\` (page/timestamp/heading), \\\`source\\\_date\\\` (document date, distinct from \\\`captured\\\_at\\\`), \\\`project\\\_id\\\`, \\\`entity\\\_ids[]\\\`, \\\`confidence\\\` (0–1, extraction certainty), \\\`status\\\` (\\\`current｜superseded｜rejected\\\`). Nothing enters retrieval without provenance — that rule is what makes the workspace trustworthy.
+
+\\\*\\\*Retrieval:\\\*\\\* one RPC, \\\`search\\\_knowledge(query\\\_embedding, query\\\_text, project\\\_id, limit, filters)\\\`, doing hybrid vector + tsvector with reciprocal-rank fusion and project scoping. Chat grounding, global search, and skills all call this one function. This replaces both the current keyword-only \\\`match\\\_nigerian\\\_knowledge\\\` and the in-memory title filter in \\\`QuickSearchModal\\\`.
+
+\\---
+
+\\## 7. PROJECT MODEL
+
+\\\`\\\`\\\`text
+project
+ ├─ conversations   (conversations.project\\\_id, NULLABLE)
+ ├─ documents       (documents.project\\\_id)
+ ├─ entities        (people, companies — project-scoped or global)
+ ├─ events          (decisions, meetings, milestones)
+ ├─ tasks           (a lightweight table, or events with kind='task' initially)
+ ├─ knowledge\\\_items (durable memory scoped to the project)
+ └─ settings        (system\\\_prompt, default\\\_model, retrieval on/off)
+\\\`\\\`\\\`
+
+\\\*\\\*Context scoping rule — three levels, chosen per conversation:\\\*\\\*
+
+1\\. \\\`none\\\` — no retrieval, no memory. A scratch chat.
+2\\. \\\`project\\\` (default when \\\`project\\\_id\\\` is set) — retrieval limited to that project's documents, knowledge, entities, and events; the project's system prompt applies.
+3\\. \\\`global\\\` — explicit opt-in; searches across all projects.
+
+Because \\\`conversations.project\\\_id\\\` is nullable and the scope is a per-conversation column rather than a global user setting, attaching a chat to a project never forces every other chat to inherit that context. Moving a conversation into a project is a single \\\`UPDATE\\\` and re-scopes retrieval from the next message onward — prior messages keep their recorded provenance.
+
+\\---
+
+\\## 8. MEMORY MODEL
+
+Two tables, deliberately not one.
+
+\\### DURABLE MEMORY — \\\`knowledge\\\_items\\\`
+
+Stable facts and preferences: "prefers concise answers", "works in Lagos", "the stack is React + Supabase".
+
+\\\`\\\`\\\`
+id, user\\\_id, project\\\_id (nullable = global), key, value, category,
+confidence, status (current|superseded|rejected),
+supersedes\\\_id, source\\\_type (chat|document|manual|extraction),
+source\\\_ref (message\\\_id | document\\\_id + locator),
+valid\\\_from, captured\\\_at, updated\\\_at
+\\\`\\\`\\\`
+
+Writes are upserts on \\\`(user\\\_id, project\\\_id, key)\\\`; the previous row is set \\\`status='superseded'\\\` with \\\`supersedes\\\_id\\\` pointing forward, never deleted. Retrieval reads \\\`status='current'\\\` only.
+
+\\### EVENT MEMORY — \\\`events\\\`
+
+Things that happened at a point in time: decisions, meetings, milestones.
+
+\\\`\\\`\\\`
+id, user\\\_id, project\\\_id, kind, title, body,
+event\\\_date        -- when it happened
+captured\\\_at       -- when Hanci learned it
+status (current|superseded), supersedes\\\_id,
+confidence, source\\\_type, source\\\_ref, entity\\\_ids[]
+\\\`\\\`\\\`
+
+\\\*\\\*Distinguishing an old decision from the current one\\\*\\\* relies on three fields together: \\\`event\\\_date\\\` orders reality, \\\`captured\\\_at\\\` orders knowledge (a decision learned late is still an old decision), and \\\`supersedes\\\_id\\\` records the explicit chain. The current decision on a topic is the \\\`status='current'\\\` row with the latest \\\`event\\\_date\\\`; the chain via \\\`supersedes\\\_id\\\` gives the full history on request. Conflicting extractions land as separate rows with their own confidence rather than overwriting — the assistant surfaces the conflict instead of silently picking one.
+
+Migration: today's \\\`user\\\_memory\\\` splits — the true facts become \\\`knowledge\\\_items\\\`, and the settings-shaped keys (\\\`custom\\\_instructions\\\`, \\\`tone\\\`, \\\`nickname\\\`, \\\`occupation\\\`, \\\`about\\\_you\\\`, \\\`ref\\\_\\\*\\\`) move to \\\`user\\\_settings\\\`.
+
+\\---
+
+\\## 9. SKILLS
+
+A skill is a stored, versioned, executable workflow definition.
+
+\\\`\\\`\\\`
+skills
+  id, user\\\_id, project\\\_id (nullable = available everywhere),
+  name, purpose, instructions (system prompt / plan template),
+  input\\\_schema  jsonb (JSON Schema),
+  output\\\_schema jsonb (JSON Schema, drives structured output),
+  allowed\\\_tools text[]        -- connector tool ids; empty = no tool access
+  preferred\\\_models jsonb      -- {primary, fallback[]} per capability
+  requires\\\_approval bool      -- pause before any write-scope tool call
+  max\\\_steps int, max\\\_cost\\\_credits numeric,
+  enabled bool, version int, created\\\_at, updated\\\_at
+
+skill\\\_runs
+  id, skill\\\_id, user\\\_id, project\\\_id, conversation\\\_id (nullable),
+  input jsonb, output jsonb, status (queued|running|awaiting\\\_approval|succeeded|failed|cancelled),
+  error, model\\\_used, tokens\\\_in, tokens\\\_out, cost,
+  started\\\_at, finished\\\_at
+  → tool\\\_calls (shared table, run\\\_type='skill')
+\\\`\\\`\\\`
+
+\\\*\\\*Execution engine (the only part to build):\\\*\\\*
+\\\`validate input against input\\\_schema\\\` → \\\`resolve model via router\\\` → \\\`assemble context (project scope + retrieval)\\\` → \\\`loop: model call → tool call → observation\\\` (bounded by \\\`max\\\_steps\\\`, pausing at \\\`requires\\\_approval\\\` for write tools) → \\\`validate output against output\\\_schema\\\` → \\\`persist skill\\\_run + tool\\\_calls + usage\\\_events\\\`.
+
+The five named skills (WhatsApp Analyst, Daily Review, YouTube Script, Scholarship Assistant, Job Application) are then \\\*\\\*data rows\\\*\\\*, not code. That is the test of whether the engine is right: adding a skill must require no deployment.
+
+\\---
+
+\\## 10. CONNECTORS
+
+\\\`\\\`\\\`
+connectors                      -- catalogue (one row per provider integration)
+  id, provider (notion|github|firecrawl|mcp|...),
+  display\\\_name, auth\\\_method (oauth2|api\\\_key|pat|none),
+  scopes\\\_available text[], tools jsonb, docs\\\_url
+
+connector\\\_connections           -- one per user per connector
+  id, user\\\_id, connector\\\_id,
+  status (disconnected|connected|expired|revoked),
+  scopes\\\_granted text[],
+  credential\\\_ref text,          -- pointer into Vault / encrypted store; NEVER the token itself
+  account\\\_label,                -- e.g. the workspace or repo owner name
+  permissions (read|write|read\\\_write),
+  enabled bool, connected\\\_at, expires\\\_at, last\\\_used\\\_at
+
+connector\\\_tools                 -- resolved tool surface
+  id, connector\\\_id, name, description,
+  input\\\_schema jsonb, side\\\_effect (read|write),
+  requires\\\_approval bool, enabled bool
+\\\`\\\`\\\`
+
+\\\*\\\*Per provider, as known — exact OAuth endpoints, scope strings, and flows must be read from each provider's current documentation at implementation time; none are invented here:\\\*\\\*
+
+\\- \\\*\\\*Notion\\\*\\\* — OAuth-based integration authorization; access is granted per selected page/database, so the connection must record \\\*which\\\* resources were shared, not just "connected". Tools: search, read page/database, query database, append/create (write).
+\\- \\\*\\\*GitHub\\\*\\\* — supports both a personal access token and a GitHub App / OAuth app flow; the App path is the one that gives per-repository scoping. Tools: list repos, read file, search code, list/create issues (write), create PR (write).
+\\- \\\*\\\*Firecrawl\\\*\\\* — plain API key, no OAuth. Tools: search, scrape, crawl. Already used server-side today, so this is a formalization rather than a new integration.
+\\- \\\*\\\*MCP servers\\\*\\\* — not a fixed provider: a connection is a server endpoint plus a transport and an auth mode, and the tool list is \\\*\\\*discovered at runtime\\\*\\\* from the server rather than stored statically. \\\`connector\\\_tools\\\` rows are therefore a cache with a refresh timestamp for MCP connections.
+
+\\\*\\\*Invariants:\\\*\\\* tokens live only in Vault/encrypted storage referenced by \\\`credential\\\_ref\\\`; every tool declares \\\`side\\\_effect\\\`; every write-scope tool defaults to \\\`requires\\\_approval = true\\\`; the skill/agent runtime may only call tools present in the caller's \\\`allowed\\\_tools\\\` ∩ the user's enabled connector tools; every invocation writes a \\\`tool\\\_calls\\\` row and an \\\`audit\\\_events\\\` row.
+
+\\---
+
+\\## 11. AGENTS (design only)
+
+\\\`\\\`\\\`
+agent\\\_runs
+  id, user\\\_id, project\\\_id, agent\\\_key, task text,
+  plan jsonb,                    -- ordered steps, revisable mid-run
+  state jsonb,                   -- scratchpad carried between steps
+  status (planning|running|awaiting\\\_approval|paused|succeeded|failed|cancelled),
+  step\\\_count, max\\\_steps, retry\\\_count, max\\\_retries,
+  cost, tokens\\\_in, tokens\\\_out,
+  result jsonb, error,
+  created\\\_at, started\\\_at, finished\\\_at
+
+agent\\\_steps
+  id, run\\\_id, ordinal, kind (plan|model\\\_call|tool\\\_call|approval|observation|reflection),
+  input jsonb, output jsonb, model, tokens, duration\\\_ms, status, error
+
+tool\\\_calls (shared with skills, run\\\_type='agent')
+audit\\\_events (every approval, every write-scope tool call)
+\\\`\\\`\\\`
+
+\\\*\\\*Behaviour:\\\*\\\* plan → act → observe → revise, bounded by \\\`max\\\_steps\\\`, \\\`max\\\_retries\\\`, and a cost ceiling. Retries are per-step with exponential backoff and only for retryable failures (429/5xx per the gateway error contract) — a terminal error fails the step. Any write-scope tool, or any step a skill marked \\\`requires\\\_approval\\\`, transitions the run to \\\`awaiting\\\_approval\\\` and persists state so it can resume later — runs must be durable across function invocations, which means the loop is driven by a queue/scheduler, not by one long-lived HTTP request. Every step is auditable; the run is fully reconstructable from \\\`agent\\\_steps\\\` alone.
+
+Agents are last for a reason: they are only as good as retrieval, skills, connectors, and quotas beneath them.
+
+\\---
+
+\\## 12. SECURITY
+
+\\### Functions that MUST become \\\`verify\\\_jwt = true\\\`
+
+\\| Function | Today | Required | Why |
+\\|---|---|---|---|
+\\| \\\`chat\\\` | \\\`false\\\` | \\\*\\\*\\\`true\\\`\\\*\\\* | Highest cost per call; currently callable by anyone holding the public anon key. |
+\\| \\\`transcribe-audio\\\` | \\\`false\\\` | \\\*\\\*\\\`true\\\`\\\*\\\* | Accepts arbitrary uploads; multimodal cost. |
+\\| \\\`text-to-speech\\\` | \\\`false\\\` | \\\*\\\*\\\`true\\\`\\\*\\\* | Metered ElevenLabs cost. |
+\\| \\\`yarngpt-tts\\\` | \\\`false\\\` | \\\*\\\*\\\`true\\\`\\\*\\\* | External metered cost. |
+\\| \\\`translate-voice\\\` | \\\`false\\\` | \\\*\\\*\\\`true\\\`\\\*\\\* | Model cost. |
+\\| \\\`generate-image\\\` | \\\`false\\\` | \\\*\\\*\\\`true\\\`\\\*\\\* | Replicate credits — the most directly expensive endpoint. |
+\\| \\\`process-media\\\` | not configured (default) | \\\*\\\*\\\`true\\\`\\\*\\\* | Large uploads + model cost. |
+\\| \\\`ai-smart-features\\\` | not configured (default) | \\\*\\\*\\\`true\\\`\\\*\\\* | Model cost. |
+
+There is no legitimate anonymous caller for any of the eight. The only exception to design around later is a public shared-conversation read path, which should be a separate, narrowly-scoped function — not an exemption on \\\`chat\\\`.
+
+\\### Additional requirements
+
+\\- \\\*\\\*Server-side identity:\\\*\\\* every AI function must derive \\\`user\\\_id\\\` from the verified JWT (\\\`auth.getUser()\\\` on the request's Authorization header), never from the request body. \\\`useChat\\\` currently sends only the anon key; it must send the session access token.
+\\- \\\*\\\*Per-user quotas\\\*\\\* enforced \\\*before\\\* the provider call, reading \\\`quotas\\\` and writing \\\`usage\\\_events\\\` after (section 13).
+\\- \\\*\\\*RLS everywhere\\\*\\\*, with new tables using \\\`TO authenticated\\\` and \\\`auth.uid()\\\` scoping from the first migration; \\\`service\\\_role\\\` grants only where edge functions genuinely need them.
+\\- \\\*\\\*Private storage only.\\\*\\\* Signed URLs with short expiry; \\\`storage.objects\\\` policies keyed on the \\\`{user\\\_id}/...\\\` path prefix. Never a public bucket for user documents.
+\\- \\\*\\\*Secrets\\\*\\\* stay in the Supabase secret store / Vault. No \\\`VITE\\\_\\\`-prefixed provider key, ever.
+\\- \\\*\\\*Connector tokens\\\*\\\* in Vault via \\\`credential\\\_ref\\\`; revocation must be one row update that immediately disables the tools.
+\\- \\\*\\\*Tool permission scopes:\\\*\\\* read vs write separation, approval gates on writes, and an \\\`audit\\\_events\\\` row per privileged action.
+\\- \\\*\\\*Input limits:\\\*\\\* max upload size, max messages per request, max context tokens — enforced server-side, since the client limits are advisory.
+
+\\---
+
+\\## 13. FREE-TIER / COST CONTROL
+
+\\- \\\*\\\*Quota table\\\*\\\* per \\\`(scope, provider, window)\\\` — daily and monthly, per user and global. Checked before dispatch; a breach returns a structured, user-visible error, never a silent generic reply.
+\\- \\\*\\\*Usage tracking:\\\*\\\* one \\\`usage\\\_events\\\` row per model call with real token counts and computed cost, written even on failure (a severed generation is still billed upstream).
+\\- \\\*\\\*Model fallback chains\\\*\\\* declared per capability, e.g. \\\`[gemini-flash (free tier) → gpt-5-mini → gpt-5]\\\`, walked on 429/5xx only. Terminal statuses (400/401/402/403) never trigger fallback.
+\\- \\\*\\\*Request limits:\\\*\\\* per-minute and per-hour caps per user, independent of token cost, to blunt abuse of the now-authenticated endpoints.
+\\- \\\*\\\*Token limits:\\\*\\\* cap input context (truncate oldest turns, prefer retrieval over raw history) and output tokens per capability; refuse rather than truncate for structured output.
+\\- \\\*\\\*User-configurable model selection\\\*\\\* in \\\`user\\\_settings\\\`, constrained to models the user's quota allows — and a "cheapest that can do the job" default.
+\\- \\\*\\\*Streaming for anything long-running\\\*\\\* — a buffered call that emits nothing for \\\~2 minutes is severed by the host, still billed, and retried by SDK defaults, which can triple the cost of a single request.
+\\- \\\*\\\*Honest copy:\\\*\\\* local chats, projects, and files may be presented as unlimited (bounded only by storage). External model usage must never be described as unlimited anywhere in the UI.
+
+\\---
+
+\\## 14. MIGRATION ORDER (adjusted to this codebase)
+
+\\\*\\\*Phase 0 — Preconditions (no migration yet)\\\*\\\*
+1\\. Freeze schema changes in Lovable. Take a full \\\`pg\\\_dump\\\` (schema + data + \\\`auth\\\` schema) and store it safely.
+2\\. Reconcile the duplicate tables on paper: decide the \\\`documents\\\`/\\\`uploaded\\\_documents\\\` merge and the \\\`message\\\_sources\\\` promotion. Both tables are empty, so this is a schema-dump edit rather than a data migration.
+3\\. Introduce \\\`\\\_shared/model-router.ts\\\` with a Lovable-only adapter and move \\\`ai-smart-features\\\` onto it. Zero behaviour change; proves the abstraction.
+
+\\\*\\\*Phase 1 — Backend exit\\\*\\\*
+4\\. Create the managed Supabase project; enable \\\`vector\\\`.
+5\\. Restore corrected schema → RLS → functions → triggers → new indexes.
+6\\. Restore \\\`auth.users\\\` (preserving UUIDs), then table data in FK order.
+7\\. Re-enter secrets; issue a \\\*\\\*new\\\*\\\* Firecrawl key.
+8\\. \\\`supabase link\\\`, deploy all eight functions, rewrite \\\`config.toml\\\`.
+9\\. Point a staging build at the new project; verify auth, chat streaming, history load, admin gate, image generation, transcription.
+10\\. Cut production env vars over. Keep the Lovable project read-only as a rollback for two weeks.
+
+\\\*\\\*Phase 2 — Lock down\\\*\\\*
+11\\. Flip \\\`verify\\\_jwt = true\\\` on all eight functions \\\*\\\*and\\\*\\\* ship the client change that sends the session token in the same release. Add \\\`usage\\\_events\\\` + \\\`quotas\\\` and enforce them.
+
+\\\*\\\*Phase 3 — AI exit\\\*\\\*
+12\\. Add OpenAI / Anthropic / Google adapters behind the router; migrate call sites low-risk first, \\\`chat\\\` last.
+13\\. Remove the Lovable adapter and \\\`LOVABLE\\\_API\\\_KEY\\\`.
+
+\\\*\\\*Phase 4 — The brain\\\*\\\*
+14\\. Storage buckets + merged \\\`documents\\\` + upload pipeline (real persistence).
+15\\. \\\`projects\\\` table + migrate \\\`localStorage\\\` payloads + \\\`project\\\_id\\\` on conversations/documents/images.
+16\\. \\\`document\\\_chunks\\\` + embeddings + the unified \\\`search\\\_knowledge\\\` RPC; retire keyword-only retrieval and the in-memory search modal.
+17\\. \\\`knowledge\\\_items\\\` + \\\`events\\\` + \\\`entities\\\` (memory model), splitting \\\`user\\\_memory\\\`.
+18\\. Skills engine + migrate \\\`hanchi\\\_custom\\\_gpts\\\`.
+19\\. Connectors (Firecrawl first — it already works server-side — then GitHub, Notion, MCP).
+20\\. Agent runtime.
+
+\\\*\\\*Two deliberate deviations from the suggested order:\\\*\\\* the AI abstraction starts in Phase 0 (a no-op adapter costs nothing and de-risks step 12 enormously), and endpoint lockdown moves \\\*before\\\* the AI exit, because open metered endpoints are a live liability that should not wait behind a multi-provider refactor.
+
+\\---
+
+\\## 15. RISK MAP
+
+\\| # | Area | Risk | Why | Mitigation |
+\\|---|---|---|---|---|
+\\| 1 | \\\*\\\*\\\`chat\\\` edge function\\\*\\\* | \\\*\\\*CRITICAL\\\*\\\* | 400+ lines mixing persona, tone, web search, RAG, thought-process construction, and SSE streaming. Any provider change touches all of it. | Refactor into router + prompt-assembly + stream-encoder \\\*before\\\* changing providers. Golden-transcript tests on a fixed prompt set. |
+\\| 2 | \\\*\\\*\\\`useChat\\\` SSE parser\\\*\\\* | \\\*\\\*CRITICAL\\\*\\\* | Hand-rolled line buffering with a re-buffer-on-parse-failure branch; no tests. Any change to the wire format (Anthropic's event names differ) breaks the primary UX silently. | Normalize the SSE format at the edge so the client contract never changes. Do not touch the parser during the backend migration. |
+\\| 3 | \\\*\\\*Auth / \\\`auth.users\\\` UUIDs\\\*\\\* | \\\*\\\*HIGH\\\*\\\* | Every user-scoped table FKs to \\\`auth.users.id\\\`. A re-invite migration orphans 96 conversations and 117 messages. | Dump and restore the \\\`auth\\\` schema with UUIDs intact; verify FK integrity before cutover. |
+\\| 4 | \\\*\\\*Env vars & generated files\\\*\\\* | \\\*\\\*HIGH\\\*\\\* | \\\`.env\\\`, \\\`client.ts\\\`, \\\`types.ts\\\`, \\\`config.toml\\\` are all platform-regenerated. Editing them while still in Lovable is silently reverted. | Sequence the env swap last, or perform it after the repo leaves Lovable. Never mid-migration. |
+\\| 5 | \\\*\\\*\\\`messages.metadata\\\`\\\*\\\* | \\\*\\\*HIGH\\\*\\\* | Undeclared de-facto schema holding images, sources, confidence, and reasoning across 117 rows and multiple readers. | Additive-only: promote to real columns/tables while continuing to \\\*write\\\* metadata until all readers move. Never a destructive reshape. |
+\\| 6 | \\\*\\\*Generated types drift\\\*\\\* | \\\*\\\*MEDIUM-HIGH\\\*\\\* | Compile-wide breakage the moment types stop matching the new project. | Type generation in CI, committed output, typecheck gate. |
+\\| 7 | \\\*\\\*Document tables\\\*\\\* | \\\*\\\*MEDIUM\\\*\\\* | Two conflicting tables — but both empty. | Merge during the schema dump. Risk is near zero \\\*now\\\* and grows with every row. |
+\\| 8 | \\\*\\\*localStorage projects / GPTs\\\*\\\* | \\\*\\\*MEDIUM\\\*\\\* | Data lives only in the user's browser; clearing site data destroys it, and it is invisible to any server migration. | Export-to-DB path shipped \\\*before\\\* any change that might clear storage or change the origin. |
+\\| 9 | \\\*\\\*Firecrawl connector key\\\*\\\* | \\\*\\\*MEDIUM\\\*\\\* | Connector-managed, not exportable; failure mode is silent (empty search results). | Provision a direct key before cutover and assert on it at function start. |
+\\| 10 | \\\*\\\*\\\`verify\\\_jwt\\\` flip\\\*\\\* | \\\*\\\*MEDIUM\\\*\\\* | Flipping without the client sending a token breaks all AI features instantly. | Ship both halves in one release; verify on staging first. |
+\\| 11 | \\\*\\\*No deploy pipeline\\\*\\\* | \\\*\\\*MEDIUM\\\*\\\* | Post-exit, edits appear to apply but never deploy. | Establish CI deploy as part of Phase 1, not after. |
+\\| 12 | \\\*\\\*pgvector / embeddings\\\*\\\* | \\\*\\\*LOW-MEDIUM\\\*\\\* | Extension must exist before restore; the column is currently unused. | \\\`create extension vector\\\` first; no data to preserve. |
+
+\\---
+
+\\## 16. FINAL RECOMMENDATION
+
+\\\*\\\*Can Hanci safely evolve into the target architecture?\\\*\\\*
+Yes. The chat core, RLS discipline, and edge-function boundary are genuinely reusable. The workspace layer is \\\*absent\\\* rather than wrongly built, which makes it additive work. The real debt is small and well-identified: two localStorage features, two duplicate table pairs, and one overloaded jsonb column.
+
+\\\*\\\*Should we keep the existing project?\\\*\\\*
+Yes. Rebuilding would discard a working streaming chat pipeline, a correct security-definer admin model, a functioning multimodal media pipeline, and a complete design system — and would reintroduce the same bugs. The exit is a migration, not a rewrite.
+
+\\\*\\\*Should we migrate before building the brain?\\\*\\\*
+Yes — but only the \\\*backend\\\* exit. Building projects, storage, retrieval, skills, and connectors on Lovable Cloud means building them twice: every new table is a table to re-migrate, and every generated-file edit is reverted. The \\\*AI\\\* exit can safely wait, provided the router abstraction is introduced first as a no-op.
+
+\\\*\\\*Which 3 tasks should happen first?\\\*\\\*
+1\\. \\\*\\\*Full backup + schema reconciliation on paper\\\*\\\* — dump everything including the \\\`auth\\\` schema, and finalize the \\\`documents\\\`/\\\`uploaded\\\_documents\\\` merge and the \\\`message\\\_sources\\\` promotion so the migration carries the corrected schema rather than the current one.
+2\\. \\\*\\\*Introduce the model-router abstraction with a Lovable-only adapter\\\*\\\* and move \\\`ai-smart-features\\\` onto it — zero user-visible change, and it removes the single largest risk from the eventual provider swap.
+3\\. \\\*\\\*Export the localStorage Projects and Custom GPTs to the database\\\*\\\* — this is the only data in the system that no server-side migration can rescue, and it is one browser-cache clear from being gone.
+
+\\\*\\\*Which existing features should NOT be touched yet?\\\*\\\*
+\\- \\\`useChat\\\`'s SSE parser and the \\\`chat\\\` function's streaming path — freeze until the backend migration is verified.
+\\- \\\`messages.metadata\\\` shape — additive changes only.
+\\- \\\`is\\\_admin()\\\` and the admin RLS policies — the only working privilege boundary.
+\\- The \\\`process-media\\\` chunked base64 handling — naive edits reintroduce stack-overflow crashes on large files.
+\\- The design system, routing, and page layouts — no visual work during a backend migration; it makes regressions impossible to attribute.
+\\- Mock features (Apps, Discover, plugin registry) — leave them inert. Deleting them now creates churn; they are replaced wholesale by connectors in Phase 4. w

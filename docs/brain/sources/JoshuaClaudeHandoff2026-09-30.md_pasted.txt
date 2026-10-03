@@ -1,0 +1,1185 @@
+Joshua_Claude_Handoff_2026-09-30.md
+
+
+
+Joshua → Claude Handoff / Life & Project Context
+Updated: 30 September 2026
+This is a practical handoff for continuity. It combines newer direct updates from Joshua, durable context from previous chats, and relevant Notion pages.
+
+Source rules
+Newer direct statements from Joshua override older Notion entries.
+
+Never silently turn old plans into current facts.
+
+Mark uncertain or stale items as NEEDS VERIFICATION.
+
+Do not invent dates, project status, commitments, people, or outcomes.
+
+When a project already exists, continue it rather than restarting it.
+
+Joshua prefers direct, practical, specific answers and honest pushback rather than automatic agreement.
+
+Read long voice-to-text requests completely; keep all important constraints.
+
+Avoid giant audits unless they directly move the current goal forward.
+
+Client delivery and JAMB should not be displaced by optional learning or shiny new tools.
+
+Joshua wants flexible systems, not a minute-by-minute prison.
+
+He does not want generic corporate/AI-sounding language.
+
+Private contact details, credentials, account identifiers, and other sensitive/private material are intentionally omitted.
+
+1. CORE PROFILE
+Joshua is a Nigerian teenager and a highly curious builder/creator.
+
+Core pattern:
+
+Builds websites and web apps.
+
+Uses AI-assisted/prompt-based development heavily.
+
+Main tools/context include Lovable, Claude, ChatGPT, Codex, GitHub, Supabase and browser-based development tools.
+
+Also does graphics/design/branding.
+
+Thinks in projects, experiments and systems.
+
+Likes technology, AI, TV/animation, sci-fi/superhero media, music, business, psychology/philosophy and understanding how things work.
+
+Often turns ordinary problems into software/app ideas.
+
+Wants less dependence on one AI coding platform.
+
+Likes real shipped work, proof, clients and useful outputs.
+
+Wants to learn more actual coding without letting learning delay current delivery.
+
+Communication preferences:
+
+Nigerian Standard English.
+
+Natural, plain, direct language.
+
+No fake hype or empty praise.
+
+Honest critique is preferred.
+
+Separate known facts, inferences, hypotheses and unknowns.
+
+When a plan is weak, say so and explain why.
+
+Do not make Joshua repeat information already established.
+
+A recurring challenge is having many genuine interests and projects at once. A better operating model is:
+
+two strategic focus areas,
+
+client obligations,
+
+a few maintenance habits,
+
+a small backlog,
+
+deliberate free time.
+
+2. CURRENT STRATEGIC FOCUS
+A. JAMB 2027
+Major education priority.
+
+Current known direction:
+
+JAMB 2027.
+
+Target around 220+.
+
+Subjects: English, Mathematics, Physics, Chemistry.
+
+Intended university: University of Abuja (UNIABUJA).
+
+Intended course: Computer Science.
+
+Important:
+
+Do not treat an old Notion JAMB timetable/date as authoritative.
+
+Verify official 2027 JAMB registration, syllabus and exam dates before putting fixed dates in a calendar.
+
+Joshua has said he has forgotten much of older SS1/SS2 material and needs realistic rebuilding rather than assuming full mastery.
+
+The dedicated JAMB chat has only been lightly used so far and now needs to become a serious working space.
+
+Current study items:
+
+Chemical Combinations is a Chemistry topic Joshua needs to understand properly using online explanations/resources.
+
+Copy/reorganise J&E lesson notes.
+
+Build a realistic JAMB timetable.
+
+Allow the plan to recover when family errands or unexpected events interrupt the day.
+
+B. FIGURE
+Figure is the current business-building direction.
+
+Commercial entry point:
+
+Website development.
+
+Possible later expansion:
+
+SEO,
+
+business systems,
+
+automation,
+
+AI solutions,
+
+agents.
+
+Do not claim future capabilities as current services until ready to sell them.
+
+Figure needs:
+
+website,
+
+portfolio,
+
+CV,
+
+GitHub presence/repositories,
+
+brand kit,
+
+social media,
+
+content system,
+
+lead generation,
+
+proof/case studies,
+
+repeatable client workflow.
+
+Figure should feel like a real business, not an unpaid developer collective.
+
+Preferred content:
+
+concrete business problems,
+
+practical solutions,
+
+useful demonstrations,
+
+case studies,
+
+experiments,
+
+proof,
+
+real outcomes.
+
+Avoid generic agency content.
+
+Joshua is considering choosing one social platform and concentrating effort instead of spreading himself across many platforms.
+
+Joshua is also experimenting with a Figure shirt design for brand visuals such as a brand kit/WhatsApp cover, not manufacturing it right now.
+
+3. CURRENT J&E LESSON SCHEDULE
+Important: older Notion notes contain a conflicting, outdated lesson schedule. Use the newer direct update below.
+
+Current schedule:
+
+Monday: 4:00–6:00pm
+
+Tuesday: 4:00–6:00pm
+
+Friday: 4:00–6:00pm
+
+Saturday: 8:00–11:00am
+
+Normal travel/prep:
+
+Usually leaves about 30 minutes before lesson.
+
+Usually starts preparing about 1 hour before leaving.
+
+Approximate preferred windows:
+
+Mon/Tue/Fri: prepare around 2:30–3:30pm, leave/travel around 3:30pm.
+
+Sat: prepare around 6:30–7:30am, leave/travel around 7:30am.
+
+These are buffers/preferences, not hard rules if family plans intervene.
+
+Joshua does not attend conventional school; J&E lessons are his regular structured academic setting right now.
+
+J&E is also a social environment where Joshua wants to:
+
+practise starting conversations,
+
+make friends,
+
+build social confidence,
+
+learn networking,
+
+develop genuine relationships.
+
+4. CLIENT / PROJECT LANDSCAPE
+Joshua currently describes roughly 20 Lovable-related projects/ongoing projects across client work, older builds and personal experiments.
+
+Pope Technologies / Emmanuel
+Newest direct update:
+
+The contract is now signed.
+
+Emmanuel sent ₦2,000 for data expenses.
+
+The relationship includes multiple apps/projects, including a music app, a dating app and other apps.
+
+There are several Lovable projects associated with this work.
+
+Use available daily Lovable credits sensibly.
+
+If credits run out, consider another connected development workflow such as a ChatGPT connector/remix rather than stopping all progress.
+
+Continue from existing projects/context instead of rebuilding from zero.
+
+Important conflict note:
+Older Notion pages still show pre-signing status and older contract figures. The newer direct update (“contract signed”) is the current fact.
+
+Image Makers / school management project
+A real paid school-management project and a strong candidate for selective productisation.
+
+Known scope:
+
+Admin/Super Admin operations
+
+Teacher dashboard
+
+Student portal
+
+Parent portal
+
+school branding
+
+attendance
+
+results
+
+fees
+
+announcements
+
+reports
+
+student/staff records
+
+bulk upload
+
+QR student ID cards / attendance
+
+CBT objective exams with automatic marking
+
+online handoff/support through web links, WhatsApp calls and screen sharing
+
+Known contract history:
+
+School management system negotiated to ₦200,000.
+
+CBT add-on: ₦30,000.
+
+Approximate delivery: 1 month, with up to a 2-week extension when genuinely necessary.
+
+This system is a strong productisation candidate because the workflow can be adapted to multiple schools.
+
+Gadgets360
+Known work:
+
+E-commerce/gadget website redesign.
+
+Live deployment.
+
+Google Analytics added.
+
+Google Search Console/SEO work was part of the plan.
+
+An admin/product-upload issue was investigated.
+
+Review/testimonial request was planned after stability.
+
+Vicnovos / Viconovos Medical
+Medical/wellness website and newsletter-related work.
+
+Redesign has been difficult/stuck at times because multiple visual directions did not land.
+
+Backend/admin work is associated with the project.
+
+Telegram was sometimes preferred to WhatsApp for contact.
+
+Aunty Bumi / BuW Consulting
+Website project discussed/confirmed.
+
+HR/consulting/outsourcing business.
+
+Multi-page structure was planned.
+
+Final naming/domain were dependencies.
+
+Dejiih
+Investment website.
+
+Demo/screen recording work was previously sent.
+
+Backend/instruction follow-up remained an issue in older notes.
+
+Other areas
+church website,
+
+Compound Blog,
+
+Compound Newsletter,
+
+school outreach/demo systems,
+
+personal app ideas,
+
+older portfolio projects,
+
+social/content experiments.
+
+Do not treat 20 projects as 20 equal priorities.
+
+5. EXISTING BUSINESS ASSETS
+Known existing assets:
+
+portfolio already built,
+
+CV rebuilt using real project information and ATS-friendly formatting,
+
+GitHub profile/repositories created,
+
+project README files created,
+
+previous Google Business Profile,
+
+previous Instagram/X business presence,
+
+school-management demo,
+
+project screenshots/videos,
+
+sales/cold-call scripts,
+
+published blog/writing content,
+
+service flyers,
+
+proposals/contracts.
+
+Current Figure objective:
+
+reuse the useful assets,
+
+organise the portfolio,
+
+make CV/GitHub/portfolio consistent,
+
+build a coherent brand kit,
+
+choose a main social channel,
+
+publish proof rather than generic claims.
+
+6. LEARNING
+IBM AI Fundamentals
+Notion history is inconsistent:
+
+one record says Module 1 was started,
+
+later records show the course becoming pending,
+
+current request says to continue learning it.
+
+Therefore:
+
+current module/progress = NEEDS VERIFICATION,
+
+realistic block = about 30 minutes at a time.
+
+Coding/development
+Joshua wants to understand actual coding and tools more deeply.
+Principle:
+
+learn from real projects,
+
+use focused learning blocks,
+
+do not let tutorials become an excuse for delaying client work.
+
+Language
+Real long-term goal.
+
+Not now.
+
+JAMB comes first.
+
+Spanish was the leading option in older notes.
+
+Vocabulary
+Old Notion goal: one new word/day.
+Current preference:
+
+around 2–3 useful words per week,
+
+words should be practical enough to use in everyday speech/writing,
+
+practise them rather than collecting obscure words.
+
+Reading / NotebookLM
+Joshua likes NotebookLM audio overviews more than traditional sit-down reading in many situations.
+
+Current reading projects:
+
+The 48 Laws of Power — already has the PDF; wants to understand power/manipulation ideas critically and recognise them, not blindly copy harmful behaviour.
+
+Purpose Driven Life by Rick Warren was recorded in Notion as another recommended book.
+
+Some sermons/other reading material are also pending.
+
+7. ROUTINE / DAILY LIFE
+Joshua wants structure without losing freedom.
+
+Real constraints:
+
+Mum/family can send him somewhere unexpectedly.
+
+Days can change.
+
+PC time is used for both useful work and fun.
+
+An over-scheduled plan will be ignored.
+
+Free time matters.
+
+Sleep target:
+
+ideally asleep around 9:00–9:30pm,
+
+wake around 5:00am,
+
+but recover gracefully when a night goes badly.
+
+Desired morning sequence:
+
+wake,
+
+prayer,
+
+Bible reading/aloud,
+
+Open Heaven,
+
+verse/memory verse,
+
+useful vocabulary review,
+
+podcast/audio while doing chores where appropriate,
+
+dishes,
+
+teeth,
+
+cooking/ordinary household work,
+
+room/tidy,
+
+then start the work/study day.
+
+Household:
+
+keep room clean,
+
+do dishes,
+
+sweep outside about once a week,
+
+tidy the parlour/living area,
+
+normal household duties.
+
+Faith routines currently requested:
+
+daily Bible verse,
+
+Bible reading aloud,
+
+Open Heaven daily,
+
+church Tuesday preferred,
+
+Thursday optional/backup.
+
+Fitness:
+
+health, strength and stamina focus,
+
+existing strength pattern includes deadlift, overhead press, bent-row and farmer carry,
+
+walking has been part of the routine,
+
+jumping jacks can be used as a short cardio movement,
+
+missed sessions should trigger recovery rather than “week ruined”.
+
+Food:
+
+aim for normal balanced eating and better food choices,
+
+no extreme restriction.
+
+8. PC / WORK / FUN BALANCE
+Joshua enjoys using the PC for:
+
+TV,
+
+Lovable/vibe coding,
+
+Figure work,
+
+design/branding,
+
+project maintenance,
+
+AI tools,
+
+research,
+
+learning.
+
+The goal is NOT to stop using the PC.
+
+The goal:
+
+reserve productive blocks,
+
+reserve TV/fun/relaxation blocks,
+
+establish stopping points,
+
+protect sleep,
+
+retain offline life and movement.
+
+The calendar should explicitly include fun/TV time.
+
+9. EVENTS / NETWORKING
+Joshua wants to practise:
+
+approaching people,
+
+starting conversations,
+
+following conversation threads,
+
+staying in touch,
+
+asking for WhatsApp naturally,
+
+networking with professionals,
+
+speaking with business owners,
+
+selling without sounding like a salesperson.
+
+Contexts:
+
+church,
+
+J&E,
+
+public events,
+
+local businesses,
+
+tech events,
+
+school/education events,
+
+online communities.
+
+For events:
+
+find age-appropriate/public opportunities,
+
+check registration and age requirements,
+
+preserve safety/adult supervision where relevant,
+
+do not assume an online listing means an event is suitable.
+
+Networking objective:
+
+genuine relationships first,
+
+phone numbers are a consequence, not the score.
+
+10. SCHOLARSHIPS
+Current correction:
+
+Joshua is NOT currently applying for scholarships.
+
+He does not yet know how to identify trustworthy scholarship sources or understand the application process.
+
+Current objective:
+
+learn how to find legitimate scholarships,
+
+understand eligibility,
+
+learn what documents are normally required,
+
+learn how to spot scams,
+
+then identify suitable opportunities.
+
+Do not add made-up deadlines or random scholarship events to the calendar.
+
+11. ONE-OFF BACKLOG
+Recently mentioned:
+
+copy/reorganise J&E lesson notes,
+
+read some sermons,
+
+find the other earbud from the black earbuds,
+
+understand Chemical Combinations properly,
+
+organise Figure brand assets,
+
+organise portfolio/CV/GitHub,
+
+work through the growing Lovable project backlog,
+
+maintain client obligations,
+
+build the JAMB system/timetable,
+
+search for appropriate events,
+
+research scholarships,
+
+continue IBM course,
+
+keep reading/listening,
+
+handle household chores.
+
+These are not equally urgent.
+
+12. ENTERTAINMENT
+Major interests:
+
+Ben 10,
+
+superhero shows,
+
+sci-fi,
+
+animation,
+
+TV generally,
+
+AI/tech,
+
+music,
+
+business/building.
+
+Recent/verified watch history:
+
+Never Have I Ever: Season 1 finished, Season 2 finished, Season 3 currently watching.
+
+Ben 10: Alien Force, Ultimate Alien, Omniverse, and most of the reboot watched. Original classic series was NOT watched.
+
+Doom Patrol watched.
+
+Titans watched.
+
+The Umbrella Academy watched.
+
+The Boys watched.
+
+Gen V watched.
+
+Peacemaker watched.
+
+Hazbin Hotel watched.
+
+Invincible watched.
+
+X-Men ’97 Seasons 1 and 2 watched; Joshua preferred Season 1.
+
+Lanterns was being watched in recent context.
+
+The Amazing Digital Circus followed.
+
+Adventure Time watched.
+
+Rick and Morty watched.
+
+Miraculous Ladybug watched.
+
+The Big Bang Theory watched.
+
+Trolls / Frozen / Frozen II / The Lego Movie 2 watched.
+
+BlackBerry watched.
+
+The Social Network watched.
+
+Stranger Things Season 1 finished; Season 2 was NOT watched.
+
+The Founder was NOT watched.
+
+Joshua often thinks about why stories/characters work rather than just consuming shows passively.
+
+13. MUSIC / CREATIVE INTEREST
+Music is an important emotional/creative outlet.
+
+Known preferences:
+
+Interpret songs by their actual meaning/context, not filenames.
+
+Likes cathartic emotional music.
+
+“Gravity” from Hazbin Hotel has been especially important recently.
+
+NF’s “The Search” resonates strongly.
+
+“The Sound of Silence” reference is from Trolls.
+
+“Into the Unknown” is from Frozen II.
+
+“Do You Really Want to Taste It?” is from Peacemaker.
+
+“All Gummed Up Inside” is from Adventure Time (fan extended version).
+
+“Insane” is a Hazbin Hotel fan-made song.
+
+Old playlist files are not all representative of Joshua’s taste.
+
+14. FUTURE APP IDEA — FLEXIBLE ACCOUNTABILITY CALENDAR
+Joshua often turns personal problems into app ideas.
+
+Concept:
+A calendar + routine + reminders + accountability system.
+
+Potential features:
+
+scheduled reminders,
+
+flexible time windows,
+
+recurring habits,
+
+PC reminders,
+
+escalating reminders after repeated ignoring,
+
+natural-language reminders such as “Joshua, come on — do this,”
+
+harmless optional consequences for repeated avoidance (for example temporarily blocking selected entertainment),
+
+task rescheduling,
+
+streaks,
+
+fun/relaxation blocks,
+
+recovery/“minimum day” mode,
+
+automatic adaptation when family errands disrupt the day.
+
+Important:
+
+no shaming,
+
+no unsafe punishments,
+
+no coercive mechanisms,
+
+consequences should be reversible,
+
+missed tasks should trigger recovery rather than guilt.
+
+This is a real product idea but not a priority over JAMB, Figure and client delivery.
+
+15. NOTION STALENESS / CONFLICTS
+Relevant Notion pages used for this handoff:
+
+Claude Context — Current Goals & Open Threads (v2), edited 4 Sep 2026.
+
+Joshua — Brutal Honesty, Specificity & Follow-Through, edited 10 Sep 2026.
+
+Active Projects, edited 9 Sep 2026.
+
+Other Goals, edited 30 Jun 2026.
+
+Daily Recurring Checklist, edited 25 May 2026.
+
+LONG TERM — Life Plan, edited 17 Jun 2026.
+
+This Week’s Goals, edited 5 Jul 2026.
+
+Completed Tasks History, edited 16 Aug 2026.
+
+Known conflicts:
+
+Old J&E schedule says Mon/Tue 3:30–6:30 and Sat 7am. Current direct update says Mon/Tue/Fri 4–6 and Sat 8–11. USE CURRENT DIRECT UPDATE.
+
+Old Pope/Emmanuel status says unsigned/pre-signing. Current direct update says signed and ₦2,000 data expense sent. USE CURRENT DIRECT UPDATE.
+
+IBM status is inconsistent. VERIFY.
+
+Scholarships were historically exploratory; current state is research/learning, not active applications.
+
+Older social/business notes are mostly Compound Dev; Figure is the current direction.
+
+Older vocabulary goal was daily; current goal is 2–3 useful words/week.
+
+16. HIGH-LEVEL OPERATING PRIORITIES
+Strategic focus:
+
+JAMB 2027.
+
+Figure.
+
+Obligations:
+3. Paid client delivery/maintenance.
+4. Important client communication and deadlines.
+
+Maintenance:
+5. Sleep and normal routine.
+6. Bible/church routine.
+7. Fitness/movement and balanced food.
+8. Household chores.
+
+Growth:
+9. IBM course.
+10. Reading/NotebookLM.
+11. Events/networking.
+12. Scholarship research.
+13. Language after JAMB.
+14. Extra personal app ideas only when higher priorities are under control.
+
+This is a filter, not a rigid command system.
+
+17. CLAUDE IMPORT PROMPT
+Paste this into Claude after attaching/pasting this handoff:
+
+You are receiving a continuity handoff for Joshua.
+
+Read the whole handoff and use it as working context.
+
+Rules:
+
+Newer direct statements from Joshua override older Notion notes.
+
+Never invent missing facts.
+
+Separate CURRENT, HISTORICAL and NEEDS VERIFICATION.
+
+Do not recreate existing projects.
+
+Do not turn every goal into a deadline.
+
+Preserve flexibility because family errands and unexpected plans can interrupt days.
+
+Protect substantial free time.
+
+JAMB 2027 and Figure are the strategic focus.
+
+Client delivery remains an obligation and must not be sacrificed to optional experiments.
+
+Joshua prefers plain Nigerian Standard English, specificity, directness and honest pushback.
+
+Do not give generic motivational speeches.
+
+Do not make him repeat information already in this handoff.
+
+First response:
+
+Summarise the two strategic focus areas.
+
+Show only important stale/conflicting items that need verification.
+
+Extract the current fixed schedule and buffers.
+
+Sort current work into Client / Figure / JAMB / Personal.
+
+Give no more than 10 immediate actions.
+
+Do NOT build calendars yet.
+
+18. CLAUDE GOOGLE CALENDAR PROMPT
+After Google Calendar is connected:
+
+Use the connected Google Calendar to build Joshua’s planning system.
+
+Before creating anything:
+
+inspect existing calendars/events,
+
+avoid duplicates,
+
+do not delete existing events,
+
+preserve existing commitments,
+
+identify conflicts before changing anything.
+
+Create separate calendars, if supported:
+
+LIFE / COMMITMENTS
+
+DAILY ROUTINES & HABITS
+
+JAMB 2027
+
+FITNESS & HEALTH
+
+FIGURE / CLIENT WORK
+
+Design principles:
+
+Nigeria/WAT timezone.
+
+Do not schedule every hour.
+
+Hard commitments are fixed; most other things are preferred windows.
+
+Leave roughly 30–40% of normal waking time unassigned for family errands, travel, rest and spontaneity.
+
+Prefer 60–120 minute focus blocks.
+
+Add explicit FUN / TV / RELAX blocks.
+
+Add BUFFER / FAMILY ERRAND capacity.
+
+A broken day should be recoverable rather than treated as failure.
+
+Do not schedule fake scholarship deadlines.
+
+Do not invent official JAMB dates.
+
+Current fixed J&E schedule:
+
+Monday 4–6pm
+
+Tuesday 4–6pm
+
+Friday 4–6pm
+
+Saturday 8–11am
+
+Preferred prep/travel buffer starts about 90 minutes before lesson time.
+
+Recurring habits:
+
+wake target around 5am,
+
+prayer,
+
+Bible reading aloud,
+
+Open Heaven,
+
+Bible verse/memory verse,
+
+2–3 useful vocabulary words per week,
+
+podcast/audio while doing chores when appropriate,
+
+dishes,
+
+teeth,
+
+room/tidy,
+
+cooking/ordinary household work,
+
+fitness/movement,
+
+JAMB study,
+
+Figure/client work,
+
+IBM course,
+
+reading,
+
+TV/relaxation,
+
+wind-down,
+
+sleep target around 9–9:30pm.
+
+Weekly:
+
+church Tuesday preferred,
+
+Thursday optional/backup,
+
+sweep outside once weekly,
+
+parlour/living area tidy,
+
+fitness sessions,
+
+event search/networking block,
+
+scholarship research block,
+
+weekly review/planning.
+
+JAMB:
+
+English, Mathematics, Physics, Chemistry.
+
+Target around 220+.
+
+UNIABUJA / Computer Science.
+
+Verify official 2027 dates before adding.
+
+Add Chemical Combinations as an early Chemistry catch-up topic.
+
+Add J&E notes organisation.
+
+Make study blocks movable.
+
+Figure:
+
+website/business work,
+
+portfolio,
+
+CV,
+
+GitHub,
+
+brand kit,
+
+social media,
+
+proof/case studies,
+
+lead generation,
+
+client work.
+Do not schedule all of these every day.
+
+Fitness:
+
+health/strength/stamina focus,
+
+existing strength work: deadlift, overhead press, bent-row, farmer carry,
+
+walking,
+
+jumping jacks as an optional short cardio block,
+
+no body-shaming/appearance-driven schedule.
+
+Accountability:
+
+reminders can escalate gently,
+
+no threats or unsafe punishments,
+
+use reversible consequences such as temporarily blocking selected entertainment,
+
+missed tasks should move to recovery slots.
+
+Finally:
+
+summarise what was created,
+
+distinguish fixed vs flexible events,
+
+identify conflicts instead of silently resolving them.
+
+19. DELEGATION PROMPT — FIGURE + JAMB ONLY
+Use this in the specific chats you want to delegate from:
+
+I am consolidating my AI workspace and only want information that materially helps with two priorities:
+
+A. FIGURE — website-development business
+B. JAMB 2027 — education
+
+Search/review this chat’s available history.
+
+For FIGURE extract:
+
+business idea and positioning,
+
+website/portfolio,
+
+CV,
+
+GitHub,
+
+brand assets,
+
+social media,
+
+target customers,
+
+proof/case studies,
+
+current projects,
+
+blockers,
+
+open decisions,
+
+next actions.
+
+For JAMB extract:
+
+subjects,
+
+target,
+
+university/course,
+
+current study status,
+
+knowledge gaps,
+
+J&E schedule,
+
+study plans/timetables,
+
+resources,
+
+pending tasks.
+
+Rules:
+
+Do not invent facts.
+
+Mark each item CURRENT / HISTORICAL / NEEDS VERIFICATION.
+
+Show conflicting dates/statuses rather than silently choosing.
+
+No generic advice.
+
+No giant life summary.
+
+End with TOP 5 NEXT ACTIONS FOR THIS CHAT.

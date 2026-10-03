@@ -6,6 +6,28 @@ This changelog records agent-executed changes. Each entry follows the bounded-ta
 
 ---
 
+## 2026-10-03 — Private Brain and Me foundation
+
+**Task:** Add Joshua’s private Brain layer without rebuilding Hanchi or mixing stale exports into default chat context.
+
+**Implemented:**
+
+- Added live `public.brain_records` storage with source/provenance, domain, project, record type, confidence, event date, status, supersession and two-layer (`high_signal` / `context_rot`) classification.
+- Added `/brain` with a current Me view, editable personal notes, search, record deletion, and multi-file archive import.
+- Seeded only the supplied handoff’s high-signal profile: identity and communication style, JAMB 2027, Figure direction, current J&E schedule and flexible planning rules.
+- Preserved the supplied handoff and architecture/chat-export source files under `docs/brain/sources/`.
+- Added Brain context loading to chat. Only current high-signal records without `needs_verification` status are included; imported historical chunks remain out of default replies.
+
+**Verification:**
+
+- Supabase migration completed successfully and regenerated database types.
+- `npm run build` passed after the Brain changes.
+- `npm run lint` remains non-zero because of existing lint debt across untouched components, generated UI primitives, and older chat/edge-function code; the new Brain files were not reported.
+
+**Remaining boundary:** Historical exports are preserved and importable, but not yet automatically fact-extracted, deduplicated, or promoted into current memory. No claim is made that every historical statement is current.
+
+---
+
 ## 2026-09-04 — Admin foundation pushed to live DB
 
 **Task:** Deploy the Task-2 admin schema delta to the live Supabase project.

@@ -1,0 +1,2282 @@
+HANCHI — DREAM AI / AGENTIC ENGINEERING MASTER BUILD PROMPT
+
+September 2026 • Existing repo + user-owned Supabase • staged execution
+
+This file is the master specification for evolving the existing Hanchi AI codebase into a private personal AI operating system.
+
+The project already exists. DO NOT rebuild it from scratch.
+
+The coding agent must work forward from the current repository, preserve working functionality, verify before moving on, and implement one bounded subsystem at a time.
+
+0. SOURCE OF TRUTH
+
+Repository:
+https://github.com/Theyoungtimesmedia/hanchi-ai-knows-all.git
+
+Current backend:
+User-owned Supabase project. Lovable Cloud is intentionally discontinued.
+
+Current project history:
+
+Lovable Cloud was the original managed backend.
+
+Lovable AI Gateway was the original AI gateway.
+
+Both are being permanently removed from runtime.
+
+The existing database/schema/data should be preserved where technically possible.
+
+The application remains React + Vite + TypeScript + Tailwind/shadcn/Radix + Supabase + Edge Functions.
+
+External providers should be used behind a provider-neutral abstraction.
+
+Use the repository's actual current state as the implementation truth. Do not assume every historical audit finding is still true.
+
+Supporting source files already exist in the project/conversation archive, including previous architecture audits, AI-memory exports, project exports, WhatsApp exports and prior Lovable agentic-engineering prompts. Examples include:
+
+hanchi-ai-knows-all_260829.backup
+
+chat.md
+
+chat(1).md
+
+CLAUDE CHAT EXPORTS.txt
+
+previous Hanchi migration/architecture specifications
+
+previous project-specific prompt documents
+
+The database backup is a PostgreSQL custom-format backup, not plain SQL. It must never be treated as an ordinary text file.
+
+1. PRODUCT VISION
+
+Hanchi is NOT supposed to remain a normal chatbot with extra pages.
+
+It is intended to become a private personal AI operating system for Joshua.
+
+Core capabilities:
+
+persistent personal context
+
+project workspaces
+
+durable chat history
+
+durable files/documents
+
+multimodal AI
+
+multiple model providers
+
+capability-based model routing
+
+research
+
+skills
+
+skill creation
+
+connectors
+
+tool calling
+
+approval workflows
+
+agent execution
+
+automation
+
+historical timeline
+
+context retrieval
+
+context-rot archive
+
+verification/evidence tracking
+
+personal daily operating system
+
+Conceptual flow:
+
+User request
+  ↓
+Understand intent
+  ↓
+Determine required context
+  ↓
+Retrieve only relevant high-signal context
+  ↓
+Retrieve project context if applicable
+  ↓
+Search historical CONTEXT_ROT only if justified
+  ↓
+Choose capable model(s)
+  ↓
+Use skill when a repeatable workflow applies
+  ↓
+Use connectors when external systems are needed
+  ↓
+Use agent execution only for multi-step tasks
+  ↓
+Verify important output
+  ↓
+Persist useful result + provenance
+
+The system should feel like a capable personal assistant/workspace that can eventually perform real work, not like a demo showing fake integrations.
+
+2. AGENTIC ENGINEERING OPERATING RULES
+
+The coding agent is not a prompt-to-code generator.
+
+Before every meaningful change:
+
+inspect current implementation
+
+identify exact files/tables/functions involved
+
+identify dependencies
+
+identify regression risk
+
+define one bounded outcome
+
+implement
+
+run the strongest available verification
+
+inspect the diff/result
+
+document what changed
+
+only then move to the next task
+
+Do not build the entire product in one prompt.
+
+Do not mix unrelated backend, UI, and infrastructure rewrites without a clear dependency.
+
+Do not say a feature is complete because the UI exists.
+
+A feature is complete only when the underlying behavior is wired, persisted where required, permissioned correctly, and verified.
+
+3. CURRENT → TARGET ARCHITECTURE
+
+Target architecture:
+
+                        HANCHI
+                          │
+          ┌───────────────┼────────────────┐
+          │               │                │
+       Context         Projects          Models
+          │               │                │
+   ┌──────┴──────┐   ┌────┴─────┐   ┌─────┼───────────┐
+   │             │   │          │   │     │           │
+Memory       Timeline Chats   Files OpenAI Anthropic Gemini
+   │             │
+   └──────┬──────┘
+          │
+       Retrieval
+          │
+       Knowledge
+          │
+        Skills
+          │
+      Connectors
+          │
+        Agents
+          │
+      Automation
+          │
+      Verification
+
+The system must have one central retrieval/context architecture instead of disconnected memory systems.
+
+4. HIGH-SIGNAL MEMORY VS CONTEXT_ROT
+
+Two memory levels are required.
+
+HIGH-SIGNAL
+
+Normal retrieval.
+
+Contains:
+
+durable identity
+
+stable communication preferences
+
+current goals
+
+important people
+
+active projects
+
+current decisions
+
+recurring workflows
+
+reusable knowledge
+
+meaningful technical preferences
+
+persistent constraints
+
+important recurring habits
+
+CONTEXT_ROT
+
+Historical searchable archive.
+
+Contains:
+
+old daily events
+
+historical client messages
+
+old project states
+
+one-off conversations
+
+temporary plans
+
+obsolete ideas
+
+historical research
+
+exact timestamps
+
+non-essential personal information
+
+older relationship/project history
+
+other details that may matter in rare cases
+
+CONTEXT_ROT is NOT deleted.
+
+It is NOT normally injected into prompts.
+
+It is searched only when:
+
+the user explicitly asks about history
+
+a specific date/time is requested
+
+normal memory cannot answer
+
+a project history is incomplete
+
+identity is ambiguous
+
+there is a contradiction
+
+an older decision needs verification
+
+the user says they remember telling the AI something before
+
+When retrieved, label it:
+[Historical Context]
+
+Historical information must never silently override current high-signal information.
+
+5. MEMORY MODEL
+
+Implement durable knowledge as structured records.
+
+Suggested knowledge_items fields:
+
+id
+user_id
+project_id nullable
+key
+value
+category
+confidence
+status
+supersedes_id nullable
+source_type
+source_ref
+valid_from
+captured_at
+updated_at
+
+Statuses:
+
+current
+superseded
+rejected
+
+Create a separate event/timeline model.
+
+Suggested events fields:
+
+id
+user_id
+project_id nullable
+kind
+title
+body
+event_date
+captured_at
+status
+supersedes_id nullable
+confidence
+source_type
+source_ref
+entity_ids
+
+Kinds can include:
+
+decision
+meeting
+milestone
+task
+note
+project_change
+relationship_change
+life_event
+
+Important distinction:
+
+event_date = when it happened
+
+captured_at = when Hanchi learned/recorded it
+
+Never invent a date.
+
+If only “yesterday” is known, preserve:
+
+relative_date = yesterday
+
+surrounding source date if known
+
+6. TIMELINE / DATE INTELLIGENCE
+
+Historical dates and times are first-class information.
+
+If a source contains:
+
+[16/08, 12:21 pm]
+
+preserve the exact timestamp.
+
+If the date is certain but time is absent:
+
+preserve the date
+
+mark time unknown
+
+If a relative date is used:
+
+preserve the relative wording
+
+do not manufacture an absolute date
+
+A future query such as:
+
+What happened on August 16?
+
+must be answerable from the structured timeline and/or CONTEXT_ROT without loading the entire raw export.
+
+7. PROVENANCE
+
+Every high-value extracted item should carry provenance when available.
+
+Possible source types:
+
+ChatGPT
+Claude
+WhatsApp
+User statement
+Uploaded file
+Web research
+Project document
+Other AI
+Imported conversation
+
+Store:
+
+source_type
+source_ref
+source_date
+event_date
+project_id
+conversation_id
+document_id
+locator
+confidence
+
+Locator examples:
+
+message timestamp
+
+document page
+
+heading
+
+video timestamp
+
+filename
+
+conversation ID
+
+The raw source should remain available for audit/reference.
+
+8. ENTITY GRAPH
+
+Create a unified entity layer.
+
+Entity kinds:
+
+person
+company
+place
+product
+organisation
+project
+concept
+
+Relationships can connect:
+
+person ↔ project
+person ↔ message
+company ↔ project
+project ↔ document
+project ↔ conversation
+entity ↔ event
+entity ↔ knowledge_item
+
+The graph is retrieval infrastructure, not merely visual decoration.
+
+9. IMPORT PIPELINE
+
+Hanchi must support imported conversation/export formats such as:
+
+MHTML
+
+HTML
+
+TXT
+
+Markdown
+
+JSON
+
+other structured export formats when parsable
+
+Import pipeline:
+
+upload
+↓
+detect format
+↓
+parse
+↓
+preserve message order
+↓
+extract timestamps
+↓
+identify speakers
+↓
+identify entities
+↓
+identify projects
+↓
+identify decisions
+↓
+identify events
+↓
+identify durable preferences
+↓
+identify contradictions
+↓
+classify high-signal/project-specific/context_rot/do-not-migrate
+↓
+store provenance
+↓
+retain raw source
+
+Do not turn every sentence into memory.
+
+10. PERSONAL CONTEXT IMPORT
+
+The imported AI archives contain information about:
+
+Joshua's identity
+
+communication style
+
+clients
+
+family
+
+friends
+
+projects
+
+business history
+
+education
+
+interests
+
+movies and series
+
+YouTube
+
+business naming
+
+technical workflows
+
+habits
+
+decisions
+
+historical events
+
+dates and times
+
+AI usage patterns
+
+Do NOT inject these exports directly into the system prompt.
+
+Convert them into structured records.
+
+11. SENSITIVE DATA RULE
+
+Some information is explicitly marked as DO NOT MIGRATE.
+
+When the source says:
+DO NOT MIGRATE
+or
+[REDACTED — SENSITIVE]
+
+do not reconstruct or infer the omitted detail.
+
+Do not:
+
+embed it
+
+summarize it
+
+expose it through search
+
+add it to memory
+
+place it into context packets
+
+The exclusion itself may be retained as metadata when needed.
+
+12. PROJECTS
+
+Projects are first-class persistent entities.
+
+Each project can contain:
+
+project
+├── conversations
+├── documents
+├── entities
+├── events
+├── knowledge
+├── tasks
+├── skills
+└── runs
+
+Conversation context scope:
+
+NONE
+PROJECT
+GLOBAL
+
+Rules:
+
+scratch chat → NONE
+
+project chat → PROJECT
+
+explicitly personal/global task → GLOBAL
+
+Never assume every chat should search the entire life archive.
+
+13. FILES / DOCUMENTS
+
+The current project's file system is a major architectural priority.
+
+Implement real persistent storage.
+
+Requirements:
+
+private buckets
+
+signed URLs
+
+file metadata
+
+checksum
+
+project relationship
+
+conversation relationship
+
+upload status
+
+ingestion status
+
+extraction metadata
+
+source dates
+
+timestamps
+
+page count when relevant
+
+media duration when relevant
+
+Suggested storage:
+
+documents
+generated
+avatars
+
+User documents remain private.
+
+14. DOCUMENT INGESTION
+
+upload
+↓
+validate
+↓
+store original
+↓
+extract
+↓
+normalize
+↓
+chunk
+↓
+embed
+↓
+index
+↓
+optional entity extraction
+↓
+optional event extraction
+↓
+optional durable memory extraction
+
+Preserve source locations:
+
+PDF → page
+
+DOCX → paragraph/heading
+
+TXT/MD → heading path
+
+audio/video → timestamp range
+
+HTML/MHTML → section/message
+
+Never lose provenance during chunking.
+
+15. RETRIEVAL
+
+Implement one central retrieval layer.
+
+It should support:
+
+semantic/vector search
+
+lexical/FTS search
+
+project filtering
+
+entity filtering
+
+date filtering
+
+confidence filtering
+
+status filtering
+
+recency
+
+provenance
+
+The same retrieval layer should power:
+
+chat
+
+global search
+
+project search
+
+skills
+
+agents
+
+memory lookup
+
+historical/context_rot search
+
+Do not create separate retrieval implementations for every surface.
+
+16. MODEL ROUTER
+
+Use one provider-neutral model router.
+
+Callers specify:
+
+capability
+input
+modelHint optional
+projectId
+userId
+stream
+schema optional
+tools
+budget
+
+Resolution order:
+
+explicit model
+↓
+skill preference
+↓
+project preference
+↓
+user preference
+↓
+capability default
+↓
+quota/cost check
+↓
+provider adapter
+
+Adapters hide provider-specific request/response formats.
+
+17. MODEL CAPABILITY REGISTRY
+
+Each model entry should declare capabilities such as:
+
+text_in
+image_in
+audio_in
+video_in
+document_in
+text_out
+image_out
+audio_out
+streaming
+tool_calling
+parallel_tool_calling
+structured_output
+reasoning
+
+Also track where available:
+
+context_window
+max_output_tokens
+free_tier
+cost_in
+cost_out
+provider
+model_id
+status
+
+Never assume every model supports every modality.
+
+Examples:
+
+audio → model/provider with audio support
+
+video understanding → model/provider with video support
+
+image generation → image-capable provider
+
+strict extraction → strong structured-output model
+
+difficult reasoning → reasoning-capable model
+
+18. MULTI-MODEL DEBATE
+
+Support optional multi-model deliberation.
+
+Do NOT use it for every message.
+
+Architecture:
+
+request
+↓
+planner
+↓
+model A
+model B
+model C
+↓
+critic/disagreement pass
+↓
+synthesis model
+↓
+final result
+
+Rules:
+
+only use when justified
+
+track participating models
+
+record disagreement summaries
+
+record evidence/provenance
+
+keep the user-visible reasoning concise
+
+never expose hidden chain-of-thought
+
+do not waste multiple models on trivial tasks
+
+19. CHAT CORE
+
+Preserve the existing working chat contract wherever possible.
+
+Keep:
+
+streaming
+
+stop generation
+
+conversation persistence
+
+message persistence
+
+regeneration
+
+edit/resend
+
+reactions
+
+multimodal input
+
+web search
+
+model selection
+
+Do not casually rewrite the existing streaming parser.
+
+Normalize provider output before it reaches the UI.
+
+20. SKILLS
+
+A skill is a reusable, versioned, executable workflow.
+
+Suggested fields:
+
+id
+user_id
+project_id nullable
+name
+description
+purpose
+instructions
+input_schema
+output_schema
+allowed_tools
+preferred_models
+requires_approval
+max_steps
+enabled
+version
+created_at
+updated_at
+
+Skill execution:
+
+validate input
+↓
+resolve context
+↓
+resolve model
+↓
+retrieve
+↓
+execute bounded workflow
+↓
+tools if allowed
+↓
+validate output
+↓
+persist run
+
+Adding a skill should not require a code deployment.
+
+21. INITIAL SKILLS
+
+Seed these:
+
+WhatsApp Analyst
+
+Input:
+
+messages/export
+
+Output:
+
+current status
+
+decisions
+
+commitments
+
+unanswered questions
+
+next action
+
+response draft
+
+relevant relationship context
+
+Daily Review
+
+Input:
+
+daily dump
+
+Output:
+
+what happened
+
+important decisions
+
+lessons
+
+unfinished work
+
+tomorrow's priority
+
+YouTube Script
+
+Input:
+
+topic/research
+
+Output:
+
+angle
+
+hooks
+
+structure
+
+script
+
+title ideas
+
+thumbnail directions
+
+Scholarship Assistant
+
+Input:
+
+scholarship listing
+
+Output:
+
+eligibility
+
+deadline
+
+requirements
+
+fit
+
+missing documents
+
+checklist
+
+Job Application
+
+Input:
+
+job listing
+
+CV/profile
+
+Output:
+
+fit analysis
+
+missing requirements
+
+tailored answers
+
+checklist
+
+Context Extractor
+
+Input:
+
+historical conversation/export
+
+target topic/project
+
+Output:
+
+only relevant information
+
+dates
+
+sources
+
+contradictions
+
+current vs historical status
+
+22. SKILL CREATOR
+
+Provide a no-code skill builder.
+
+Flow:
+
+describe workflow
+↓
+minimal clarification only when necessary
+↓
+generate skill specification
+↓
+preview
+↓
+test with sample input
+↓
+approve
+↓
+save version
+
+Display:
+
+purpose
+
+inputs
+
+outputs
+
+allowed tools
+
+model preference
+
+approval requirements
+
+limits
+
+23. CONNECTOR SYSTEM
+
+Replace hardcoded fake connector cards with real integrations.
+
+Connector catalogue:
+
+provider
+display_name
+auth_method
+available_scopes
+tool_catalogue
+docs_url
+status
+
+Connection:
+
+user_id
+connector_id
+status
+account_label
+permissions
+credential_ref
+scopes_granted
+enabled
+connected_at
+expires_at
+last_used_at
+
+Never store raw API tokens in ordinary application tables.
+
+24. INITIAL CONNECTORS
+
+Prioritize the tools Joshua actually uses.
+
+Notion
+
+search
+
+read pages
+
+query databases
+
+append/create where permitted
+
+resource selection
+
+GitHub
+
+repository listing
+
+read files
+
+code search
+
+issue operations
+
+PR operations
+
+repo metadata
+
+Firecrawl
+
+search
+
+scrape
+
+crawl
+
+MCP
+
+Dynamic server/tool discovery.
+
+Do not hardcode every MCP tool.
+
+25. TOOL PERMISSIONS
+
+Every tool must declare:
+
+READ
+WRITE
+
+Writes default to approval.
+
+Examples:
+
+read Notion → READ
+
+create Notion page → WRITE / approval
+
+read GitHub → READ
+
+create PR → WRITE / approval
+
+Approval must survive interruptions.
+
+26. AGENTS
+
+Agents come after:
+
+retrieval
+skills
+connectors
+approvals
+model routing
+
+Agent flow:
+
+objective
+↓
+plan
+↓
+step
+↓
+observe
+↓
+verify
+↓
+revise if needed
+↓
+continue
+
+Persist:
+
+agent_runs
+agent_steps
+tool_calls
+audit_events
+
+Agent runs must support:
+
+planning
+running
+awaiting_approval
+paused
+succeeded
+failed
+cancelled
+
+Every step must be auditable.
+
+Do not depend on one long-running HTTP request.
+
+27. AGENTS FOR JOSHUA
+
+Prioritize:
+
+Personal Research Agent
+
+Client Communication Agent
+
+Daily OS Agent
+
+Scholarship Agent
+
+Job Agent
+
+YouTube Research Agent
+
+Keep external writes approval-gated.
+
+28. AUTOMATION
+
+Automation comes after reliable skills/connectors.
+
+Support:
+
+trigger
+condition
+action
+schedule
+approval
+status
+last_run
+next_run
+
+Later automations:
+
+nightly consolidation
+
+daily summary
+
+weekly review
+
+scholarship monitoring
+
+job monitoring
+
+project reminders
+
+No autonomous external writes by default.
+
+29. NIGHTLY CONSOLIDATION
+
+Eventually run:
+
+today's new records
+↓
+find orphan entities
+↓
+find duplicates
+↓
+update supersession chains
+↓
+attach events to projects
+↓
+promote durable knowledge
+↓
+move low-signal information to CONTEXT_ROT
+↓
+flag strategic items
+
+Never:
+
+erase history
+
+silently overwrite current truth
+
+promote every daily event into permanent memory
+
+30. DAILY OS
+
+Track:
+
+productivity
+
+money
+
+projects
+
+learning
+
+habits
+
+exercise
+
+sleep
+
+faith practices
+
+routine completion
+
+blockers
+
+current priorities
+
+Money stays inside Daily OS for now.
+
+Do not create a separate finance system unless scale requires it.
+
+Daily OS should support:
+
+daily entry
+
+weekly review
+
+historical queries
+
+trend summaries
+
+31. PERSONAL AI BEHAVIOUR
+
+Default behaviour:
+
+direct
+
+honest
+
+practical
+
+evidence-aware
+
+natural
+
+Nigerian Standard English when appropriate
+
+not unnecessarily formal
+
+not flattering
+
+not a yes-man
+
+challenge weak assumptions
+
+distinguish fact/inference/recommendation/unknown
+
+solve before asking needless questions
+
+never invent
+
+maintain uncertainty
+
+preserve decision history
+
+understand that the user sometimes thinks out loud and may change position before deciding
+
+Do not treat an exploratory thought as a committed decision.
+
+32. VERIFICATION LAYER
+
+Important outputs should be classifiable as:
+
+FACT
+INFERENCE
+RECOMMENDATION
+UNKNOWN
+
+Research claims should carry:
+
+claim
+source
+source_date
+confidence
+
+For uncertain information:
+
+say that it is uncertain.
+
+33. SECURITY
+
+Must include:
+
+verified JWTs for authenticated AI functions
+
+server-derived user identity
+
+RLS
+
+private storage
+
+secure secret storage
+
+request limits
+
+context/token limits
+
+per-user quotas
+
+audit events
+
+tool-call logging
+
+approval gates
+
+Never:
+
+trust user_id from request body
+
+expose provider secrets in VITE_*
+
+disable RLS to make a feature work
+
+34. FREE / LOW-COST OPERATION
+
+The system should use free/low-cost provider options where practical.
+
+However:
+
+Never represent external model capacity as literally unlimited.
+
+Use:
+
+cheapest capable model
+↓
+fallback on eligible temporary failures
+↓
+usage tracking
+↓
+quota enforcement
+
+Do not fallback on auth/billing/invalid-request errors.
+
+35. PC PERFORMANCE
+
+Optimize for a modest PC.
+
+Requirements:
+
+lazy-load heavy features
+
+paginate large datasets
+
+virtualize long histories where appropriate
+
+cache stable data
+
+stream AI output
+
+avoid giant base64 state
+
+server-side document processing
+
+efficient React rendering
+
+reasonable bundle size
+
+background processing for ingestion
+
+avoid loading entire archive into browser memory
+
+36. FRONTEND / UX TARGET
+
+The UI must eventually be rebuilt substantially.
+
+Research input is the previously collected 2026 UI/UX research dossier across leading AI products.
+
+Do not blindly clone any single product.
+
+Study and combine useful patterns from:
+
+ChatGPT
+
+Claude
+
+Gemini
+
+other leading AI workspaces
+
+High-value UX areas:
+
+Navigation
+
+conversations
+
+projects
+
+files
+
+skills
+
+connectors
+
+agents
+
+research
+
+settings
+
+command search
+
+Chat
+
+streaming
+
+model picker
+
+context scope indicator
+
+attachments
+
+citations
+
+tool activity
+
+structured results
+
+regenerate
+
+edit/resend
+
+voice
+
+multimodal input
+
+Project workspace
+
+summary
+
+chats
+
+files
+
+people
+
+companies
+
+events
+
+decisions
+
+tasks
+
+skills
+
+runs
+
+Research
+
+evidence
+
+sources
+
+claims
+
+model comparison
+
+synthesis
+
+Skills
+
+catalogue
+
+create
+
+test
+
+version
+
+run
+
+permissions
+
+Connectors
+
+connect
+
+accounts
+
+permissions
+
+tools
+
+revoke
+
+audit
+
+Agents
+
+objective
+
+plan
+
+progress
+
+approval
+
+tool usage
+
+failure
+
+result
+
+run history
+
+37. BRANDING
+
+The product should have a real product identity.
+
+Do not use:
+
+generic AI purple/blue gradients
+
+excessive glow
+
+fake futuristic visual language
+
+excessive glassmorphism
+
+over-rounded cards everywhere
+
+pointless animation
+
+copied competitor branding
+
+The requested naming direction is an energetic/exciting meaning.
+
+Do not replace the brand globally with a random word before validating the name.
+
+38. RESEARCH INJECTION PROMPT
+
+Use this when supplying the already-collected AI UI/UX research:
+
+You are the research reconciliation layer for Hanchi.
+
+I am supplying research collected from multiple AI products and models.
+
+Do not invent facts.
+
+For each feature record:
+
+- product
+- feature
+- current/beta/retired when known
+- model if relevant
+- UI/UX pattern
+- workflow
+- source
+- source date
+- confidence
+- lesson for Hanchi
+
+Prefer current 2026 evidence and official sources.
+
+Identify:
+
+1. common patterns
+2. unique strengths
+3. weaknesses to avoid
+4. model-specific capabilities
+5. multimodal strengths
+6. connector patterns
+7. skill/agent patterns
+8. research UX
+9. project/workspace UX
+10. mobile UX
+11. accessibility/keyboard patterns
+12. verification patterns
+13. implementation implications
+
+Do not copy proprietary branding or protected assets.
+
+Produce implementation rules, not a generic product comparison.
+
+39. PERSONAL CONTEXT IMPORT PROMPT
+
+You are the ingestion engine for Hanchi.
+
+Process the supplied AI conversation exports.
+
+Produce structured records for:
+
+- high-signal knowledge
+- project context
+- entities
+- decisions
+- timeline events
+- context_rot
+- contradictions
+- do-not-migrate
+
+Preserve exact dates and times whenever present.
+
+Do not invent dates.
+
+Keep:
+- event date
+- captured date
+- source
+- project
+- person
+- decision status
+- provenance
+
+Current information has priority over historical information.
+
+Historical information remains searchable but should not normally enter active context.
+
+When a detail belongs only to history, place it in context_rot.
+
+Do not migrate anything explicitly excluded.
+
+Return structured output suitable for database ingestion.
+
+40. EXECUTION PHASES
+
+PHASE 0 — AUDIT
+
+Create:
+
+/docs/HANCHI_CURRENT_IMPLEMENTATION_AUDIT.md
+
+Audit:
+
+Lovable references
+
+Supabase configuration
+
+auth
+
+RLS
+
+current functions
+
+model router
+
+storage
+
+projects
+
+localStorage
+
+documents
+
+generated images
+
+connectors
+
+skills
+
+agents
+
+automation
+
+chat
+
+search
+
+memory
+
+admin
+
+tests/build
+
+Do not make broad product changes during the audit.
+
+PHASE 1 — COMPLETE LOVABLE EXIT
+
+Finish all remaining Lovable runtime cleanup.
+
+Verify:
+
+no Lovable AI gateway calls
+
+no Lovable Cloud runtime dependency
+
+provider router works
+
+process-media works
+
+image generation works
+
+chat works
+
+transcription works
+
+translation works
+
+auth works
+
+Supabase connection works
+
+RLS works
+
+Then document.
+
+PHASE 2 — SECURITY + PERSISTENCE
+
+storage
+
+document normalization
+
+real uploads
+
+signed URLs
+
+auth guards
+
+quotas
+
+usage events
+
+indexes
+
+profiles if truly needed
+
+PHASE 3 — PROJECT WORKSPACE
+
+durable projects
+
+project/chat relationship
+
+project/file relationship
+
+project navigation
+
+context scoping
+
+migrate localStorage projects
+
+verify
+
+only then remove localStorage source of truth
+
+PHASE 4 — KNOWLEDGE BRAIN
+
+ingest pipeline
+
+chunks
+
+embeddings
+
+hybrid retrieval
+
+knowledge_items
+
+events
+
+entities
+
+entity links
+
+provenance
+
+historical search
+
+context_rot fallback
+
+contradiction handling
+
+PHASE 5 — SKILLS
+
+schema
+
+executor
+
+skill runs
+
+skill creator
+
+permissions
+
+initial skills
+
+versioning
+
+testing
+
+PHASE 6 — CONNECTORS
+
+registry
+
+credentials
+
+Firecrawl
+
+GitHub
+
+Notion
+
+MCP
+
+tool discovery
+
+permissions
+
+approval
+
+audit
+
+PHASE 7 — AGENTS
+
+agent runs
+
+agent steps
+
+durable state
+
+retries
+
+tool calls
+
+approvals
+
+verification
+
+history
+
+PHASE 8 — AUTOMATION
+
+scheduler
+
+triggers
+
+nightly consolidation
+
+daily review
+
+weekly review
+
+monitoring workflows
+
+PHASE 9 — FRONTEND REBUILD
+
+Only after the backend architecture has stabilized enough to avoid repeated UI rewrites.
+
+Order:
+
+application shell
+
+navigation
+
+chat
+
+projects
+
+files
+
+skills
+
+connectors
+
+agents
+
+research
+
+settings
+
+command palette
+
+mobile/responsive refinement
+
+41. TERMINAL-FIRST HANDOFF
+
+The long-term source of truth is:
+
+GitHub repository
++
+Supabase project
+
+not the browser builder.
+
+Terminal workflow:
+
+clone repo
+↓
+install dependencies
+↓
+run tests/typecheck/build
+↓
+inspect
+↓
+modify
+↓
+test
+↓
+review diff
+↓
+commit
+↓
+Supabase migration/deploy
+↓
+verify
+↓
+push
+
+The Supabase CLI is appropriate for this phase because it supports hosted-project management, migrations, database pushes, type generation, Edge Functions and local development.
+
+Do not mix platform-specific builder assumptions into the final architecture.
+
+42. MIGRATION / BACKUP SAFETY
+
+The existing PostgreSQL backup is a source artifact.
+
+Never:
+
+overwrite the only backup
+
+assume backup = storage files
+
+assume backup = auth configuration
+
+assume backup = edge functions
+
+assume backup = secrets
+
+assume backup = dashboard settings
+
+Use controlled restore/inspection procedures.
+
+The destination Supabase project is the future canonical backend.
+
+43. TEST STRATEGY
+
+Before declaring a subsystem finished, verify:
+
+Auth
+
+sign in
+
+sign out
+
+session refresh
+
+protected route
+
+admin access
+
+Chat
+
+new chat
+
+old chat
+
+streaming
+
+stop
+
+regenerate
+
+edit/resend
+
+model selection
+
+file/image input
+
+Memory
+
+durable write
+
+retrieval
+
+project scope
+
+historical lookup
+
+context_rot fallback
+
+contradiction
+
+Files
+
+upload
+
+persistence
+
+signed URL
+
+ingest
+
+failure
+
+delete
+
+Projects
+
+create
+
+attach chat
+
+attach file
+
+search
+
+scope
+
+Skills
+
+create
+
+test
+
+run
+
+fail safely
+
+version
+
+Connectors
+
+connect
+
+revoke
+
+read tool
+
+write approval
+
+audit
+
+Agents
+
+plan
+
+run
+
+pause
+
+approval
+
+resume
+
+failure
+
+recovery
+
+44. DEFINITION OF DONE
+
+Hanchi is finished only when:
+
+Context
+
+current context is reliable
+
+historical context is searchable
+
+dates can be reconstructed
+
+provenance exists
+
+contradictions are surfaced
+
+Projects
+
+project-scoped context works
+
+files/chats are persistent
+
+project state is durable
+
+AI
+
+multiple providers work
+
+capability routing works
+
+multimodal routing works
+
+usage is tracked
+
+fallback works
+
+Skills
+
+reusable
+
+versioned
+
+tool-aware
+
+creator available
+
+Connectors
+
+real
+
+permissioned
+
+secure
+
+auditable
+
+Agents
+
+durable
+
+bounded
+
+resumable
+
+approval-aware
+
+verifiable
+
+Security
+
+RLS works
+
+secrets are protected
+
+metered endpoints are authenticated
+
+tool writes are approval-gated
+
+UX
+
+fast
+
+responsive
+
+clear
+
+keyboard-friendly
+
+not a fake demo
+
+visually coherent
+
+45. CURRENT FIRST TASK
+
+When this specification is handed to the coding agent:
+
+DO NOT begin by redesigning the UI.
+
+DO NOT begin by creating 30 new tables.
+
+DO NOT begin by building autonomous agents.
+
+Start with:
+
+FULL IMPLEMENTATION AUDIT
+
+Then execute the smallest remaining blocker in PHASE 1.
+
+For every subsequent task, report:
+
+DONE
+PARTIAL
+BLOCKED
+UNVERIFIED
+
+Never label something DONE without evidence.
+
+46. FINAL PRINCIPLE
+
+The goal is not:
+
+"make an AI that has everything."
+
+The goal is:
+
+"make an AI that knows what information it needs, gets it from the right place, uses the right capability, performs the task in bounded steps, verifies the result, and remembers only what should be remembered."
+
+The system should reduce the need for Joshua to repeatedly export chats, explain projects, re-teach preferences, and move context from one AI platform to another.
+
+Build the foundation first.
+
+Then intelligence.
+
+Then tools.
+
+Then autonomy.
+
+Then polish.
+
+END
