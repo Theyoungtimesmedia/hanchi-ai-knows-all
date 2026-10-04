@@ -1,153 +1,118 @@
-import { useState } from "react";
-import { X, Copy, Check, ArrowLeft, Wand2, Minus, Plus, BookOpen, Bug, MessageSquare, Code, FileText, Download, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Code, Copy, Download, Eye, FileText, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { artifactExtension, downloadArtifact, safeArtifactFilename } from "@/lib/artifacts";
 
 interface CanvasModeProps {
   content: string;
   type: "code" | "document";
+  title: string;
+  language: string;
   onClose: () => void;
   onUpdate: (newContent: string) => void;
-  onSendMessage: (message: string) => void;
 }
 
-export const CanvasMode = ({ content, type, onClose, onUpdate, onSendMessage }: CanvasModeProps) => {
+export const CanvasMode = ({ content, type, title, language, onClose, onUpdate }: CanvasModeProps) => {
   const [editableContent, setEditableContent] = useState(content);
+  const [view, setView] = useState<"source" | "preview">("source");
   const [copied, setCopied] = useState(false);
-  const [chatInput, setChatInput] = useState("");
   const { toast } = useToast();
 
+  useEffect(() => {
+    setEditableContent(content);
+    setView("source");
+  }, [content, language]);
+
+  const extension = artifactExtension(language, type);
+  const filename = safeArtifactFilename(title, extension);
+  const canPreview = type === "document" || language.toLowerCase() === "html" || language.toLowerCase() === "htm";
+  const isHtml = language.toLowerCase() === "html" || language.toLowerCase() === "htm";
+  const previewDocument = useMemo(() => {
+    if (!isHtml) return "";
+    const hasDocument = /<!doctype\s+html|<html[\s>]/i.test(editableContent);
+    return hasDocument ? editableContent : `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>${editableContent}</body></html>`;
+  }, [editableContent, isHtml]);
+
+  const updateContent = (value: string) => {
+    setEditableContent(value);
+    onUpdate(value);
+  };
+
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(editableContent);
-    setCopied(true);
-    toast({ title: "Copied to clipboard" });
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(editableContent);
+      setCopied(true);
+      toast({ title: "Copied to clipboard" });
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast({ title: "Could not copy file", variant: "destructive" });
+    }
   };
 
   const handleDownload = () => {
-    const ext = type === "code" ? "txt" : "md";
-    const blob = new Blob([editableContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `hanchi-canvas.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "File downloaded" });
-  };
-
-  const quickActions = type === "code" 
-    ? [
-        { icon: <Bug size={14} />, label: "Fix bugs", prompt: "Fix any bugs in this code" },
-        { icon: <MessageSquare size={14} />, label: "Add comments", prompt: "Add clear comments to this code" },
-        { icon: <Sparkles size={14} />, label: "Optimize", prompt: "Optimize this code for performance" },
-        { icon: <Code size={14} />, label: "Add tests", prompt: "Write unit tests for this code" },
-      ]
-    : [
-        { icon: <Wand2 size={14} />, label: "Polish", prompt: "Add final polish and improve readability" },
-        { icon: <Minus size={14} />, label: "Shorter", prompt: "Make this more concise while keeping key points" },
-        { icon: <Plus size={14} />, label: "Longer", prompt: "Expand this with more detail and examples" },
-        { icon: <BookOpen size={14} />, label: "Simplify", prompt: "Simplify this to a 5th grade reading level" },
-      ];
-
-  const handleChatSubmit = () => {
-    if (!chatInput.trim()) return;
-    onSendMessage(chatInput);
-    setChatInput("");
+    downloadArtifact(editableContent, filename, extension);
+    toast({ title: "File downloaded", description: filename });
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex">
-      {/* Chat panel */}
-      <div className="w-[380px] border-r border-border/50 flex flex-col bg-card/50">
-        <div className="h-14 flex items-center gap-2 px-4 border-b border-border/50">
-          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-lg">
-            <ArrowLeft size={16} />
+    <aside className="fixed inset-0 z-50 flex min-w-0 flex-col border-l border-border bg-background md:relative md:inset-auto md:z-10 md:h-screen md:w-[42%] md:max-w-[620px] md:min-w-[360px] md:flex-shrink-0">
+      <header className="flex h-12 flex-shrink-0 items-center justify-between gap-3 border-b border-border/50 px-3 md:px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          {type === "code" ? <Code size={15} className="flex-shrink-0 text-primary" /> : <FileText size={15} className="flex-shrink-0 text-primary" />}
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-semibold">{title}</h2>
+            <p className="text-[10px] uppercase text-muted-foreground">{language} · {filename}</p>
+          </div>
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleCopy} aria-label="Copy file" title="Copy file">
+            {copied ? <Check size={15} /> : <Copy size={15} />}
           </Button>
-          <span className="text-sm font-semibold">Canvas Chat</span>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleDownload} aria-label="Download file" title="Download file">
+            <Download size={15} />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose} aria-label="Close Canvas" title="Close Canvas">
+            <X size={16} />
+          </Button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="text-center py-8">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3">
-              <span className="text-lg">👃🏿</span>
-            </div>
-            <p className="text-xs text-muted-foreground">Ask Hanchi to edit your {type}</p>
-          </div>
-        </div>
-        <div className="p-3 border-t border-border/50">
-          <div className="flex gap-2">
-            <input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
-              placeholder={`Edit this ${type}...`}
-              className="flex-1 bg-muted/50 rounded-lg px-3 py-2 text-sm border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-            />
-            <Button size="sm" onClick={handleChatSubmit} disabled={!chatInput.trim()} className="rounded-lg">
-              Send
-            </Button>
-          </div>
-        </div>
+      </header>
+
+      <div className="flex h-10 flex-shrink-0 items-center gap-1 border-b border-border/40 px-3">
+        <Button variant={view === "source" ? "secondary" : "ghost"} size="sm" className="h-7 gap-1.5 px-2.5 text-xs" onClick={() => setView("source")}>
+          <Code size={13} /> Source
+        </Button>
+        <Button variant={view === "preview" ? "secondary" : "ghost"} size="sm" className="h-7 gap-1.5 px-2.5 text-xs" onClick={() => setView("preview")} disabled={!canPreview} title={!canPreview ? "Preview is available for HTML and Markdown files" : undefined}>
+          <Eye size={13} /> Preview
+        </Button>
       </div>
 
-      {/* Editor panel */}
-      <div className="flex-1 flex flex-col">
-        <div className="h-14 flex items-center justify-between px-4 border-b border-border/50 bg-background">
-          <div className="flex items-center gap-2">
-            {type === "code" ? <Code size={16} className="text-primary" /> : <FileText size={16} className="text-primary" />}
-            <span className="text-sm font-semibold">{type === "code" ? "Code Editor" : "Document Editor"}</span>
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {view === "source" ? (
+          <textarea
+            aria-label="Edit file content"
+            value={editableContent}
+            onChange={(event) => updateContent(event.target.value)}
+            className="h-full min-h-0 w-full resize-none border-0 bg-background p-4 font-mono text-[13px] leading-6 text-foreground outline-none focus:ring-0"
+            spellCheck={type !== "code"}
+          />
+        ) : isHtml ? (
+          <iframe
+            title={`${title} preview`}
+            srcDoc={previewDocument}
+            sandbox=""
+            referrerPolicy="no-referrer"
+            className="h-full w-full border-0 bg-background"
+          />
+        ) : (
+          <div className="h-full overflow-y-auto px-5 py-4">
+            <article className="mx-auto max-w-2xl text-sm leading-7">
+              <MarkdownMessage content={editableContent} allowRawHtml={false} />
+            </article>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Button variant="ghost" size="sm" onClick={handleCopy} className="h-8 gap-1.5 text-xs">
-              {copied ? <Check size={14} /> : <Copy size={14} />} Copy
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleDownload} className="h-8 gap-1.5 text-xs">
-              <Download size={14} /> Download
-            </Button>
-            <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
-              <X size={16} />
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-3xl mx-auto">
-            {type === "code" ? (
-              <textarea
-                value={editableContent}
-                onChange={(e) => setEditableContent(e.target.value)}
-                className="w-full min-h-[500px] bg-muted/30 rounded-xl p-4 font-mono text-sm border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none"
-                spellCheck={false}
-              />
-            ) : (
-              <textarea
-                value={editableContent}
-                onChange={(e) => setEditableContent(e.target.value)}
-                className="w-full min-h-[500px] bg-transparent rounded-xl p-4 text-sm border border-border/50 focus:outline-none focus:ring-1 focus:ring-primary/30 resize-none leading-relaxed"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Quick actions bar */}
-        <div className="border-t border-border/50 p-3 bg-muted/30">
-          <div className="flex items-center gap-2 max-w-3xl mx-auto overflow-x-auto scrollbar-none">
-            {quickActions.map((action, i) => (
-              <Button
-                key={i}
-                variant="outline"
-                size="sm"
-                onClick={() => onSendMessage(action.prompt)}
-                className="h-8 rounded-lg text-[10px] gap-1.5 whitespace-nowrap border-border/50 hover:border-primary/30 hover:bg-primary/5"
-              >
-                {action.icon} {action.label}
-              </Button>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
-    </div>
+    </aside>
   );
 };
