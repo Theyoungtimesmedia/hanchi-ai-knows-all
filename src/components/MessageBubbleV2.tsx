@@ -50,6 +50,7 @@ interface MessageBubbleV2Props {
   onRegenerate?: () => void;
   onEdit?: (newContent: string) => void;
   onSaveToCollection?: (content: string, type: string) => void;
+  onOpenArtifact?: (content: string, language: string) => void;
   language?: string;
 }
 
@@ -64,6 +65,7 @@ export const MessageBubbleV2 = ({
   onRegenerate,
   onEdit,
   onSaveToCollection,
+  onOpenArtifact,
   language = "en",
 }: MessageBubbleV2Props) => {
   const [showThought, setShowThought] = useState(false);
@@ -280,7 +282,7 @@ export const MessageBubbleV2 = ({
               </div>
             </div>
           ) : isAI ? (
-            <MarkdownMessage content={content} />
+            <MarkdownMessage content={content} onOpenArtifact={onOpenArtifact} />
           ) : (
             <p className="whitespace-pre-wrap">{content}</p>
           )}
@@ -348,14 +350,20 @@ export const MessageBubbleV2 = ({
                   <DropdownMenuItem onClick={handleCopy}>
                     <Copy size={14} className="mr-2" /> Copy all
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onOpenArtifact?.(content, "markdown")}>
+                    <FileText size={14} className="mr-2" /> Open as document
+                  </DropdownMenuItem>
                   {hasCodeBlock && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => toast({ title: "Code copied" })}>
-                        <Code size={14} className="mr-2" /> Copy code
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => toast({ title: "Feature coming soon" })}>
-                        <FileText size={14} className="mr-2" /> Download as file
+                      <DropdownMenuItem onClick={async () => {
+                        const firstCode = content.match(/```[^\n]*\n([\s\S]*?)```/);
+                        if (firstCode?.[1]) {
+                          await navigator.clipboard.writeText(firstCode[1].replace(/\n$/, ""));
+                          toast({ title: "Code copied" });
+                        }
+                      }}>
+                        <Code size={14} className="mr-2" /> Copy first code block
                       </DropdownMenuItem>
                     </>
                   )}

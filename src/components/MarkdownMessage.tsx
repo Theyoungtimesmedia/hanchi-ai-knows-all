@@ -5,9 +5,10 @@ import { CodeBlock } from './CodeBlock';
 
 interface MarkdownMessageProps {
   content: string;
+  onOpenArtifact?: (content: string, language: string) => void;
 }
 
-export const MarkdownMessage = ({ content }: MarkdownMessageProps) => {
+export const MarkdownMessage = ({ content, onOpenArtifact }: MarkdownMessageProps) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -18,7 +19,7 @@ export const MarkdownMessage = ({ content }: MarkdownMessageProps) => {
           const codeString = String(children).replace(/\n$/, '');
 
           return !inline && match ? (
-            <CodeBlock language={match[1]}>{codeString}</CodeBlock>
+            <CodeBlock language={match[1]} onOpenArtifact={onOpenArtifact}>{codeString}</CodeBlock>
           ) : (
             <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
               {children}
