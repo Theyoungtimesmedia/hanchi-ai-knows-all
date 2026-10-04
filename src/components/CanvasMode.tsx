@@ -108,7 +108,7 @@ export const CanvasMode = ({ content, type, title, language, onClose, onUpdate }
         ) : (
           <div className="h-full overflow-y-auto px-5 py-4">
             <article className="mx-auto max-w-2xl text-sm leading-7">
-              <MarkdownMessage content={editableContent} />
+              <MarkdownMessage content={editableContent} allowRawHtml={false} />
             </article>
           </div>
         )}

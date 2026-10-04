@@ -6,13 +6,14 @@ import { CodeBlock } from './CodeBlock';
 interface MarkdownMessageProps {
   content: string;
   onOpenArtifact?: (content: string, language: string) => void;
+  allowRawHtml?: boolean;
 }
 
-export const MarkdownMessage = ({ content, onOpenArtifact }: MarkdownMessageProps) => {
+export const MarkdownMessage = ({ content, onOpenArtifact, allowRawHtml = true }: MarkdownMessageProps) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
+      rehypePlugins={allowRawHtml ? [rehypeRaw] : []}
       components={{
         code({ node, inline, className, children, ...props }: any) {
           const match = /language-(\w+)/.exec(className || '');
