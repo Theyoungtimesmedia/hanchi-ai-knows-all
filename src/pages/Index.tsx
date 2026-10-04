@@ -53,7 +53,7 @@ export default function Index() {
   const [activeCustomGPT, setActiveCustomGPT] = useState<CustomGPT | null>(null);
   const [activeAddons, setActiveAddons] = useState<ActiveAddons>({});
   const [showVoiceMode, setShowVoiceMode] = useState(false);
-  const [canvasState, setCanvasState] = useState<{ open: boolean; content: string; type: "code" | "document" } | null>(null);
+  const [canvasState, setCanvasState] = useState<{ content: string; type: "code" | "document"; title: string; language: string } | null>(null);
   const [currentInputText, setCurrentInputText] = useState("");
   const [showImageGen, setShowImageGen] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
@@ -177,9 +177,20 @@ export default function Index() {
   const handleOpenCanvas = useCallback(() => {
     const lastAI = [...messages].reverse().find(m => m.role === 'assistant');
     if (!lastAI) return;
-    const hasCode = lastAI.content.includes('```');
-    setCanvasState({ open: true, content: hasCode ? lastAI.content.replace(/```\w*\n?/g, '').replace(/```/g, '') : lastAI.content, type: hasCode ? "code" : "document" });
+    const title = lastAI.content.match(/^#\s+(.+)$/m)?.[1]?.trim() || "Hanchi response";
+    setCanvasState({ content: lastAI.content, type: "document", title, language: "markdown" });
   }, [messages]);
+
+  const handleOpenArtifact = useCallback((content: string, language: string) => {
+    const normalizedLanguage = language.toLowerCase();
+    const isDocument = normalizedLanguage === "markdown" || normalizedLanguage === "md";
+    setCanvasState({
+      content,
+      type: isDocument ? "document" : "code",
+      title: isDocument ? (content.match(/^#\s+(.+)$/m)?.[1]?.trim() || "Hanchi document") : `Hanchi ${normalizedLanguage} file`,
+      language: isDocument ? "markdown" : normalizedLanguage,
+    });
+  }, []);
 
   const handleSignOut = async () => { await supabase.auth.signOut(); navigate("/auth"); };
 
@@ -229,12 +240,6 @@ export default function Index() {
         onNewConversation={handleNewConversation}
       />
       <VoiceModePanel isOpen={showVoiceMode} onClose={() => setShowVoiceMode(false)} onSendMessage={handleSend} lastAIResponse={lastAIMessage} language={language} isAIResponding={isLoading} />
-      {canvasState?.open && (
-        <CanvasMode content={canvasState.content} type={canvasState.type} onClose={() => setCanvasState(null)}
-          onUpdate={(newContent) => setCanvasState(prev => prev ? { ...prev, content: newContent } : null)}
-          onSendMessage={(msg) => handleSend(`Regarding the canvas content: ${msg}`)} />
-      )}
-      
       {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
       
       <AppSidebar
@@ -266,8 +271,9 @@ export default function Index() {
         </DialogContent>
       </Dialog>
 
+      <div className="flex min-w-0 flex-1">
       {/* Main content */}
-      <div className="flex-1 flex flex-col relative w-full max-w-full h-screen">
+      <div className="flex min-w-0 flex-1 flex-col relative w-full max-w-full h-screen">
         {/* Announcement Banner */}
         {announcements.filter(a => !dismissedAnnouncements.has(a.id)).slice(0, 1).map((ann) => (
           <div key={ann.id} className="bg-primary/6 border-b border-primary/10 px-4 py-2 flex items-center gap-2.5 flex-shrink-0">
@@ -367,6 +373,7 @@ export default function Index() {
                       language={language}
                       onRegenerate={msg.role === 'assistant' && index === messages.length - 1 ? regenerateLastMessage : undefined}
                       onEdit={msg.role === 'user' ? (newContent) => editMessage(index, newContent) : undefined}
+                      onOpenArtifact={handleOpenArtifact}
                     />
                   </motion.div>
                 ))}
@@ -422,6 +429,17 @@ export default function Index() {
             inputValue={currentInputText}
           />
         </div>
+      </div>
+      {canvasState && (
+        <CanvasMode
+          content={canvasState.content}
+          type={canvasState.type}
+          title={canvasState.title}
+          language={canvasState.language}
+          onClose={() => setCanvasState(null)}
+          onUpdate={(newContent) => setCanvasState(prev => prev ? { ...prev, content: newContent } : null)}
+        />
+      )}
       </div>
     </motion.div>
   );
