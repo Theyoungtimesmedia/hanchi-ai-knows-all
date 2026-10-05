@@ -313,7 +313,12 @@ export const useChat = (
         const message = error instanceof Error ? error.message : "Failed to send message.";
         setRequestError({ title: "Message could not be sent", message });
         toast({ title: "Message could not be sent", description: message, variant: "destructive" });
-        setMessages((prev) => prev.slice(0, -1));
+        setMessages((prev) => {
+          const lastMessage = prev[prev.length - 1];
+          return lastMessage?.role === "assistant" && !lastMessage.content
+            ? prev.slice(0, -1)
+            : prev;
+        });
       } finally {
         setIsLoading(false);
         setIsStreaming(false);
