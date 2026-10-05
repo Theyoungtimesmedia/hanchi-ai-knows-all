@@ -31,6 +31,12 @@ interface ChatOptions {
   userMemory?: string;
 }
 
+interface ChatRequestError {
+  title: string;
+  message: string;
+  billingUrl?: string;
+}
+
 export const useChat = (
   language: string, 
   conversationId: string | null, 
@@ -40,6 +46,7 @@ export const useChat = (
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [requestError, setRequestError] = useState<ChatRequestError | null>(null);
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -146,6 +153,7 @@ export const useChat = (
 
   const sendMessage = useCallback(
     async (content: string, images?: string[]) => {
+      setRequestError(null);
       analytics.trackChatMessage('user', content.length);
       performanceMonitor.startTimer('chat_response');
       
@@ -197,21 +205,31 @@ export const useChat = (
         if (!response.ok) {
           const errorMessage = await extractErrorMessage(response);
           if (response.status === 429) {
+            const hasNoCredits = /no credits remaining|insufficient_quota|credit balance/i.test(errorMessage);
+            const title = hasNoCredits ? "OpenAI API credits are exhausted" : "AI provider rate limit reached";
+            const message = hasNoCredits
+              ? "Your message is still here, but Hanchi cannot generate a reply until the OpenAI API account has credits. No automatic retry was made."
+              : "The provider is rate-limiting requests. Wait before sending another message; Hanchi did not retry automatically.";
+            const error = {
+              title,
+              message,
+              ...(hasNoCredits ? { billingUrl: "https://platform.openai.com/settings/organization/billing/" } : {}),
+            };
+            setRequestError(error);
             toast({
-              title: "Rate limit exceeded",
-              description: errorMessage,
+              title,
+              description: message,
               variant: "destructive",
             });
-            setMessages((prev) => prev.slice(0, -1));
             return;
           }
           if (response.status === 402) {
+            const error = { title: "Service limit reached", message: errorMessage };
+            setRequestError(error);
             toast({
-              title: "Service limit reached",
-              description: errorMessage,
+              ...error,
               variant: "destructive",
             });
-            setMessages((prev) => prev.slice(0, -1));
             return;
           }
           throw new Error(errorMessage);
@@ -292,11 +310,9 @@ export const useChat = (
         }
         analytics.trackError('chat_send_failed', { error: String(error) });
         console.error("Chat error:", error);
-        toast({
-          title: "Error",
-          description: "Failed to send message. Please try again.",
-          variant: "destructive",
-        });
+        const message = error instanceof Error ? error.message : "Failed to send message.";
+        setRequestError({ title: "Message could not be sent", message });
+        toast({ title: "Message could not be sent", description: message, variant: "destructive" });
         setMessages((prev) => prev.slice(0, -1));
       } finally {
         setIsLoading(false);
@@ -309,6 +325,10 @@ export const useChat = (
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+  }, []);
+
+  const clearRequestError = useCallback(() => {
+    setRequestError(null);
   }, []);
 
   const addMessage = useCallback((message: Message) => {
@@ -341,6 +361,8 @@ export const useChat = (
     messages,
     isLoading,
     isStreaming,
+    requestError,
+    clearRequestError,
     sendMessage,
     clearMessages,
     addMessage,

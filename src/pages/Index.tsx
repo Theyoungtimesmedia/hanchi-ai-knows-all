@@ -23,7 +23,7 @@ import { CanvasMode } from "@/components/CanvasMode";
 import { ImageGenerationModal } from "@/components/ImageGenerationModal";
 import { VoiceTranslationPanel } from "@/components/VoiceTranslationPanel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot, Loader2, Mic, Columns, X } from "lucide-react";
+import { Menu, Bell, Globe, ImagePlus, Sparkles, PenLine, Square, BookOpen, Bot, Loader2, Mic, Columns, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -86,7 +86,7 @@ export default function Index() {
     userMemory: `${getMemoryContext()}${getBrainContext()}`,
   };
   
-  const { messages, isLoading, isStreaming, sendMessage, addMessage, regenerateLastMessage, editMessage, stopGeneration } = 
+  const { messages, isLoading, isStreaming, requestError, clearRequestError, sendMessage, addMessage, regenerateLastMessage, editMessage, stopGeneration } = 
     useChat(language, currentConversationId, user?.id || null, chatOptions);
 
   useEffect(() => {
@@ -377,6 +377,24 @@ export default function Index() {
                     />
                   </motion.div>
                 ))}
+
+                {requestError && (
+                  <div role="alert" className="mb-4 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm">
+                    <AlertCircle size={17} className="mt-0.5 flex-shrink-0 text-destructive" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-foreground">{requestError.title}</p>
+                      <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">{requestError.message}</p>
+                      {requestError.billingUrl && (
+                        <a href={requestError.billingUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-medium text-primary underline underline-offset-2">
+                          Open OpenAI billing settings
+                        </a>
+                      )}
+                    </div>
+                    <Button variant="ghost" size="icon" className="-mr-2 -mt-2 h-7 w-7 flex-shrink-0" onClick={clearRequestError} aria-label="Dismiss error">
+                      <X size={14} />
+                    </Button>
+                  </div>
+                )}
                 
                 {pendingImagePrompt && (
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-3">
