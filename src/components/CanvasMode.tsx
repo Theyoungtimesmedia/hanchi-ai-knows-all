@@ -57,13 +57,13 @@ export const CanvasMode = ({ content, type, title, language, onClose, onUpdate }
   };
 
   return (
-    <aside className="fixed inset-0 z-50 flex min-w-0 flex-col border-l border-border bg-background md:relative md:inset-auto md:z-10 md:h-screen md:w-[42%] md:max-w-[620px] md:min-w-[360px] md:flex-shrink-0">
+    <aside className="fixed inset-0 z-50 flex min-w-0 flex-col border-l border-border bg-background lg:relative lg:inset-auto lg:z-10 lg:h-screen lg:w-[42%] lg:max-w-[620px] lg:min-w-[360px] lg:flex-shrink-0">
       <header className="flex h-12 flex-shrink-0 items-center justify-between gap-3 border-b border-border/50 px-3 md:px-4">
         <div className="flex min-w-0 items-center gap-2">
           {type === "code" ? <Code size={15} className="flex-shrink-0 text-primary" /> : <FileText size={15} className="flex-shrink-0 text-primary" />}
           <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold">{title}</h2>
-            <p className="text-[10px] uppercase text-muted-foreground">{language} · {filename}</p>
+            <p className="truncate text-[10px] uppercase text-muted-foreground">{language} · {filename}</p>
           </div>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
