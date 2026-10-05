@@ -63,7 +63,7 @@ export const CanvasMode = ({ content, type, title, language, onClose, onUpdate }
           {type === "code" ? <Code size={15} className="flex-shrink-0 text-primary" /> : <FileText size={15} className="flex-shrink-0 text-primary" />}
           <div className="min-w-0">
             <h2 className="truncate text-sm font-semibold">{title}</h2>
-            <p className="text-[10px] uppercase text-muted-foreground">{language} · {filename}</p>
+            <p className="truncate text-[10px] uppercase text-muted-foreground">{language} · {filename}</p>
           </div>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
