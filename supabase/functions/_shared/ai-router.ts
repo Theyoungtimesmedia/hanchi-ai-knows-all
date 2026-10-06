@@ -46,7 +46,7 @@ export const MODEL_CATALOGUE: ModelEntry[] = [
   {
     provider: 'openai',
     id: 'gpt-4o-mini',
-    alias: 'hanchi-instant',
+    alias: 'hanchi-openai-mini',
     label: 'Hanchi Instant',
     capabilities: ['text', 'image_input', 'documents', 'structured_output', 'tool_calling', 'streaming'],
   },
@@ -73,10 +73,17 @@ export const MODEL_CATALOGUE: ModelEntry[] = [
   },
   {
     provider: 'google',
-    id: 'gemini-1.5-pro',
+    id: 'gemini-3.8-flash',
     alias: 'hanchi-context',
-    label: 'Hanchi Context',
-    capabilities: ['text', 'image_input', 'audio_input', 'video_input', 'documents', 'streaming'],
+    label: 'Gemini 3.8 Flash',
+    capabilities: ['text', 'image_input', 'audio_input', 'video_input', 'documents', 'structured_output', 'tool_calling', 'streaming'],
+  },
+  {
+    provider: 'google',
+    id: 'gemini-3.1-flash-lite',
+    alias: 'hanchi-instant',
+    label: 'Gemini 3.1 Flash-Lite',
+    capabilities: ['text', 'image_input', 'audio_input', 'video_input', 'documents', 'structured_output', 'tool_calling', 'streaming'],
   },
   {
     provider: 'replicate',
@@ -89,12 +96,12 @@ export const MODEL_CATALOGUE: ModelEntry[] = [
 
 /** Legacy UI model names kept working so the frontend contract does not break. */
 const LEGACY_ALIASES: Record<string, string> = {
-  'gemini-pro': 'hanchi-pro',
+  'gemini-pro': 'hanchi-context',
   'gemini-flash': 'hanchi-instant',
-  'gpt-5': 'hanchi-pro',
+  'gpt-5': 'hanchi-context',
   'gpt-5-mini': 'hanchi-instant',
   'gpt-5-nano': 'hanchi-instant',
-  'deep-think': 'hanchi-pro',
+  'deep-think': 'hanchi-context',
   'claude': 'hanchi-reason',
   'sdxl': 'hanchi-art',
 };
@@ -133,13 +140,14 @@ export function resolveModel(
     if (exact) return exact;
   }
 
-  const capable = MODEL_CATALOGUE.find((entry) => supportsAll(entry) && isProviderAvailable(entry.provider));
+  const capable = MODEL_CATALOGUE.find((entry) => entry.provider === 'google' && supportsAll(entry) && isProviderAvailable(entry.provider))
+    || MODEL_CATALOGUE.find((entry) => supportsAll(entry) && isProviderAvailable(entry.provider));
   if (capable) return capable;
 
   const anyCapable = MODEL_CATALOGUE.find(supportsAll);
   if (anyCapable) {
     throw new Error(
-      `No provider key configured for ${capabilities.join(', ')}. Configure ${anyCapable.provider.toUpperCase()}_API_KEY.`,
+      `No provider key configured for ${capabilities.join(', ')}. Configure ${anyCapable.provider === 'google' ? 'GEMINI_API_KEY' : `${anyCapable.provider.toUpperCase()}_API_KEY`}.`,
     );
   }
 
