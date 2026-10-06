@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { resolveModel, routedChat, routerError, type Capability } from "../_shared/ai-router.ts";
 import { selectSkills } from "../_shared/skills.ts";
+import { JOSHUA_CONTEXT } from "../_shared/joshua-context.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -183,7 +184,8 @@ When you learn something new:
     // Custom GPT system prompt takes precedence
     const baseSystemPrompt = customSystemPrompt || buildSystemPrompt(language, tone, toneInstructions[tone] || "", thinkMode);
     
-    const systemPrompt = baseSystemPrompt + 
+    const systemPrompt = baseSystemPrompt +
+      JOSHUA_CONTEXT +
       `\n\n=== ACTIVE SKILLS ===\n${skillSelection.instructions}` +
       userLearningPrompt +
       nigerianContext + 
