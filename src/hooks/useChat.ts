@@ -206,14 +206,14 @@ export const useChat = (
           const errorMessage = await extractErrorMessage(response);
           if (response.status === 429) {
             const hasNoCredits = /no credits remaining|insufficient_quota|credit balance/i.test(errorMessage);
-            const title = hasNoCredits ? "OpenAI API credits are exhausted" : "AI provider rate limit reached";
+            const title = hasNoCredits ? "Gemini API quota or billing limit reached" : "AI provider rate limit reached";
             const message = hasNoCredits
-              ? "Your message is still here, but Hanchi cannot generate a reply until the OpenAI API account has credits. No automatic retry was made."
+              ? "Your message is still here, but Gemini cannot generate a reply until the Google AI Studio quota or billing limit is resolved. No automatic retry was made."
               : "The provider is rate-limiting requests. Wait before sending another message; Hanchi did not retry automatically.";
             const error = {
               title,
               message,
-              ...(hasNoCredits ? { billingUrl: "https://platform.openai.com/settings/organization/billing/" } : {}),
+              ...(hasNoCredits ? { billingUrl: "https://aistudio.google.com/" } : {}),
             };
             setRequestError(error);
             toast({

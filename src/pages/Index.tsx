@@ -386,7 +386,7 @@ export default function Index() {
                       <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground">{requestError.message}</p>
                       {requestError.billingUrl && (
                         <a href={requestError.billingUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-medium text-primary underline underline-offset-2">
-                          Open OpenAI billing settings
+                          Open Google AI Studio
                         </a>
                       )}
                     </div>

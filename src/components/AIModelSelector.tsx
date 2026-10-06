@@ -1,4 +1,4 @@
-import { ChevronDown, Zap, Brain, Sparkles, Rocket, Star } from "lucide-react";
+import { ChevronDown, Zap, Brain, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,33 +20,21 @@ export const AI_MODELS: AIModel[] = [
   { 
     id: 'gemini-flash', 
     name: 'Hanchi Fast', 
-    description: 'Quick responses, great for most tasks',
+    description: 'Gemini 3.1 Flash-Lite · quick everyday answers',
     icon: <Zap className="w-4 h-4 text-yellow-500" />,
     badge: 'Default'
   },
   { 
     id: 'gemini-pro', 
     name: 'Hanchi Pro', 
-    description: 'Deep reasoning & complex analysis',
+    description: 'Gemini 3.8 Flash · complex work and reasoning',
     icon: <Brain className="w-4 h-4 text-purple-500" />,
-  },
-  { 
-    id: 'gpt-5-mini', 
-    name: 'GPT-5 Mini', 
-    description: 'OpenAI - balanced power & speed',
-    icon: <Sparkles className="w-4 h-4 text-green-500" />,
-  },
-  { 
-    id: 'gpt-5', 
-    name: 'GPT-5', 
-    description: 'OpenAI - most powerful reasoning',
-    icon: <Star className="w-4 h-4 text-blue-500" />,
   },
   { 
     id: 'deep-think', 
     name: 'Deep Think', 
-    description: 'Extended thinking for complex problems',
-    icon: <Rocket className="w-4 h-4 text-red-500" />,
+    description: 'Gemini 3.8 Flash for harder problems',
+    icon: <Sparkles className="w-4 h-4 text-green-500" />,
     badge: 'Pro'
   },
 ];
