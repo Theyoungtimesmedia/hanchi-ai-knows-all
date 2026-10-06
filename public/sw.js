@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hanchi-ai-v2';
+const CACHE_NAME = 'hanchi-ai-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately on install
@@ -50,6 +50,10 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
+
+  // Vite's optimized development modules are versioned as a connected graph.
+  // Serving one stale module from cache can mix React runtimes and break hooks.
+  if (new URL(event.request.url).pathname.includes('/node_modules/.vite/')) return;
 
   // Skip Supabase API calls - these need fresh data
   if (event.request.url.includes('supabase.co')) return;
