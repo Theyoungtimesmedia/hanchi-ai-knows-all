@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
-  Archive, ArrowLeft, ArrowRight, BookOpen, Bot, Brain, ChevronDown, ChevronRight, CircleHelp,
-  Copy, Download, File, FileCode2, FileImage, FileText, Folder, FolderOpen, Github, Globe,
+  Archive, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Bot, Brain, ChevronDown, ChevronRight, CircleHelp,
+  Copy, Download, File, FileCode2, FileImage, FileText, Folder, FolderOpen, GitBranch, Github, Globe,
   ImageIcon, Library, Loader2, Menu, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight,
   Paperclip, Pencil, Plus, RefreshCw, Search, Settings2, Share2, Sparkles, ThumbsDown, ThumbsUp,
   Trash2, Upload, Volume2, WandSparkles, X, Zap
@@ -121,29 +121,48 @@ export default function Index(){
     if(busy) return;
     const idx=messages.findIndex(m=>m.id===messageId); if(idx<0)return;
     const prevUser=[...messages.slice(0,idx)].reverse().find(m=>m.role==='user'); if(!prevUser)return;
-    setMessages(messages.slice(0,idx));
-    setInput(prevUser.content); await sendMessage(prevUser.content);
+    const history=messages.slice(0,idx);
+    // Replace the selected assistant answer instead of creating a second user turn.
+    if(messageId && !messageId.startsWith('stream-')){
+      await db.from('messages').delete().eq('id',messageId);
+    }
+    setMessages(history);
+    setInput('');
+    await sendMessage(prevUser.content,{history,persistUser:false});
   }
   async function branchFrom(messageId:string){
-    const idx=messages.findIndex(m=>m.id===messageId); if(idx<0)return;
+    if(busy) return;
+    const idx=messages.findIndex(m=>m.id===messageId); if(idx<0 || !user)return;
     const seed=messages.slice(0,idx+1);
-    const title=(safeText(seed.findLast(m=>m.role==='user')?.content)||'Branched chat').slice(0,80);
-    const cid=await ensureConversation(title+' — Branch');
-    if(cid===conversationId){ setMessages(seed); return; }
-    setConversationId(cid); setMessages(seed);
-    for(const m of seed) await db.from('messages').insert({conversation_id:cid,role:m.role,content:m.content,metadata:{...(m.metadata||{}),branched:true}});
-    setConversations(prev=>[{id:cid,title:title+' — Branch',updated_at:new Date().toISOString(),pinned:false},...prev]);
+    const title=(safeText([...seed].reverse().find(m=>m.role==='user')?.content)||'Branched chat').slice(0,72);
+    const branchTitle=`${title} — Branch`;
+    const {data:conversation,error:conversationError}=await db.from('conversations').insert({user_id:user.id,title:branchTitle,language:'en'}).select('id,title,updated_at,pinned').single();
+    if(conversationError) { setLastError(conversationError.message); return; }
+    const payload=seed.map(m=>({conversation_id:conversation.id,role:m.role,content:m.content,metadata:{...(m.metadata||{}),branched:true}}));
+    const {data:copied,error:copyError}=await db.from('messages').insert(payload).select('id,role,content,created_at,metadata');
+    if(copyError){ setLastError(copyError.message); return; }
+    setConversationId(conversation.id);
+    setMessages(copied||seed);
+    setConversations(prev=>[conversation,...prev]);
     setView('chat');
+    setRightOpen(false);
   }
-  async function sendMessage(custom?:string){
+  async function sendMessage(custom?:string, options:{history?:HanchiMessage[];persistUser?:boolean}={}){
     const raw=(custom??input).trim(); if(!raw||busy||!user)return;
-    setLastError(null); const cid=await ensureConversation(raw); setInput(''); setBusy(true);
+    setLastError(null);
+    const cid=await ensureConversation(raw);
+    setInput('');
+    setBusy(true);
     const attachedImages=attachments.filter(a=>a.kind==='image'&&a.base64).map(a=>a.base64 as string);
     const transcript=attachments.filter(a=>a.text).map(a=>`[${a.name}]\n${a.text}`).join('\n\n');
     const prompt=transcript?`${raw}\n\n${transcript}`:raw;
+    const persistUser=options.persistUser!==false;
+    const sourceHistory=options.history ?? messages.filter(m=>m.role!=='system');
     try{
-      await storeMessage(cid,'user',prompt,{mode,attachments:attachments.map(a=>({name:a.name,kind:a.kind,size:a.size}))});
-      const history=[...messages.filter(m=>m.role!=='system'),{role:'user',content:prompt}].map(m=>({role:m.role,content:m.content}));
+      if(persistUser){
+        await storeMessage(cid,'user',prompt,{mode,attachments:attachments.map(a=>({name:a.name,kind:a.kind,size:a.size}))});
+      }
+      const history=(persistUser ? [...sourceHistory,{role:'user',content:prompt}] : sourceHistory).map(m=>({role:m.role,content:m.content}));
       setAttachments([]);
       if(mode==='research'){
         setStatus('Researching and collecting evidence…');
@@ -258,16 +277,15 @@ export default function Index(){
       </section>
     </main>
 
-    {settingsOpen&&<SettingsModal tab={settingsTab} setTab={setSettingsTab} connectors={connectors} onClose={()=>setSettingsOpen(false)} themeClass=""/>}
+    {settingsOpen&&<SettingsModal tab={settingsTab} setTab={setSettingsTab} connectors={connectors} onClose={()=>setSettingsOpen(false)}/>}
     {globalSearchOpen&&<div className="overlay" onMouseDown={()=>setGlobalSearchOpen(false)}><div className="search-dialog" onMouseDown={e=>e.stopPropagation()}><div className="search-head"><Search size={18}/><input autoFocus value={globalQuery} onChange={e=>setGlobalQuery(e.target.value)} placeholder="Search chats"/><kbd>Esc</kbd></div><div className="search-results">{filteredChats.slice(0,30).map(c=><button key={c.id} onClick={()=>{loadConversation(c.id);setGlobalSearchOpen(false)}}><MessageSquare size={15}/><span>{safeText(c.title)}</span><small>{new Date(c.updated_at).toLocaleDateString('en-GB')}</small></button>)}{!filteredChats.length&&<div className="empty-state">No chats found.</div>}</div></div></div>}
   </div>
 }
 
-function Message({msg,onCopy,onRetry,onBranch,onSpeak}:{msg:HanchiMessage;onCopy:()=>void;onRetry?:()=>void;onBranch?:()=>void;onSpeak?:()=>void}){
+function Message({msg,onCopy,onRetry,onBranch,onSpeak}:{msg:HanchiMessage;onCopy:()=>void;onRetry?:()=>void;onBranch?:()=>void;onSpeak?:()=>void;key?:string|number}){
   const user=msg.role==='user'; const error=!!msg.metadata?.error;
-  return <div className={`message-row ${user?'user':'assistant'}`}><div className="message-rail"><div className="message-avatar">{user?'JO':'H'}</div><div className="message-main"><div className="message-head"><b>{user?'You':'Hanchi'}</b><span>{msg.created_at?new Date(msg.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</span></div><div className={`message-content ${error?'message-error':''}`}><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div>{!user&&<div className="message-actions"><button onClick={onCopy} title="Copy"><Copy size={15}/></button>{onSpeak&&<button onClick={onSpeak} title="Read aloud"><Volume2 size={15}/></button>}<button title="Good response"><ThumbsUp size={15}/></button><button title="Poor response"><ThumbsDown size={15}/></button>{onRetry&&<button onClick={onRetry} title="Retry"><RefreshCw size={15}/></button>}{onBranch&&<button onClick={onBranch} title="Branch chat"><GitBranchIcon/></button><button title="Share"><Share2 size={15}/></button><button title="More"><MoreHorizontal size={15}/></button></div>}</div></div></div>
+  return <div className={`message-row ${user?'user':'assistant'}`}><div className="message-rail"><div className="message-avatar">{user?'JO':'H'}</div><div className="message-main"><div className="message-head"><b>{user?'You':'Hanchi'}</b><span>{msg.created_at?new Date(msg.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</span></div><div className={`message-content ${error?'message-error':''}`}><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div>{!user&&<div className="message-actions"><button onClick={onCopy} title="Copy"><Copy size={15}/></button>{onSpeak&&<button onClick={onSpeak} title="Read aloud"><Volume2 size={15}/></button>}<button title="Good response"><ThumbsUp size={15}/></button><button title="Poor response"><ThumbsDown size={15}/></button>{onRetry&&<button onClick={onRetry} title="Retry"><RefreshCw size={15}/></button>}{onBranch&&<button onClick={onBranch} title="Branch chat"><GitBranch size={15}/></button>}<button title="Share"><Share2 size={15}/></button><button title="More"><MoreHorizontal size={15}/></button></div>}</div></div></div>
 }
-function GitBranchIcon(){return <span style={{display:'inline-flex',width:15,height:15}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3v12"/><path d="M18 9v12"/><circle cx="6" cy="3" r="2"/><circle cx="6" cy="15" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 15c0-4 12-4 12-8"/></svg></span>}
 
 function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:boolean;processing:boolean;onUpload:()=>void;onDictate:()=>void;menuOpen:boolean;setMenuOpen:(v:boolean)=>void;mode:'chat'|'research'|'council';setMode:(v:any)=>void;effort:string;setEffort:(s:string)=>void;effortMenu:boolean;setEffortMenu:(v:boolean)=>void}){
   const {input,setInput,send,busy,processing,onUpload,onDictate,menuOpen,setMenuOpen,mode,setMode,effort,setEffort,effortMenu,setEffortMenu}=p;
