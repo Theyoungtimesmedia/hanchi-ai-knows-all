@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -424,6 +424,981 @@ export type Database = {
           },
         ]
       }
+      hanchi_agent_runs: {
+        Row: {
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          error: string | null
+          goal: string
+          id: string
+          max_steps: number
+          plan: Json
+          project_id: string | null
+          result: Json | null
+          started_at: string | null
+          status: string
+          step_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          goal: string
+          id?: string
+          max_steps?: number
+          plan?: Json
+          project_id?: string | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          step_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          goal?: string
+          id?: string
+          max_steps?: number
+          plan?: Json
+          project_id?: string | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          step_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_agent_runs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_agent_runs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_agent_steps: {
+        Row: {
+          approved_at: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          input: Json | null
+          kind: string
+          output: Json | null
+          requires_approval: boolean
+          run_id: string
+          started_at: string | null
+          status: string
+          step_index: number
+          tool_name: string | null
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          input?: Json | null
+          kind: string
+          output?: Json | null
+          requires_approval?: boolean
+          run_id: string
+          started_at?: string | null
+          status?: string
+          step_index: number
+          tool_name?: string | null
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          input?: Json | null
+          kind?: string
+          output?: Json | null
+          requires_approval?: boolean
+          run_id?: string
+          started_at?: string | null
+          status?: string
+          step_index?: number
+          tool_name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_agent_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_artifact_versions: {
+        Row: {
+          artifact_id: string
+          content: string
+          created_at: string
+          id: string
+          metadata: Json
+          user_id: string
+          version: number
+        }
+        Insert: {
+          artifact_id: string
+          content: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id: string
+          version: number
+        }
+        Update: {
+          artifact_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_artifact_versions_artifact_id_fkey"
+            columns: ["artifact_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_artifacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_artifacts: {
+        Row: {
+          artifact_type: string
+          content: string
+          conversation_id: string | null
+          created_at: string
+          file_name: string
+          id: string
+          language: string | null
+          metadata: Json
+          mime_type: string
+          preview_mode: string
+          project_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          artifact_type?: string
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          language?: string | null
+          metadata?: Json
+          mime_type?: string
+          preview_mode?: string
+          project_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          artifact_type?: string
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          language?: string | null
+          metadata?: Json
+          mime_type?: string
+          preview_mode?: string
+          project_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_artifacts_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_artifacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_brain_chunks: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+          project_id: string | null
+          source_id: string | null
+          source_type: string
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          project_id?: string | null
+          source_id?: string | null
+          source_type: string
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          project_id?: string | null
+          source_id?: string | null
+          source_type?: string
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_brain_chunks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_connector_tools: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          input_schema: Json
+          operation: string
+          provider: string
+          requires_approval: boolean
+          tool_name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          input_schema?: Json
+          operation?: string
+          provider: string
+          requires_approval?: boolean
+          tool_name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          input_schema?: Json
+          operation?: string
+          provider?: string
+          requires_approval?: boolean
+          tool_name?: string
+        }
+        Relationships: []
+      }
+      hanchi_connectors: {
+        Row: {
+          config: Json
+          created_at: string
+          display_name: string
+          id: string
+          last_used_at: string | null
+          provider: string
+          scopes: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          display_name: string
+          id?: string
+          last_used_at?: string | null
+          provider: string
+          scopes?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          display_name?: string
+          id?: string
+          last_used_at?: string | null
+          provider?: string
+          scopes?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hanchi_daily_briefings: {
+        Row: {
+          bible_reference: string | null
+          bible_text: string | null
+          briefing_date: string
+          created_at: string
+          id: string
+          note: string | null
+          priorities: Json
+          schedule: Json
+          user_id: string
+          word_of_day: string | null
+        }
+        Insert: {
+          bible_reference?: string | null
+          bible_text?: string | null
+          briefing_date: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          priorities?: Json
+          schedule?: Json
+          user_id: string
+          word_of_day?: string | null
+        }
+        Update: {
+          bible_reference?: string | null
+          bible_text?: string | null
+          briefing_date?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          priorities?: Json
+          schedule?: Json
+          user_id?: string
+          word_of_day?: string | null
+        }
+        Relationships: []
+      }
+      hanchi_events: {
+        Row: {
+          body: string
+          captured_at: string
+          confidence: number
+          entity_ids: string[]
+          event_date: string | null
+          event_time: string | null
+          id: string
+          kind: string
+          project_id: string | null
+          search_text: unknown
+          source_ref: string | null
+          source_type: string | null
+          status: string
+          supersedes_id: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          captured_at?: string
+          confidence?: number
+          entity_ids?: string[]
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          kind: string
+          project_id?: string | null
+          search_text?: unknown
+          source_ref?: string | null
+          source_type?: string | null
+          status?: string
+          supersedes_id?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          captured_at?: string
+          confidence?: number
+          entity_ids?: string[]
+          event_date?: string | null
+          event_time?: string | null
+          id?: string
+          kind?: string
+          project_id?: string | null
+          search_text?: unknown
+          source_ref?: string | null
+          source_type?: string | null
+          status?: string
+          supersedes_id?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_events_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_knowledge_items: {
+        Row: {
+          captured_at: string
+          category: string
+          confidence: number
+          id: string
+          key: string
+          project_id: string | null
+          scope: string
+          search_text: unknown
+          source_id: string | null
+          source_ref: string | null
+          source_type: string | null
+          status: string
+          supersedes_id: string | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          value: string
+        }
+        Insert: {
+          captured_at?: string
+          category?: string
+          confidence?: number
+          id?: string
+          key: string
+          project_id?: string | null
+          scope?: string
+          search_text?: unknown
+          source_id?: string | null
+          source_ref?: string | null
+          source_type?: string | null
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          value: string
+        }
+        Update: {
+          captured_at?: string
+          category?: string
+          confidence?: number
+          id?: string
+          key?: string
+          project_id?: string | null
+          scope?: string
+          search_text?: unknown
+          source_id?: string | null
+          source_ref?: string | null
+          source_type?: string | null
+          status?: string
+          supersedes_id?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_knowledge_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_knowledge_items_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_knowledge_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_knowledge_items_supersedes_id_fkey"
+            columns: ["supersedes_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_knowledge_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_knowledge_sources: {
+        Row: {
+          content: string | null
+          content_sha256: string | null
+          created_at: string
+          id: string
+          kind: string
+          metadata: Json
+          source_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          content_sha256?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          metadata?: Json
+          source_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          content_sha256?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          metadata?: Json
+          source_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hanchi_model_catalog: {
+        Row: {
+          alias: string
+          capabilities: Json
+          created_at: string
+          enabled: boolean
+          free_tier: boolean
+          id: string
+          label: string
+          metadata: Json
+          model_id: string
+          priority: number
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          alias: string
+          capabilities?: Json
+          created_at?: string
+          enabled?: boolean
+          free_tier?: boolean
+          id?: string
+          label: string
+          metadata?: Json
+          model_id: string
+          priority?: number
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          alias?: string
+          capabilities?: Json
+          created_at?: string
+          enabled?: boolean
+          free_tier?: boolean
+          id?: string
+          label?: string
+          metadata?: Json
+          model_id?: string
+          priority?: number
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hanchi_model_runs: {
+        Row: {
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          input_tokens: number | null
+          latency_ms: number | null
+          model: string
+          output_tokens: number | null
+          parent_run_id: string | null
+          provider: string
+          result: Json | null
+          role: string
+          status: string
+          task: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          model: string
+          output_tokens?: number | null
+          parent_run_id?: string | null
+          provider: string
+          result?: Json | null
+          role: string
+          status?: string
+          task?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          model?: string
+          output_tokens?: number | null
+          parent_run_id?: string | null
+          provider?: string
+          result?: Json | null
+          role?: string
+          status?: string
+          task?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_model_runs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_model_runs_parent_run_id_fkey"
+            columns: ["parent_run_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_model_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_owner_config: {
+        Row: {
+          created_at: string
+          id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hanchi_projects: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          instructions: string | null
+          metadata: Json
+          name: string
+          slug: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          metadata?: Json
+          name: string
+          slug?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          metadata?: Json
+          name?: string
+          slug?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hanchi_skills: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          instructions: string
+          name: string
+          slug: string
+          tools: Json
+          triggers: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          instructions?: string
+          name: string
+          slug: string
+          tools?: Json
+          triggers?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          instructions?: string
+          name?: string
+          slug?: string
+          tools?: Json
+          triggers?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hanchi_tool_runs: {
+        Row: {
+          approved_at: string | null
+          completed_at: string | null
+          connector_id: string | null
+          conversation_id: string | null
+          created_at: string
+          id: string
+          input: Json
+          output: Json | null
+          requires_approval: boolean
+          status: string
+          tool_name: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          completed_at?: string | null
+          connector_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          input?: Json
+          output?: Json | null
+          requires_approval?: boolean
+          status?: string
+          tool_name: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          completed_at?: string | null
+          connector_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          input?: Json
+          output?: Json | null
+          requires_approval?: boolean
+          status?: string
+          tool_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_tool_runs_connector_id_fkey"
+            columns: ["connector_id"]
+            isOneToOne: false
+            referencedRelation: "hanchi_connectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hanchi_tool_runs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_usage_events: {
+        Row: {
+          capability: string | null
+          conversation_id: string | null
+          created_at: string
+          estimated_cost: number | null
+          id: string
+          input_tokens: number | null
+          latency_ms: number | null
+          metadata: Json
+          model: string | null
+          output_tokens: number | null
+          provider: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          capability?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          metadata?: Json
+          model?: string | null
+          output_tokens?: number | null
+          provider?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          capability?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          estimated_cost?: number | null
+          id?: string
+          input_tokens?: number | null
+          latency_ms?: number | null
+          metadata?: Json
+          model?: string | null
+          output_tokens?: number | null
+          provider?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hanchi_usage_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hanchi_user_settings: {
+        Row: {
+          auto_archive_enabled: boolean
+          auto_memory_enabled: boolean
+          created_at: string
+          default_effort: string
+          locale: string
+          metadata: Json
+          morning_enabled: boolean
+          morning_time: string
+          self_check_enabled: boolean
+          timezone: string
+          tone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_archive_enabled?: boolean
+          auto_memory_enabled?: boolean
+          created_at?: string
+          default_effort?: string
+          locale?: string
+          metadata?: Json
+          morning_enabled?: boolean
+          morning_time?: string
+          self_check_enabled?: boolean
+          timezone?: string
+          tone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_archive_enabled?: boolean
+          auto_memory_enabled?: boolean
+          created_at?: string
+          default_effort?: string
+          locale?: string
+          metadata?: Json
+          morning_enabled?: boolean
+          morning_time?: string
+          self_check_enabled?: boolean
+          timezone?: string
+          tone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string | null
@@ -781,6 +1756,23 @@ export type Database = {
     }
     Functions: {
       get_admin_stats: { Args: never; Returns: Json }
+      hanchi_search_context_internal: {
+        Args: {
+          p_limit?: number
+          p_project_id?: string
+          p_query: string
+          p_user_id: string
+        }
+        Returns: {
+          content: string
+          event_date: string
+          scope: string
+          score: number
+          source_id: string
+          source_type: string
+          title: string
+        }[]
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       match_nigerian_knowledge:
         | {
@@ -816,6 +1808,8 @@ export type Database = {
               subcategory: string
             }[]
           }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
