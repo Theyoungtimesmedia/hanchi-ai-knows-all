@@ -40,6 +40,10 @@ export default function Index(){
   const [globalSearchOpen,setGlobalSearchOpen]=useState(false);
   const [globalQuery,setGlobalQuery]=useState('');
   const [chatMenu,setChatMenu]=useState(false);
+  const [projectMenu,setProjectMenu]=useState(false);
+  const [chatSearch,setChatSearch]=useState<string|null>(null);
+  const [locked,setLocked]=useState<string[]>(()=>{try{return JSON.parse(localStorage.getItem('hanchi-locked-chats')||'[]')}catch{return []}});
+  const [chatProjects,setChatProjects]=useState<Record<string,string>>(()=>{try{return JSON.parse(localStorage.getItem('hanchi-chat-projects')||'{}')}catch{return {}}});
   const [messages,setMessages]=useState<HanchiMessage[]>([]);
   const [conversations,setConversations]=useState<Row[]>([]);
   const [projects,setProjects]=useState<Row[]>([]);
@@ -132,6 +136,17 @@ export default function Index(){
     setInput('');
     await sendMessage(prevUser.content,{history,persistUser:false});
   }
+  async function editAndResend(messageId:string,text:string){
+    if(busy||!text.trim())return;
+    const idx=messages.findIndex(m=>m.id===messageId); if(idx<0)return;
+    const history=messages.slice(0,idx); const ids=messages.slice(idx).map(m=>m.id).filter(id=>id&&!String(id).startsWith('stream-'));
+    if(ids.length) await db.from('messages').delete().in('id',ids);
+    setMessages(history);
+    await sendMessage(text.trim(),{history});
+  }
+  function renameChat(id:string){const c=conversations.find(x=>x.id===id);const t=prompt('Rename chat',c?.title||'');if(!t?.trim())return;db.from('conversations').update({title:t.trim()}).eq('id',id).then(()=>setConversations(prev=>prev.map(x=>x.id===id?{...x,title:t.trim()}:x)));}
+  function toggleLock(id:string){setLocked(prev=>{const n=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];localStorage.setItem('hanchi-locked-chats',JSON.stringify(n));return n;});}
+  function moveToProject(id:string,pid:string|null){setChatProjects(prev=>{const n={...prev};if(pid)n[id]=pid;else delete n[id];localStorage.setItem('hanchi-chat-projects',JSON.stringify(n));return n;});setStatus(pid?'Moved to project':'Removed from project');setTimeout(()=>setStatus(''),1500);}
   async function branchFrom(messageId:string){
     if(busy) return;
     const idx=messages.findIndex(m=>m.id===messageId); if(idx<0 || !user)return;
@@ -280,6 +295,11 @@ export default function Index(){
             <div className="relative" onMouseDown={e=>e.stopPropagation()}><button className="icon-btn" onClick={()=>setChatMenu(v=>!v)}><MoreHorizontal size={20}/></button>
             {chatMenu&&<div className="floating-menu chat-menu">
               <button onClick={()=>{setChatMenu(false);setRightTab('canvas');setRightOpen(true)}}><Library size={20} strokeWidth={1.75}/>View files in chat</button>
+              <button onClick={()=>{setChatMenu(false);renameChat(conversationId)}}><SquarePen size={20} strokeWidth={1.75}/>Rename</button>
+              <button onClick={()=>{setChatMenu(false);setChatSearch('')}}><Search size={20} strokeWidth={1.75}/>Search in chat</button>
+              <button onClick={()=>setProjectMenu(v=>!v)}><Library size={20} strokeWidth={1.75}/><span className="grow">Move to project</span><ChevronRight size={18}/></button>
+              {projectMenu&&<div className="sub-list">{projects.length?projects.map(pr=><button key={pr.id} onClick={()=>{setChatMenu(false);setProjectMenu(false);moveToProject(conversationId,chatProjects[conversationId]===pr.id?null:pr.id)}}><span className="grow">{safeText(pr.name||pr.title)}</span>{chatProjects[conversationId]===pr.id&&<Check size={16}/>}</button>):<div className="menu-meta">No projects yet</div>}</div>}
+              <button onClick={()=>{setChatMenu(false);toggleLock(conversationId)}}><Lock size={20} strokeWidth={1.75}/>{locked.includes(conversationId)?'Unlock chat':'Lock chat'}</button>
               <button onClick={()=>{setChatMenu(false);togglePin(conversationId)}}><Pin size={20} strokeWidth={1.75}/>{conversations.find(c=>c.id===conversationId)?.pinned?'Unpin chat':'Pin chat'}</button>
               <button className="danger" onClick={()=>{setChatMenu(false);deleteChat(conversationId)}}><Trash2 size={20} strokeWidth={1.75}/>Delete</button>
               <div className="pp-sep"/>
@@ -293,10 +313,11 @@ export default function Index(){
       <section className="workbench">
         {view==='chat'&&<div className={`chat-stage ${empty?'is-empty':''}`}>
           {empty?<div className="welcome"><h1>{`Hey, ${fullName}. Ready to dive in?`}</h1>{composer}</div>:<>
-          <div ref={scrollRef} className="chat-scroll"><div className="thread">{messages.map((m,i)=><Message key={m.id||i} msg={m} onCopy={()=>navigator.clipboard.writeText(m.content)} onRetry={m.role==='assistant'?()=>retryFrom(m.id):undefined} onBranch={m.role==='assistant'?()=>branchFrom(m.id):undefined} onSpeak={m.role==='assistant'?()=>window.speechSynthesis?.speak(new SpeechSynthesisUtterance(m.content)):undefined}/>)}
+          {chatSearch!==null&&<div className="chat-search"><Search size={16}/><input autoFocus value={chatSearch} onChange={e=>setChatSearch(e.target.value)} placeholder="Search this chat" onKeyDown={e=>{if(e.key==='Enter'){const el=scrollRef.current?.querySelector('.search-hit');el?.scrollIntoView({behavior:'smooth',block:'center'})}if(e.key==='Escape')setChatSearch(null)}}/><small>{chatSearch?messages.filter(m=>m.content.toLowerCase().includes(chatSearch.toLowerCase())).length+' found':''}</small><button className="icon-btn" onClick={()=>setChatSearch(null)}><X size={16}/></button></div>}
+          <div ref={scrollRef} className="chat-scroll"><div className="thread">{messages.map((m,i)=><Message key={m.id||i} hit={!!chatSearch&&m.content.toLowerCase().includes(chatSearch.toLowerCase())} onEdit={m.role==='user'&&m.id&&!busy&&!locked.includes(conversationId||'')?(t:string)=>editAndResend(m.id,t):undefined} msg={m} onCopy={()=>navigator.clipboard.writeText(m.content)} onRetry={m.role==='assistant'?()=>retryFrom(m.id):undefined} onBranch={m.role==='assistant'?()=>branchFrom(m.id):undefined} onSpeak={m.role==='assistant'?()=>window.speechSynthesis?.speak(new SpeechSynthesisUtterance(m.content)):undefined}/>)}
           {busy&&<div className="thinking-row"><span className="thinking-dot"></span><span>{status||''}</span></div>}</div></div>
           {lastError&&<div className="error-strip"><span>{lastError}</span><button onClick={()=>setLastError(null)}><X size={15}/></button></div>}
-          <div className="composer-dock"><div className="disclaimer">Hanchi can make mistakes. Check important info.</div>{composer}</div></>}
+          <div className="composer-dock"><div className="disclaimer">Hanchi can make mistakes. Check important info.</div>{conversationId&&locked.includes(conversationId)?<div className="locked-note"><Lock size={16}/>This chat is locked. <button onClick={()=>toggleLock(conversationId)}>Unlock</button></div>:composer}</div></>}
           <input ref={fileRef} type="file" className="hidden" multiple accept="image/*,audio/*,video/*,text/plain,text/markdown,application/pdf" onChange={e=>{Array.from(e.target.files||[]).forEach(handleFile)}}/>
         </div>}
         {view==='images'&&<ImagesView prompt={imagePrompt} setPrompt={setImagePrompt} generate={generateImage} generated={generatedImages} onPick={(t)=>setImagePrompt(t)}/>}
@@ -316,14 +337,14 @@ export default function Index(){
 
 function ChatRow({c,active,onOpen,icon}:{c:Row;active:boolean;onOpen:()=>void;icon?:boolean;key?:string}){return <button className={`chat-row ${active?'active':''}`} onClick={onOpen}>{icon&&<MessageCircle size={20} strokeWidth={1.75}/>}<span>{safeText(c.title)||'New chat'}</span></button>}
 
-function Message({msg,onCopy,onRetry,onBranch,onSpeak}:{msg:HanchiMessage;onCopy:()=>void;onRetry?:()=>void;onBranch?:()=>void;onSpeak?:()=>void;key?:string|number}){
-  const user=msg.role==='user'; const error=!!msg.metadata?.error; const [more,setMore]=useState(false); const [copied,setCopied]=useState(false);
+function Message({msg,onCopy,onRetry,onBranch,onSpeak,onEdit,hit}:{msg:HanchiMessage;onEdit?:(t:string)=>void;hit?:boolean;onCopy:()=>void;onRetry?:()=>void;onBranch?:()=>void;onSpeak?:()=>void;key?:string|number}){
+  const user=msg.role==='user'; const error=!!msg.metadata?.error; const [more,setMore]=useState(false); const [copied,setCopied]=useState(false); const [editing,setEditing]=useState(false); const [draft,setDraft]=useState(msg.content);
   const sources:any[]=Array.isArray(msg.metadata?.sources)?msg.metadata.sources:[];
-  return <div className={`message-row ${user?'user':'assistant'}`}><div className="message-main"><div className={`message-content ${error?'message-error':''}`}><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div>
+  return <div className={`message-row ${user?'user':'assistant'} ${hit?'search-hit':''} ${editing?'editing':''}`}><div className="message-main">{editing?<div className="edit-box"><textarea autoFocus value={draft} onChange={e=>setDraft(e.target.value)} rows={3}/><div className="edit-actions"><button onClick={()=>{setEditing(false);setDraft(msg.content)}}>Cancel</button><button className="primary" disabled={!draft.trim()} onClick={()=>{setEditing(false);onEdit?.(draft)}}>Send</button></div></div>:<div className={`message-content ${error?'message-error':''}`}><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div>}
   {!user&&sources.length>0&&<button className="sources-pill">Sources</button>}
   {!user&&msg.content&&<div className="message-actions"><button onClick={()=>{onCopy();setCopied(true);setTimeout(()=>setCopied(false),1200)}} title="Copy">{copied?<Check size={18}/>:<Copy size={18} strokeWidth={1.75}/>}</button><button title="Good response"><ThumbsUp size={18} strokeWidth={1.75}/></button><button title="Bad response"><ThumbsDown size={18} strokeWidth={1.75}/></button><button title="Share" onClick={onCopy}><Share size={18} strokeWidth={1.75}/></button>{onRetry&&<button onClick={onRetry} title="Try again"><RefreshCw size={18} strokeWidth={1.75}/></button>}
   <div className="relative"><button title="More" onClick={()=>setMore(v=>!v)}><MoreHorizontal size={18}/></button>{more&&<div className="floating-menu msg-menu" onMouseLeave={()=>setMore(false)}>{msg.created_at&&<div className="menu-meta">{new Date(msg.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>}<button onClick={()=>setMore(false)}><Library size={20} strokeWidth={1.75}/>View sources</button>{onBranch&&<button onClick={()=>{setMore(false);onBranch()}}><GitBranch size={20} strokeWidth={1.75}/>Branch in new chat</button>}{onSpeak&&<button onClick={()=>{setMore(false);onSpeak()}}><Volume2 size={20} strokeWidth={1.75}/>Read aloud</button>}</div>}</div></div>}
-  {user&&<div className="message-actions user-actions"><button onClick={onCopy} title="Copy"><Copy size={18} strokeWidth={1.75}/></button></div>}</div></div>
+  {user&&!editing&&<div className="message-actions user-actions"><button onClick={onCopy} title="Copy"><Copy size={18} strokeWidth={1.75}/></button>{onEdit&&<button onClick={()=>{setDraft(msg.content);setEditing(true)}} title="Edit message"><Pencil size={18} strokeWidth={1.75}/></button>}</div>}</div></div>
 }
 
 function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:boolean;processing:boolean;onUpload:()=>void;onDictate:()=>void;menuOpen:boolean;setMenuOpen:(v:boolean)=>void;mode:'chat'|'search'|'research'|'council';setMode:(v:any)=>void;effort:string;setEffort:(s:string)=>void;effortMenu:boolean;setEffortMenu:(v:boolean)=>void;onLibrary:()=>void;onImage:()=>void;menuBelow:boolean;attachments:Attachment[];removeAttachment:(i:number)=>void}){
