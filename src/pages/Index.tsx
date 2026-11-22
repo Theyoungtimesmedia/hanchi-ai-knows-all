@@ -54,7 +54,7 @@ export default function Index(){
   const [conversationId,setConversationId]=useState<string|null>(null);
   const [selectedModel,setSelectedModel]=useState('auto');
   const [effort,setEffort]=useState('standard');
-  const [mode,setMode]=useState<'chat'|'research'|'council'>('chat');
+  const [mode,setMode]=useState<'chat'|'search'|'research'|'council'>('chat');
   const [attachments,setAttachments]=useState<Attachment[]>([]);
   const [canvas,setCanvas]=useState<HanchiArtifact|null>(null);
   const [artifactTab,setArtifactTab]=useState<ArtifactTab>('preview');
@@ -183,7 +183,7 @@ export default function Index(){
       }
       setStatus(''); let answer=''; let md:any=null; const streamId='stream-'+Date.now();
       setMessages(prev=>[...prev,{id:streamId,role:'assistant',content:'',created_at:new Date().toISOString()}]);
-      await streamChat({messages:history,model:selectedModel==='auto'?undefined:selectedModel,effort,projectId:null,language:'en',tone:'default',searchWeb:/\b(search|latest|today|current|research)\b/i.test(prompt),images:attachedImages},(chunk)=>{answer+=chunk;setMessages(prev=>prev.map(m=>m.id===streamId?{...m,content:answer}:m));},(meta)=>md=meta);
+      await streamChat({messages:history,model:selectedModel==='auto'?undefined:selectedModel,effort,projectId:null,language:'en',tone:'default',searchWeb:mode==='search'||/\b(search|latest|today|current|research)\b/i.test(prompt),images:attachedImages},(chunk)=>{answer+=chunk;setMessages(prev=>prev.map(m=>m.id===streamId?{...m,content:answer}:m));},(meta)=>md=meta);
       const savedMsg=await storeMessage(cid,'assistant',answer,{...(md||{}),mode:'chat'});
       setMessages(prev=>prev.filter(m=>m.id!==streamId&&m.id!==savedMsg.id).concat(savedMsg));
       const art=extractCodeArtifacts(answer)[0]; if(art){const saved=await saveArtifact(artifactFromCodeBlock(art.language,art.content),cid);openArtifact(saved);} 
@@ -326,7 +326,7 @@ function Message({msg,onCopy,onRetry,onBranch,onSpeak}:{msg:HanchiMessage;onCopy
   {user&&<div className="message-actions user-actions"><button onClick={onCopy} title="Copy"><Copy size={18} strokeWidth={1.75}/></button></div>}</div></div>
 }
 
-function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:boolean;processing:boolean;onUpload:()=>void;onDictate:()=>void;menuOpen:boolean;setMenuOpen:(v:boolean)=>void;mode:'chat'|'research'|'council';setMode:(v:any)=>void;effort:string;setEffort:(s:string)=>void;effortMenu:boolean;setEffortMenu:(v:boolean)=>void;onLibrary:()=>void;onImage:()=>void;menuBelow:boolean;attachments:Attachment[];removeAttachment:(i:number)=>void}){
+function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:boolean;processing:boolean;onUpload:()=>void;onDictate:()=>void;menuOpen:boolean;setMenuOpen:(v:boolean)=>void;mode:'chat'|'search'|'research'|'council';setMode:(v:any)=>void;effort:string;setEffort:(s:string)=>void;effortMenu:boolean;setEffortMenu:(v:boolean)=>void;onLibrary:()=>void;onImage:()=>void;menuBelow:boolean;attachments:Attachment[];removeAttachment:(i:number)=>void}){
   const {input,setInput,send,busy,processing,onUpload,onDictate,menuOpen,setMenuOpen,mode,setMode,effort,setEffort,onLibrary,onImage,menuBelow,attachments,removeAttachment}=p;
   const ref=useRef<HTMLTextAreaElement>(null);
   useEffect(()=>{const el=ref.current;if(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}},[input]);
@@ -336,7 +336,7 @@ function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:b
     [<Paperclip size={20} strokeWidth={1.75}/>,'Add photos & files','Upload from computer',onUpload],
     [<Library size={20} strokeWidth={1.75}/>,'Add from library','Browse and search your files',onLibrary],
     [<ImageIcon size={20} strokeWidth={1.75} className="ic-img"/>,'Create image','Visualize anything',onImage],
-    [<Globe size={20} strokeWidth={1.75} className="ic-web"/>,'Web search','Find real-time news and info',pick(()=>setMode('research'))],
+    [<Globe size={20} strokeWidth={1.75} className="ic-web"/>,'Web search','Find real-time news and info',pick(()=>setMode('search'))],
     [<Telescope size={20} strokeWidth={1.75} className="ic-web"/>,'Deep research','Get a detailed report',pick(()=>setMode('research'))],
     [<Bot size={20} strokeWidth={1.75}/>,'Council','Models debate before answering',pick(()=>setMode('council'))],
     [<Github size={20} strokeWidth={1.75}/>,'GitHub','Triage PRs, issues, CI, and publish flows',pick(()=>setInput(input||'Using GitHub: '))],
@@ -348,7 +348,7 @@ function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:b
       {attachments.length>0&&<div className="att-row">{attachments.map((a,i)=><span className="att-chip" key={i}><FileText size={16}/><span>{a.name}</span><button onClick={()=>removeAttachment(i)}><X size={14}/></button></span>)}</div>}
       <div className="composer-line">
         <button className={`composer-btn ${menuOpen?'selected':''}`} onClick={()=>setMenuOpen(!menuOpen)} title="Add files and more"><Plus size={22} strokeWidth={1.75}/></button>
-        {mode!=='chat'&&<button className="mode-chip" onClick={()=>setMode('chat')}>{mode==='research'?<Globe size={16}/>:<Bot size={16}/>}<span>{mode==='research'?'Research':'Council'}</span><X size={14}/></button>}
+        {mode!=='chat'&&<button className="mode-chip" onClick={()=>setMode('chat')}>{mode==='search'?<Globe size={16}/>:mode==='research'?<Telescope size={16}/>:<Bot size={16}/>}<span>{mode==='search'?'Search':mode==='research'?'Deep research':'Council'}</span><X size={14}/></button>}
         <textarea ref={ref} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}} placeholder={processing?'Processing file…':'Ask anything'} rows={1}/>
         <button className={`think-btn ${thinking?'on':''}`} onClick={()=>setEffort(thinking?'standard':'deep')}><Brain size={20} strokeWidth={1.6}/><span>Think</span></button>
         <button className="composer-btn" onClick={onDictate} title="Dictate"><Mic size={20} strokeWidth={1.75}/></button>

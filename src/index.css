@@ -133,3 +133,6 @@ html,body,#root{font-family:ui-sans-serif,-apple-system,"Segoe UI",system-ui,Hel
 .plug-item{display:flex;align-items:center;gap:16px}.plug-item>div{flex:1;display:flex;flex-direction:column;gap:2px}.plug-item b{font-weight:400;font-size:17px}.plug-item small{color:var(--muted);font-size:16px}
 .small{font-size:14px}
 @media(max-width:900px){.trend-grid{grid-template-columns:repeat(2,1fr)}.plug-grid{grid-template-columns:1fr}.lib-tools .search-box,.plug-tools .search-box{width:180px}.pm-d{display:none}.page,.page.wide{padding:40px 16px}.library-row{grid-template-columns:1fr 140px}.seg button{padding:0 16px}}
+
+.plus-menu{max-height:min(320px,50vh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}.plus-menu::-webkit-scrollbar{width:8px}.plus-menu::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+.mode-chip{flex:none;cursor:pointer}.mode-chip:hover{filter:brightness(.97)}.dark .mode-chip{background:#1d2b3f}
