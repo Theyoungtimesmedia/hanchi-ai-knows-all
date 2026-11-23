@@ -71,7 +71,7 @@ html,body,#root{font-family:ui-sans-serif,-apple-system,"Segoe UI",system-ui,Hel
 .floating-menu{background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.12);padding:6px;min-width:240px}
 .floating-menu button.danger{color:var(--danger)}.menu-meta{font-size:14px;color:var(--faint);padding:8px 10px}
 .chat-menu{right:0;top:42px}.msg-menu{left:-150px;bottom:40px;min-width:250px}.model-menu{right:16px;top:56px}.model-menu button{height:auto;padding:8px 10px}
-.topbar{height:60px;padding:0 12px;display:grid;grid-template-columns:1fr auto 1fr;background:transparent;border:0}.topbar-right{justify-self:end;gap:6px}
+.topbar{height:60px;min-height:60px;flex:none;padding:0 12px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);background:transparent;border:0}.topbar-left{grid-column:1;grid-row:1}.topbar .seg{grid-column:2;grid-row:1}.topbar-right{grid-column:3;grid-row:1;justify-self:end;gap:6px}
 .top-pill{height:36px;font-size:14px;gap:8px;padding:0 12px;border-radius:10px;color:var(--text)}
 .seg{display:flex;background:var(--subtle);border-radius:999px;padding:3px}.seg button{border:0;background:transparent;height:40px;padding:0 30px;border-radius:999px;font-size:15px;color:var(--link);display:flex;align-items:center;gap:6px}.seg button.on{background:var(--bg);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid var(--line)}
 .chat-stage{display:flex;flex-direction:column;min-height:0}.chat-stage.is-empty{justify-content:center}
@@ -136,3 +136,27 @@ html,body,#root{font-family:ui-sans-serif,-apple-system,"Segoe UI",system-ui,Hel
 
 .plus-menu{max-height:min(320px,50vh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}.plus-menu::-webkit-scrollbar{width:8px}.plus-menu::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
 .mode-chip{flex:none;cursor:pointer}.mode-chip:hover{filter:brightness(.97)}.dark .mode-chip{background:#1d2b3f}
+
+/* Portaled menus never inherit the compact message-action button sizing. */
+.conversation-popover{min-width:250px;max-width:calc(100vw - 24px);max-height:var(--radix-dropdown-menu-content-available-height);overflow-y:auto;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--text);box-shadow:var(--shadow)}
+.conversation-popover [role="menuitem"]{min-height:40px;padding:8px 10px;border-radius:8px;display:flex;align-items:center;gap:10px;line-height:20px;font-size:14px;cursor:pointer;color:var(--text)}
+.conversation-popover [role="menuitem"][data-highlighted]{background:var(--hover);color:var(--text)}
+.conversation-popover [role="menuitem"].danger{color:var(--danger)}
+.conversation-popover svg{width:18px;height:18px;flex:none}
+.conversation-popover .menu-meta{font-size:12px;font-weight:400;color:var(--muted);padding:8px 10px}
+.menu-hint{margin-left:auto;color:var(--muted);font-size:11px}
+.message-actions:focus-within,.message-row.user:focus-within .user-actions{opacity:1}
+.message-row.editing .message-main{width:100%;max-width:100%}
+.edit-box{width:100%;background:var(--subtle);border:1px solid var(--line);border-radius:16px;padding:16px}
+.edit-box textarea{width:100%;min-height:100px;resize:vertical;border:0;outline:none;background:transparent;color:var(--text);font-size:16px;line-height:1.6}
+.edit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.edit-actions button{border-radius:20px}
+.edit-actions .primary{background:var(--text);color:var(--bg)}
+.chat-search{display:flex;align-items:center;gap:10px;margin:8px auto;padding:6px 12px;border:1px solid var(--line);border-radius:8px;width:calc(100% - 48px);max-width:912px;color:var(--muted)}
+.chat-search input{flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--text);font-size:14px}
+.chat-search small{white-space:nowrap;font-size:12px}
+.search-hit .message-content{outline:2px solid var(--link);outline-offset:5px;border-radius:8px}
+.locked-note{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:14px;padding:12px;border:1px solid var(--line);border-radius:16px}
+.message-sources{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding:12px;border-left:2px solid var(--line)}
+.message-sources a{color:var(--link);overflow-wrap:anywhere;font-size:14px}
+@media(max-width:780px){.topbar .icon-btn{width:44px;height:44px}.topbar-right .top-pill{min-width:44px;height:44px}.user-actions{opacity:1}.conversation-popover [role="menuitem"]{min-height:44px}.chat-search{width:calc(100% - 24px)}}

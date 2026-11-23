@@ -8,8 +8,11 @@ import {
   ImageIcon, Library, Loader2, Menu, MessageSquare, Mic, MoreHorizontal, PanelLeft, PanelRight,
   Paperclip, Pencil, Plus, RefreshCw, Search, Settings2, Share2, Sparkles, ThumbsDown, ThumbsUp,
   Trash2, Upload, Volume2, WandSparkles, X, Zap, SquarePen, Clock, AtSign, CircleUser, LogOut, Share, Pin, Check,
-  MessageCircle, Square, AudioLines, Telescope, ListFilter, LayoutGrid, List, Mail, Calendar
+  MessageCircle, Square, AudioLines, Telescope, ListFilter, LayoutGrid, List, Mail, Calendar, Lock
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
+import { canWriteChat, historyBeforeEdit } from '@/lib/chat-actions';
 import { supabase } from '@/integrations/supabase/client';
 import { artifactFromCodeBlock, downloadTextFile, edgeRequest, extractCodeArtifacts, streamChat, type HanchiArtifact, type HanchiMessage } from '@/lib/hanchi-ui';
 
@@ -40,7 +43,6 @@ export default function Index(){
   const [globalSearchOpen,setGlobalSearchOpen]=useState(false);
   const [globalQuery,setGlobalQuery]=useState('');
   const [chatMenu,setChatMenu]=useState(false);
-  const [projectMenu,setProjectMenu]=useState(false);
   const [chatSearch,setChatSearch]=useState<string|null>(null);
   const [locked,setLocked]=useState<string[]>(()=>{try{return JSON.parse(localStorage.getItem('hanchi-locked-chats')||'[]')}catch{return []}});
   const [chatProjects,setChatProjects]=useState<Record<string,string>>(()=>{try{return JSON.parse(localStorage.getItem('hanchi-chat-projects')||'{}')}catch{return {}}});
@@ -102,18 +104,18 @@ export default function Index(){
       if((e.ctrlKey||e.metaKey)&&k==='b'){e.preventDefault();setSidebar(v=>!v);}
       if((e.ctrlKey||e.metaKey)&&k==='n'){e.preventDefault();newChat();}
       if((e.ctrlKey||e.metaKey)&&e.shiftKey&&k==='l'){e.preventDefault();setRightOpen(v=>!v);}
-      if(e.key==='Escape'){setSettingsOpen(false);setProfileOpen(false);setComposeMenu(false);setModelMenu(false);setEffortMenu(false);setGlobalSearchOpen(false);}
+      if(e.key==='Escape'){setChatMenu(false);setChatSearch(null);setSettingsOpen(false);setProfileOpen(false);setComposeMenu(false);setModelMenu(false);setEffortMenu(false);setGlobalSearchOpen(false);}
     };
     window.addEventListener('keydown',onKey); return ()=>window.removeEventListener('keydown',onKey);
   });
   useEffect(()=>{ const el=scrollRef.current; if(el) el.scrollTop=el.scrollHeight; },[messages,busy]);
 
   async function loadConversation(id:string){
-    setLastError(null); setView('chat'); setConversationId(id);
+    setLastError(null); setChatSearch(null);setChatMenu(false);setView('chat'); setConversationId(id);
     const {data,error}=await db.from('messages').select('id,role,content,created_at,metadata').eq('conversation_id',id).order('created_at',{ascending:true});
     if(error){setLastError(error.message);return;} setMessages(data||[]); setCanvas(null); setRightOpen(false);
   }
-  function newChat(){setView('chat');setConversationId(null);setMessages([]);setAttachments([]);setCanvas(null);setRightOpen(false);setInput('');setMode('chat');setLastError(null);setTimeout(()=>textareaRef.current?.focus(),0);}
+  function newChat(){setChatSearch(null);setChatMenu(false);setView('chat');setConversationId(null);setMessages([]);setAttachments([]);setCanvas(null);setRightOpen(false);setInput('');setMode('chat');setLastError(null);setTimeout(()=>textareaRef.current?.focus(),0);}
   async function ensureConversation(title:string){
     if(conversationId) return conversationId;
     const {data,error}=await db.from('conversations').insert({user_id:user.id,title:title.slice(0,80)||'New chat',language:'en'}).select('id,title,updated_at,pinned').single();
@@ -124,7 +126,7 @@ export default function Index(){
     if(error) throw error; setMessages(prev=>[...prev,data]); return data;
   }
   async function retryFrom(messageId:string){
-    if(busy) return;
+    if(!canWriteChat(busy,conversationId,locked)) return;
     const idx=messages.findIndex(m=>m.id===messageId); if(idx<0)return;
     const prevUser=[...messages.slice(0,idx)].reverse().find(m=>m.role==='user'); if(!prevUser)return;
     const history=messages.slice(0,idx);
@@ -137,14 +139,26 @@ export default function Index(){
     await sendMessage(prevUser.content,{history,persistUser:false});
   }
   async function editAndResend(messageId:string,text:string){
-    if(busy||!text.trim())return;
-    const idx=messages.findIndex(m=>m.id===messageId); if(idx<0)return;
-    const history=messages.slice(0,idx); const ids=messages.slice(idx).map(m=>m.id).filter(id=>id&&!String(id).startsWith('stream-'));
-    if(ids.length) await db.from('messages').delete().in('id',ids);
-    setMessages(history);
-    await sendMessage(text.trim(),{history});
+    if(!canWriteChat(busy,conversationId,locked)||!text.trim()||!user)return;
+    const history=historyBeforeEdit(messages,messageId); if(!history)return;
+    setBusy(true);setLastError(null);
+    const {data:branch,error}=await db.from('conversations').insert({user_id:user.id,title:`${text.trim().slice(0,64)} — Edited`,language:'en'}).select('id,title,updated_at,pinned').single();
+    if(error){setLastError(error.message);setBusy(false);return;}
+    let copied:HanchiMessage[]=[];
+    if(history.length){
+      const result=await db.from('messages').insert(history.map(m=>({conversation_id:branch.id,role:m.role,content:m.content,metadata:{...(m.metadata||{}),branched:true}}))).select('id,role,content,created_at,metadata');
+      if(result.error){setLastError(result.error.message);setBusy(false);return;}
+      copied=result.data||[];
+    }
+    setConversationId(branch.id);setMessages(copied);setConversations(prev=>[branch,...prev]);setBusy(false);
+    await sendMessage(text.trim(),{history:copied,conversationId:branch.id});
   }
-  function renameChat(id:string){const c=conversations.find(x=>x.id===id);const t=prompt('Rename chat',c?.title||'');if(!t?.trim())return;db.from('conversations').update({title:t.trim()}).eq('id',id).then(()=>setConversations(prev=>prev.map(x=>x.id===id?{...x,title:t.trim()}:x)));}
+  async function renameChat(id:string){
+    const c=conversations.find(x=>x.id===id); const title=prompt('Rename chat',c?.title||'')?.trim();if(!title)return;
+    const {error}=await db.from('conversations').update({title}).eq('id',id);
+    if(error){setLastError(error.message);return;}
+    setConversations(prev=>prev.map(x=>x.id===id?{...x,title}:x));
+  }
   function toggleLock(id:string){setLocked(prev=>{const n=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];localStorage.setItem('hanchi-locked-chats',JSON.stringify(n));return n;});}
   function moveToProject(id:string,pid:string|null){setChatProjects(prev=>{const n={...prev};if(pid)n[id]=pid;else delete n[id];localStorage.setItem('hanchi-chat-projects',JSON.stringify(n));return n;});setStatus(pid?'Moved to project':'Removed from project');setTimeout(()=>setStatus(''),1500);}
   async function branchFrom(messageId:string){
@@ -164,10 +178,10 @@ export default function Index(){
     setView('chat');
     setRightOpen(false);
   }
-  async function sendMessage(custom?:string, options:{history?:HanchiMessage[];persistUser?:boolean}={}){
-    const raw=(custom??input).trim(); if(!raw||busy||!user)return;
+  async function sendMessage(custom?:string, options:{history?:HanchiMessage[];persistUser?:boolean;conversationId?:string}={}){
+    const raw=(custom??input).trim(); if(!raw||!user||!canWriteChat(busy,options.conversationId??conversationId,locked))return;
     setLastError(null);
-    const cid=await ensureConversation(raw);
+    const cid=options.conversationId??await ensureConversation(raw);
     setInput('');
     setBusy(true);
     const attachedImages=attachments.filter(a=>a.kind==='image'&&a.base64).map(a=>a.base64 as string);
@@ -251,6 +265,7 @@ export default function Index(){
   const fullName=user.user_metadata?.full_name||'Joshua Omoniyi';
   const pinned=conversations.filter(c=>c.pinned);
   const recent=conversations.filter(c=>!c.pinned);
+  const writable=canWriteChat(busy,conversationId,locked);
   const empty=view==='chat'&&messages.length===0;
   const go=(v:View)=>{setView(v);setProfileOpen(false);};
   const composer=<Composer input={input} setInput={setInput} send={()=>sendMessage()} busy={busy} processing={processing} onUpload={()=>{setComposeMenu(false);fileRef.current?.click();}} onDictate={voiceDictate} menuOpen={composeMenu} setMenuOpen={setComposeMenu} mode={mode} setMode={setMode} effort={effort} setEffort={setEffort} effortMenu={effortMenu} setEffortMenu={setEffortMenu} onLibrary={()=>{setComposeMenu(false);go('library');}} onImage={()=>{setComposeMenu(false);go('images');}} menuBelow={empty} attachments={attachments} removeAttachment={(i)=>setAttachments(a=>a.filter((_,j)=>j!==i))}/>;
@@ -291,20 +306,28 @@ export default function Index(){
         {empty&&<div className="seg"><button className={mode!=='council'?'on':''} onClick={()=>setMode('chat')}>Chat</button><button className={mode==='council'?'on':'work'} onClick={()=>setMode('council')}><Sparkles size={14}/> Council</button></div>}
         <div className="topbar-right">
           {view==='chat'&&conversationId?<>
-            <button className="top-pill" onClick={()=>{navigator.clipboard.writeText(location.href);setStatus('Link copied');setTimeout(()=>setStatus(''),1500)}}><Share size={18} strokeWidth={1.75}/><span>Share</span></button>
-            <div className="relative" onMouseDown={e=>e.stopPropagation()}><button className="icon-btn" onClick={()=>setChatMenu(v=>!v)}><MoreHorizontal size={20}/></button>
-            {chatMenu&&<div className="floating-menu chat-menu">
-              <button onClick={()=>{setChatMenu(false);setRightTab('canvas');setRightOpen(true)}}><Library size={20} strokeWidth={1.75}/>View files in chat</button>
-              <button onClick={()=>{setChatMenu(false);renameChat(conversationId)}}><SquarePen size={20} strokeWidth={1.75}/>Rename</button>
-              <button onClick={()=>{setChatMenu(false);setChatSearch('')}}><Search size={20} strokeWidth={1.75}/>Search in chat</button>
-              <button onClick={()=>setProjectMenu(v=>!v)}><Library size={20} strokeWidth={1.75}/><span className="grow">Move to project</span><ChevronRight size={18}/></button>
-              {projectMenu&&<div className="sub-list">{projects.length?projects.map(pr=><button key={pr.id} onClick={()=>{setChatMenu(false);setProjectMenu(false);moveToProject(conversationId,chatProjects[conversationId]===pr.id?null:pr.id)}}><span className="grow">{safeText(pr.name||pr.title)}</span>{chatProjects[conversationId]===pr.id&&<Check size={16}/>}</button>):<div className="menu-meta">No projects yet</div>}</div>}
-              <button onClick={()=>{setChatMenu(false);toggleLock(conversationId)}}><Lock size={20} strokeWidth={1.75}/>{locked.includes(conversationId)?'Unlock chat':'Lock chat'}</button>
-              <button onClick={()=>{setChatMenu(false);togglePin(conversationId)}}><Pin size={20} strokeWidth={1.75}/>{conversations.find(c=>c.id===conversationId)?.pinned?'Unpin chat':'Pin chat'}</button>
-              <button className="danger" onClick={()=>{setChatMenu(false);deleteChat(conversationId)}}><Trash2 size={20} strokeWidth={1.75}/>Delete</button>
-              <div className="pp-sep"/>
-              <button onClick={()=>{setChatMenu(false);setModelMenu(true)}}><Bot size={20} strokeWidth={1.75}/><span className="grow">Model: {selectedModel==='auto'?'Auto':selectedModel}</span><ChevronRight size={18}/></button>
-            </div>}</div>
+            <Button variant="ghost" className="top-pill" onClick={()=>{navigator.clipboard.writeText(location.href);setStatus('Link copied');setTimeout(()=>setStatus(''),1500)}}><Share size={18} strokeWidth={1.75}/><span>Share</span></Button>
+            <DropdownMenu open={chatMenu} onOpenChange={setChatMenu}>
+              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="icon-btn" title="Conversation options" aria-label="Conversation options"><MoreHorizontal size={20}/></Button></DropdownMenuTrigger>
+              <DropdownMenuContent className="conversation-popover" align="end" sideOffset={8} collisionPadding={12}>
+                <DropdownMenuItem onSelect={()=>{setRightTab('canvas');setRightOpen(true)}}><Library/>View files in chat</DropdownMenuItem>
+                <DropdownMenuItem onSelect={()=>renameChat(conversationId)}><Pencil/>Rename</DropdownMenuItem>
+                <DropdownMenuItem onSelect={()=>setChatSearch('')}><Search/>Search in chat</DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger><Folder/>Move to project</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="conversation-popover" collisionPadding={12}>
+                    <DropdownMenuLabel className="menu-meta">On this device</DropdownMenuLabel>
+                    {projects.length?projects.map(pr=><DropdownMenuItem key={pr.id} onSelect={()=>moveToProject(conversationId,pr.id)}><span className="grow">{safeText(pr.name||pr.title)}</span>{chatProjects[conversationId]===pr.id&&<Check/>}</DropdownMenuItem>):<DropdownMenuItem disabled>No projects yet</DropdownMenuItem>}
+                    {chatProjects[conversationId]&&<DropdownMenuItem onSelect={()=>moveToProject(conversationId,null)}>Remove from project</DropdownMenuItem>}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuItem disabled={busy} onSelect={()=>toggleLock(conversationId)}><Lock/>{locked.includes(conversationId)?'Unlock chat':'Lock chat'}<small className="menu-hint">This device</small></DropdownMenuItem>
+                <DropdownMenuItem onSelect={()=>togglePin(conversationId)}><Pin/>{conversations.find(c=>c.id===conversationId)?.pinned?'Unpin chat':'Pin chat'}</DropdownMenuItem>
+                <DropdownMenuSeparator/>
+                <DropdownMenuItem onSelect={()=>setModelMenu(true)}><Bot/><span className="grow">Model: {selectedModel==='auto'?'Auto':selectedModel}</span><ChevronRight/></DropdownMenuItem>
+                <DropdownMenuItem className="danger" disabled={busy||locked.includes(conversationId)} onSelect={()=>deleteChat(conversationId)}><Trash2/>Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>:<button className="icon-btn" onClick={()=>setModelMenu(v=>!v)} title="Model"><Bot size={20} strokeWidth={1.75}/></button>}
         </div>
       </header>
@@ -314,10 +337,10 @@ export default function Index(){
         {view==='chat'&&<div className={`chat-stage ${empty?'is-empty':''}`}>
           {empty?<div className="welcome"><h1>{`Hey, ${fullName}. Ready to dive in?`}</h1>{composer}</div>:<>
           {chatSearch!==null&&<div className="chat-search"><Search size={16}/><input autoFocus value={chatSearch} onChange={e=>setChatSearch(e.target.value)} placeholder="Search this chat" onKeyDown={e=>{if(e.key==='Enter'){const el=scrollRef.current?.querySelector('.search-hit');el?.scrollIntoView({behavior:'smooth',block:'center'})}if(e.key==='Escape')setChatSearch(null)}}/><small>{chatSearch?messages.filter(m=>m.content.toLowerCase().includes(chatSearch.toLowerCase())).length+' found':''}</small><button className="icon-btn" onClick={()=>setChatSearch(null)}><X size={16}/></button></div>}
-          <div ref={scrollRef} className="chat-scroll"><div className="thread">{messages.map((m,i)=><Message key={m.id||i} hit={!!chatSearch&&m.content.toLowerCase().includes(chatSearch.toLowerCase())} onEdit={m.role==='user'&&m.id&&!busy&&!locked.includes(conversationId||'')?(t:string)=>editAndResend(m.id,t):undefined} msg={m} onCopy={()=>navigator.clipboard.writeText(m.content)} onRetry={m.role==='assistant'?()=>retryFrom(m.id):undefined} onBranch={m.role==='assistant'?()=>branchFrom(m.id):undefined} onSpeak={m.role==='assistant'?()=>window.speechSynthesis?.speak(new SpeechSynthesisUtterance(m.content)):undefined}/>)}
+          <div ref={scrollRef} className="chat-scroll"><div className="thread">{messages.map((m,i)=><Message key={m.id||i} hit={!!chatSearch&&m.content.toLowerCase().includes(chatSearch.toLowerCase())} onEdit={m.role==='user'&&m.id&&!busy&&!locked.includes(conversationId||'')?(t:string)=>editAndResend(m.id,t):undefined} msg={m} onCopy={()=>navigator.clipboard.writeText(m.content)} onRetry={m.role==='assistant'&&writable?()=>retryFrom(m.id):undefined} onBranch={m.role==='assistant'?()=>branchFrom(m.id):undefined} onSpeak={m.role==='assistant'?()=>window.speechSynthesis?.speak(new SpeechSynthesisUtterance(m.content)):undefined}/>)}
           {busy&&<div className="thinking-row"><span className="thinking-dot"></span><span>{status||''}</span></div>}</div></div>
           {lastError&&<div className="error-strip"><span>{lastError}</span><button onClick={()=>setLastError(null)}><X size={15}/></button></div>}
-          <div className="composer-dock"><div className="disclaimer">Hanchi can make mistakes. Check important info.</div>{conversationId&&locked.includes(conversationId)?<div className="locked-note"><Lock size={16}/>This chat is locked. <button onClick={()=>toggleLock(conversationId)}>Unlock</button></div>:composer}</div></>}
+          <div className="composer-dock"><div className="disclaimer">Hanchi can make mistakes. Check important info.</div>{conversationId&&locked.includes(conversationId)?<div className="locked-note"><Lock size={16}/>This chat is locked. <Button variant="ghost" onClick={()=>toggleLock(conversationId)}>Unlock</Button></div>:composer}</div></>}
           <input ref={fileRef} type="file" className="hidden" multiple accept="image/*,audio/*,video/*,text/plain,text/markdown,application/pdf" onChange={e=>{Array.from(e.target.files||[]).forEach(handleFile)}}/>
         </div>}
         {view==='images'&&<ImagesView prompt={imagePrompt} setPrompt={setImagePrompt} generate={generateImage} generated={generatedImages} onPick={(t)=>setImagePrompt(t)}/>}
@@ -338,13 +361,22 @@ export default function Index(){
 function ChatRow({c,active,onOpen,icon}:{c:Row;active:boolean;onOpen:()=>void;icon?:boolean;key?:string}){return <button className={`chat-row ${active?'active':''}`} onClick={onOpen}>{icon&&<MessageCircle size={20} strokeWidth={1.75}/>}<span>{safeText(c.title)||'New chat'}</span></button>}
 
 function Message({msg,onCopy,onRetry,onBranch,onSpeak,onEdit,hit}:{msg:HanchiMessage;onEdit?:(t:string)=>void;hit?:boolean;onCopy:()=>void;onRetry?:()=>void;onBranch?:()=>void;onSpeak?:()=>void;key?:string|number}){
-  const user=msg.role==='user'; const error=!!msg.metadata?.error; const [more,setMore]=useState(false); const [copied,setCopied]=useState(false); const [editing,setEditing]=useState(false); const [draft,setDraft]=useState(msg.content);
+  const user=msg.role==='user'; const error=!!msg.metadata?.error; const [more,setMore]=useState(false); const [copied,setCopied]=useState(false); const [editing,setEditing]=useState(false); const [draft,setDraft]=useState(msg.content); const [sourcesOpen,setSourcesOpen]=useState(false);
   const sources:any[]=Array.isArray(msg.metadata?.sources)?msg.metadata.sources:[];
-  return <div className={`message-row ${user?'user':'assistant'} ${hit?'search-hit':''} ${editing?'editing':''}`}><div className="message-main">{editing?<div className="edit-box"><textarea autoFocus value={draft} onChange={e=>setDraft(e.target.value)} rows={3}/><div className="edit-actions"><button onClick={()=>{setEditing(false);setDraft(msg.content)}}>Cancel</button><button className="primary" disabled={!draft.trim()} onClick={()=>{setEditing(false);onEdit?.(draft)}}>Send</button></div></div>:<div className={`message-content ${error?'message-error':''}`}><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div>}
-  {!user&&sources.length>0&&<button className="sources-pill">Sources</button>}
+  return <div className={`message-row ${user?'user':'assistant'} ${hit?'search-hit':''} ${editing?'editing':''}`}><div className="message-main">{editing?<div className="edit-box"><textarea aria-label="Edit message" autoFocus value={draft} onChange={e=>setDraft(e.target.value)} rows={3}/><div className="edit-actions"><Button variant="ghost" onClick={()=>{setEditing(false);setDraft(msg.content)}}>Cancel</Button><Button className="primary" disabled={!draft.trim()} onClick={()=>{setEditing(false);onEdit?.(draft)}}>Send</Button></div></div>:<div className={`message-content ${error?'message-error':''}`}><ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown></div>}
+  {!user&&sources.length>0&&<Button variant="outline" className="sources-pill" onClick={()=>setSourcesOpen(v=>!v)}>Sources</Button>}
   {!user&&msg.content&&<div className="message-actions"><button onClick={()=>{onCopy();setCopied(true);setTimeout(()=>setCopied(false),1200)}} title="Copy">{copied?<Check size={18}/>:<Copy size={18} strokeWidth={1.75}/>}</button><button title="Good response"><ThumbsUp size={18} strokeWidth={1.75}/></button><button title="Bad response"><ThumbsDown size={18} strokeWidth={1.75}/></button><button title="Share" onClick={onCopy}><Share size={18} strokeWidth={1.75}/></button>{onRetry&&<button onClick={onRetry} title="Try again"><RefreshCw size={18} strokeWidth={1.75}/></button>}
-  <div className="relative"><button title="More" onClick={()=>setMore(v=>!v)}><MoreHorizontal size={18}/></button>{more&&<div className="floating-menu msg-menu" onMouseLeave={()=>setMore(false)}>{msg.created_at&&<div className="menu-meta">{new Date(msg.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</div>}<button onClick={()=>setMore(false)}><Library size={20} strokeWidth={1.75}/>View sources</button>{onBranch&&<button onClick={()=>{setMore(false);onBranch()}}><GitBranch size={20} strokeWidth={1.75}/>Branch in new chat</button>}{onSpeak&&<button onClick={()=>{setMore(false);onSpeak()}}><Volume2 size={20} strokeWidth={1.75}/>Read aloud</button>}</div>}</div></div>}
-  {user&&!editing&&<div className="message-actions user-actions"><button onClick={onCopy} title="Copy"><Copy size={18} strokeWidth={1.75}/></button>{onEdit&&<button onClick={()=>{setDraft(msg.content);setEditing(true)}} title="Edit message"><Pencil size={18} strokeWidth={1.75}/></button>}</div>}</div></div>
+  <DropdownMenu open={more} onOpenChange={setMore}>
+    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" title="More" aria-label="More response actions"><MoreHorizontal size={18}/></Button></DropdownMenuTrigger>
+    <DropdownMenuContent className="conversation-popover response-popover" side="top" align="start" sideOffset={8} collisionPadding={12}>
+      {msg.created_at&&<><DropdownMenuLabel className="menu-meta">{new Date(msg.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</DropdownMenuLabel><DropdownMenuSeparator/></>}
+      {sources.length>0&&<DropdownMenuItem onSelect={()=>setSourcesOpen(v=>!v)}><Library/>View sources</DropdownMenuItem>}
+      {onBranch&&<DropdownMenuItem onSelect={onBranch}><GitBranch/>Branch in new chat</DropdownMenuItem>}
+      {onSpeak&&<DropdownMenuItem onSelect={onSpeak}><Volume2/>Read aloud</DropdownMenuItem>}
+    </DropdownMenuContent>
+  </DropdownMenu></div>}
+  {sourcesOpen&&<div className="message-sources">{sources.map((source,i)=>{let url='';try{const parsed=new URL(source.url);if(['https:','http:'].includes(parsed.protocol))url=parsed.href;}catch{}return url?<a key={i} href={url} target="_blank" rel="noopener noreferrer">{safeText(source.title)||url}</a>:null})}</div>}
+  {user&&!editing&&<div className="message-actions user-actions"><button onClick={onCopy} title="Copy"><Copy size={18} strokeWidth={1.75}/></button>{onEdit&&<Button variant="ghost" size="icon" onClick={()=>{setDraft(msg.content);setEditing(true)}} title="Edit message" aria-label="Edit message"><Pencil size={18} strokeWidth={1.75}/></Button>}</div>}</div></div>
 }
 
 function Composer(p:{input:string;setInput:(s:string)=>void;send:()=>void;busy:boolean;processing:boolean;onUpload:()=>void;onDictate:()=>void;menuOpen:boolean;setMenuOpen:(v:boolean)=>void;mode:'chat'|'search'|'research'|'council';setMode:(v:any)=>void;effort:string;setEffort:(s:string)=>void;effortMenu:boolean;setEffortMenu:(v:boolean)=>void;onLibrary:()=>void;onImage:()=>void;menuBelow:boolean;attachments:Attachment[];removeAttachment:(i:number)=>void}){
