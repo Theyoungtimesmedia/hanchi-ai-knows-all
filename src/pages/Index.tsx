@@ -264,7 +264,7 @@ export default function Index(){
 
   const fullName=user.user_metadata?.full_name||'Joshua Omoniyi';
   const pinned=conversations.filter(c=>c.pinned);
-  const recent=conversations.filter(c=>!c.pinned);
+  const recent=conversations.filter(c=>!c.pinned&&!chatProjects[c.id]);
   const writable=canWriteChat(busy,conversationId,locked);
   const empty=view==='chat'&&messages.length===0;
   const go=(v:View)=>{setView(v);setProfileOpen(false);};
@@ -282,7 +282,7 @@ export default function Index(){
         <button className={`nav-row ${view==='brain'?'active':''}`} onClick={()=>go('brain')}><Brain size={20} strokeWidth={1.75}/><span>Brain</span></button>
         <button className={`nav-row ${view==='projects'?'active':''}`} onClick={()=>go('projects')}><MoreHorizontal size={20} strokeWidth={1.75}/><span>More</span></button>
         {pinned.length>0&&<div className="nav-group"><div className="nav-label">Pinned</div>{pinned.map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)} icon/>)}</div>}
-        {projects.length>0&&<div className="nav-group"><div className="nav-label">Projects</div>{projects.slice(0,6).map(p=><button key={p.id} className="nav-row" onClick={()=>go('projects')}><Folder size={20} strokeWidth={1.75}/><span>{p.name}</span></button>)}</div>}
+        {projects.length>0&&<div className="nav-group"><div className="nav-label">Projects</div>{projects.slice(0,6).map(p=><div key={p.id}><button className="nav-row" onClick={()=>go('projects')}><Folder size={20} strokeWidth={1.75}/><span>{p.name}</span></button>{conversations.filter(c=>chatProjects[c.id]===p.id).map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)}/>)}</div>)}</div>}
         <div className="nav-group"><div className="nav-label">Chats</div>{recent.slice(0,40).map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)}/>)}</div>
       </nav>
       <div className="sidebar-bottom">
