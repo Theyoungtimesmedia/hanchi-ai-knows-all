@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import type { FormEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -11,8 +12,12 @@ import {
   MessageCircle, Square, AudioLines, Telescope, ListFilter, LayoutGrid, List, Mail, Calendar, Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
-import { canWriteChat, historyBeforeEdit } from '@/lib/chat-actions';
+import { buildRegenerationPrompt, canWriteChat, historyBeforeEdit } from '@/lib/chat-actions';
 import { supabase } from '@/integrations/supabase/client';
 import { artifactFromCodeBlock, downloadTextFile, edgeRequest, extractCodeArtifacts, streamChat, type HanchiArtifact, type HanchiMessage } from '@/lib/hanchi-ui';
 
@@ -21,6 +26,7 @@ type View = 'chat' | 'images' | 'library' | 'plugins' | 'projects' | 'brain' | '
 type SettingsTab = 'general' | 'personalization' | 'plugins' | 'connections';
 type ArtifactTab = 'preview' | 'source';
 type Attachment = { name:string; kind:string; size?:number; text?:string; base64?:string; mime?:string; url?:string };
+type ProjectDraft = { id:string|null; name:string; description:string };
 const db = supabase as any;
 
 function initials(name='Joshua Omoniyi'){ return name.split(' ').filter(Boolean).slice(0,2).map((x)=>x[0]?.toUpperCase()).join(''); }
@@ -29,8 +35,14 @@ function iconForFile(name=''){ const n=name.toLowerCase(); if(n.endsWith('.pdf')
 
 export default function Index(){
   const navigate=useNavigate();
+  const location=useLocation();
   const [user,setUser]=useState<any>(null);
-  const [view,setView]=useState<View>('chat');
+  const [view,setView]=useState<View>(()=>location.pathname==='/projects'?'projects':'chat');
+  const [activeProjectId,setActiveProjectId]=useState<string|null>(()=>new URLSearchParams(location.search).get('projectId'));
+  const [defaultProjectId,setDefaultProjectId]=useState<string|null>(null);
+  const [projectEditor,setProjectEditor]=useState<ProjectDraft|null>(null);
+  const [projectSaving,setProjectSaving]=useState(false);
+  const [preparingRetry,setPreparingRetry]=useState(false);
   const [sidebar,setSidebar]=useState(true);
   const [rightOpen,setRightOpen]=useState(false);
   const [rightTab,setRightTab]=useState<'canvas'|'memory'|'activity'>('canvas');
@@ -98,45 +110,64 @@ export default function Index(){
   },[navigate,refresh]);
 
   useEffect(()=>{
+    if(location.pathname==='/projects'){
+      setView('projects');
+      setActiveProjectId(new URLSearchParams(location.search).get('projectId'));
+    }else if(location.pathname==='/chat'||location.pathname==='/index'){
+      setView(current=>current==='projects'?'chat':current);
+      if(!defaultProjectId)setActiveProjectId(null);
+    }
+  },[location.pathname,location.search,defaultProjectId]);
+
+  useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
       const k=e.key.toLowerCase();
       if((e.ctrlKey||e.metaKey)&&k==='k'){e.preventDefault();setGlobalSearchOpen(true);}
       if((e.ctrlKey||e.metaKey)&&k==='b'){e.preventDefault();setSidebar(v=>!v);}
       if((e.ctrlKey||e.metaKey)&&k==='n'){e.preventDefault();newChat();}
       if((e.ctrlKey||e.metaKey)&&e.shiftKey&&k==='l'){e.preventDefault();setRightOpen(v=>!v);}
-      if(e.key==='Escape'){setChatMenu(false);setChatSearch(null);setSettingsOpen(false);setProfileOpen(false);setComposeMenu(false);setModelMenu(false);setEffortMenu(false);setGlobalSearchOpen(false);}
+      if(e.key==='Escape'){setChatMenu(false);setChatSearch(null);setSettingsOpen(false);setProfileOpen(false);setComposeMenu(false);setModelMenu(false);setEffortMenu(false);setGlobalSearchOpen(false);setProjectEditor(null);}
     };
     window.addEventListener('keydown',onKey); return ()=>window.removeEventListener('keydown',onKey);
   });
   useEffect(()=>{ const el=scrollRef.current; if(el) el.scrollTop=el.scrollHeight; },[messages,busy]);
 
   async function loadConversation(id:string){
-    setLastError(null); setChatSearch(null);setChatMenu(false);setView('chat'); setConversationId(id);
+    setLastError(null); setChatSearch(null);setChatMenu(false);setView('chat');setDefaultProjectId(null);setActiveProjectId(chatProjects[id]||null);navigate('/chat');setConversationId(id);
     const {data,error}=await db.from('messages').select('id,role,content,created_at,metadata').eq('conversation_id',id).order('created_at',{ascending:true});
     if(error){setLastError(error.message);return;} setMessages(data||[]); setCanvas(null); setRightOpen(false);
   }
-  function newChat(){setChatSearch(null);setChatMenu(false);setView('chat');setConversationId(null);setMessages([]);setAttachments([]);setCanvas(null);setRightOpen(false);setInput('');setMode('chat');setLastError(null);setTimeout(()=>textareaRef.current?.focus(),0);}
+  function newChat(projectId:string|null=null){setChatSearch(null);setChatMenu(false);setView('chat');setDefaultProjectId(projectId);setActiveProjectId(projectId);navigate('/chat');setConversationId(null);setMessages([]);setAttachments([]);setCanvas(null);setRightOpen(false);setInput('');setMode('chat');setLastError(null);setTimeout(()=>textareaRef.current?.focus(),0);}
   async function ensureConversation(title:string){
     if(conversationId) return conversationId;
     const {data,error}=await db.from('conversations').insert({user_id:user.id,title:title.slice(0,80)||'New chat',language:'en'}).select('id,title,updated_at,pinned').single();
-    if(error) throw error; setConversationId(data.id); setConversations(prev=>[data,...prev]); return data.id;
+    if(error) throw error; setConversationId(data.id); setConversations(prev=>[data,...prev]);if(defaultProjectId){moveToProject(data.id,defaultProjectId);setDefaultProjectId(null);} return data.id;
   }
   async function storeMessage(cid:string,role:'user'|'assistant',content:string,metadata:Row={}){
     const {data,error}=await db.from('messages').insert({conversation_id:cid,role,content,metadata}).select('id,role,content,created_at,metadata').single();
     if(error) throw error; setMessages(prev=>[...prev,data]); return data;
   }
-  async function retryFrom(messageId:string){
-    if(!canWriteChat(busy,conversationId,locked)) return;
-    const idx=messages.findIndex(m=>m.id===messageId); if(idx<0)return;
-    const prevUser=[...messages.slice(0,idx)].reverse().find(m=>m.role==='user'); if(!prevUser)return;
-    const history=messages.slice(0,idx);
-    // Replace the selected assistant answer instead of creating a second user turn.
-    if(messageId && !messageId.startsWith('stream-')){
-      await db.from('messages').delete().eq('id',messageId);
-    }
-    setMessages(history);
-    setInput('');
-    await sendMessage(prevUser.content,{history,persistUser:false});
+  async function retryFrom(messageId:string,instruction:string,thinkLonger:boolean){
+    if(!canWriteChat(busy,conversationId,locked)||!user||preparingRetry)return;
+    const history=historyBeforeEdit(messages,messageId);if(!history)return;
+    const previousPrompt=[...history].reverse().find(m=>m.role==='user');if(!previousPrompt)return;
+    const refinedPrompt=buildRegenerationPrompt(previousPrompt.content,instruction);
+    const branchHistory=history.map(m=>m.id===previousPrompt.id?{...m,content:refinedPrompt,metadata:{...(m.metadata||{}),...(instruction.trim()?{retry_instruction:instruction.trim()}:{}),branched:true}}:m);
+    const sourceProjectId=conversationId?chatProjects[conversationId]||null:null;
+    setPreparingRetry(true);setLastError(null);
+    try{
+      const parentTitle=conversations.find(c=>c.id===conversationId)?.title||'New chat';
+      const {data:branch,error:branchError}=await db.from('conversations').insert({user_id:user.id,title:`${parentTitle.slice(0,70)} — Retry`,language:'en'}).select('id,title,updated_at,pinned').single();
+      if(branchError)throw branchError;
+      if(!branch)throw new Error('Could not create a retry branch.');
+      const {data:copied,error:copyError}=await db.from('messages').insert(branchHistory.map(m=>({conversation_id:branch.id,role:m.role,content:m.content,metadata:{...(m.metadata||{}),branched:true}}))).select('id,role,content,created_at,metadata');
+      if(copyError)throw copyError;
+      if(!copied?.length)throw new Error('Could not copy the earlier messages into the retry branch.');
+      setConversationId(branch.id);setMessages(copied);setConversations(prev=>[branch,...prev]);setView('chat');setDefaultProjectId(sourceProjectId);setActiveProjectId(sourceProjectId);navigate('/chat');
+      if(sourceProjectId)moveToProject(branch.id,sourceProjectId);
+      await sendMessage(refinedPrompt,{history:copied,persistUser:false,conversationId:branch.id,effort:thinkLonger?'deep':effort});
+    }catch(e){setLastError(e instanceof Error?e.message:'Could not start a retry branch. Your original chat is unchanged.');}
+    finally{setPreparingRetry(false);}
   }
   async function editAndResend(messageId:string,text:string){
     if(!canWriteChat(busy,conversationId,locked)||!text.trim()||!user)return;
@@ -161,6 +192,34 @@ export default function Index(){
   }
   function toggleLock(id:string){setLocked(prev=>{const n=prev.includes(id)?prev.filter(x=>x!==id):[...prev,id];localStorage.setItem('hanchi-locked-chats',JSON.stringify(n));return n;});}
   function moveToProject(id:string,pid:string|null){setChatProjects(prev=>{const n={...prev};if(pid)n[id]=pid;else delete n[id];localStorage.setItem('hanchi-chat-projects',JSON.stringify(n));return n;});setStatus(pid?'Moved to project':'Removed from project');setTimeout(()=>setStatus(''),1500);}
+  function openProject(id:string|null){setActiveProjectId(id);setView('projects');navigate(id?`/projects?projectId=${encodeURIComponent(id)}`:'/projects');}
+  function editProject(project?:Row){setProjectEditor(project?{id:project.id,name:safeText(project.name),description:safeText(project.description)}:{id:null,name:'',description:''});}
+  async function saveProject(){
+    if(!projectEditor||!user||projectSaving)return;
+    const name=projectEditor.name.trim();if(!name){setLastError('Add a project name first.');return;}
+    setProjectSaving(true);setLastError(null);
+    try{
+      if(projectEditor.id){
+        const {data,error}=await db.from('hanchi_projects').update({name,description:projectEditor.description.trim(),updated_at:new Date().toISOString()}).eq('id',projectEditor.id).eq('user_id',user.id).select('id,name,description,updated_at,status').single();
+        if(error)throw error;if(!data)throw new Error('Project was not found.');
+        setProjects(prev=>prev.map(project=>project.id===data.id?data:project));openProject(data.id);
+      }else{
+        const {data,error}=await db.from('hanchi_projects').insert({user_id:user.id,name,description:projectEditor.description.trim()}).select('id,name,description,updated_at,status').single();
+        if(error)throw error;if(!data)throw new Error('Project was not created.');
+        setProjects(prev=>[data,...prev]);openProject(data.id);
+      }
+      setProjectEditor(null);
+    }catch(e){setLastError(e instanceof Error?e.message:'Could not save this project.');}
+    finally{setProjectSaving(false);}
+  }
+  async function deleteProject(id:string){
+    if(!user||!window.confirm('Delete this project? Its chats will stay in your history.'))return;
+    const {error}=await db.from('hanchi_projects').delete().eq('id',id).eq('user_id',user.id);
+    if(error){setLastError(error.message);return;}
+    setProjects(prev=>prev.filter(project=>project.id!==id));
+    setChatProjects(prev=>{const next={...prev};Object.entries(next).forEach(([chatId,projectId])=>{if(projectId===id)delete next[chatId];});localStorage.setItem('hanchi-chat-projects',JSON.stringify(next));return next;});
+    if(activeProjectId===id)openProject(null);
+  }
   async function branchFrom(messageId:string){
     if(busy) return;
     const idx=messages.findIndex(m=>m.id===messageId); if(idx<0 || !user)return;
@@ -178,8 +237,9 @@ export default function Index(){
     setView('chat');
     setRightOpen(false);
   }
-  async function sendMessage(custom?:string, options:{history?:HanchiMessage[];persistUser?:boolean;conversationId?:string}={}){
+  async function sendMessage(custom?:string, options:{history?:HanchiMessage[];persistUser?:boolean;conversationId?:string;effort?:string}={}){
     const raw=(custom??input).trim(); if(!raw||!user||!canWriteChat(busy,options.conversationId??conversationId,locked))return;
+    const requestEffort=options.effort??effort;
     setLastError(null);
     const cid=options.conversationId??await ensureConversation(raw);
     setInput('');
@@ -206,13 +266,13 @@ export default function Index(){
       }
       if(mode==='council'){
         setStatus('Council is comparing candidate models…');
-        const r=await edgeRequest<any>('hanchi-council',{method:'POST',body:JSON.stringify({messages:history,conversationId:cid,effort})});
+        const r=await edgeRequest<any>('hanchi-council',{method:'POST',body:JSON.stringify({messages:history,conversationId:cid,effort:requestEffort})});
         await storeMessage(cid,'assistant',r.text||'No council response was returned.',{mode:'council',provider:r.provider,model:r.model,candidates:r.candidates,self_check:r.self_check});
         const art=extractCodeArtifacts(r.text||'')[0]; if(art){const saved=await saveArtifact(artifactFromCodeBlock(art.language,art.content),cid);openArtifact(saved);} return;
       }
       setStatus(''); let answer=''; let md:any=null; const streamId='stream-'+Date.now();
       setMessages(prev=>[...prev,{id:streamId,role:'assistant',content:'',created_at:new Date().toISOString()}]);
-      await streamChat({messages:history,model:selectedModel==='auto'?undefined:selectedModel,effort,projectId:null,language:'en',tone:'default',searchWeb:mode==='search'||/\b(search|latest|today|current|research)\b/i.test(prompt),images:attachedImages},(chunk)=>{answer+=chunk;setMessages(prev=>prev.map(m=>m.id===streamId?{...m,content:answer}:m));},(meta)=>md=meta);
+      await streamChat({messages:history,model:selectedModel==='auto'?undefined:selectedModel,effort:requestEffort,projectId:defaultProjectId,language:'en',tone:'default',searchWeb:mode==='search'||/\b(search|latest|today|current|research)\b/i.test(prompt),images:attachedImages},(chunk)=>{answer+=chunk;setMessages(prev=>prev.map(m=>m.id===streamId?{...m,content:answer}:m));},(meta)=>md=meta);
       const savedMsg=await storeMessage(cid,'assistant',answer,{...(md||{}),mode:'chat'});
       setMessages(prev=>prev.filter(m=>m.id!==streamId&&m.id!==savedMsg.id).concat(savedMsg));
       const art=extractCodeArtifacts(answer)[0]; if(art){const saved=await saveArtifact(artifactFromCodeBlock(art.language,art.content),cid);openArtifact(saved);} 
@@ -267,7 +327,7 @@ export default function Index(){
   const recent=conversations.filter(c=>!c.pinned&&!chatProjects[c.id]);
   const writable=canWriteChat(busy,conversationId,locked);
   const empty=view==='chat'&&messages.length===0;
-  const go=(v:View)=>{setView(v);setProfileOpen(false);};
+  const go=(v:View)=>{setView(v);setProfileOpen(false);if(v==='projects'){openProject(null);}else if(location.pathname==='/projects'){navigate('/chat');}};
   const composer=<Composer input={input} setInput={setInput} send={()=>sendMessage()} busy={busy} processing={processing} onUpload={()=>{setComposeMenu(false);fileRef.current?.click();}} onDictate={voiceDictate} menuOpen={composeMenu} setMenuOpen={setComposeMenu} mode={mode} setMode={setMode} effort={effort} setEffort={setEffort} effortMenu={effortMenu} setEffortMenu={setEffortMenu} onLibrary={()=>{setComposeMenu(false);go('library');}} onImage={()=>{setComposeMenu(false);go('images');}} menuBelow={empty} attachments={attachments} removeAttachment={(i)=>setAttachments(a=>a.filter((_,j)=>j!==i))}/>;
 
   return <div className="hanchi-app" onMouseDown={()=>{setChatMenu(false);}}>
@@ -282,7 +342,7 @@ export default function Index(){
         <button className={`nav-row ${view==='brain'?'active':''}`} onClick={()=>go('brain')}><Brain size={20} strokeWidth={1.75}/><span>Brain</span></button>
         <button className={`nav-row ${view==='projects'?'active':''}`} onClick={()=>go('projects')}><MoreHorizontal size={20} strokeWidth={1.75}/><span>More</span></button>
         {pinned.length>0&&<div className="nav-group"><div className="nav-label">Pinned</div>{pinned.map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)} icon/>)}</div>}
-        {projects.length>0&&<div className="nav-group"><div className="nav-label">Projects</div>{projects.slice(0,6).map(p=><div key={p.id}><button className="nav-row" onClick={()=>go('projects')}><Folder size={20} strokeWidth={1.75}/><span>{p.name}</span></button>{conversations.filter(c=>chatProjects[c.id]===p.id).map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)}/>)}</div>)}</div>}
+        <div className="nav-group project-nav-group"><Button variant="ghost" className="nav-label nav-label-button" onClick={()=>openProject(null)}><span>Projects</span><Plus size={16}/></Button>{projects.slice(0,6).map(p=><div key={p.id} className="sidebar-project"><div className="sidebar-project-line"><Button variant="ghost" className={`nav-row ${view==='projects'&&activeProjectId===p.id?'active':''}`} onClick={()=>openProject(p.id)} title={safeText(p.name)}><Folder size={20} strokeWidth={1.75}/><span>{safeText(p.name)}</span></Button><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="project-row-menu" title={`Options for ${safeText(p.name)}`} aria-label={`Options for ${safeText(p.name)}`}><MoreHorizontal size={18}/></Button></DropdownMenuTrigger><DropdownMenuContent className="conversation-popover" align="end" sideOffset={6}><DropdownMenuItem onSelect={()=>editProject(p)}><Pencil/>Rename project</DropdownMenuItem><DropdownMenuSeparator/><DropdownMenuItem className="danger" onSelect={()=>deleteProject(p.id)}><Trash2/>Delete project</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>{conversations.filter(c=>chatProjects[c.id]===p.id).map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)}/>)}</div>)}{!projects.length&&<div className="project-sidebar-empty">No projects yet</div>}</div>
         <div className="nav-group"><div className="nav-label">Chats</div>{recent.slice(0,40).map(c=><ChatRow key={c.id} c={c} active={c.id===conversationId} onOpen={()=>loadConversation(c.id)}/>)}</div>
       </nav>
       <div className="sidebar-bottom">
@@ -345,7 +405,7 @@ export default function Index(){
         </div>}
         {view==='images'&&<ImagesView prompt={imagePrompt} setPrompt={setImagePrompt} generate={generateImage} generated={generatedImages} onPick={(t)=>setImagePrompt(t)}/>}
         {view==='library'&&<LibraryView items={filteredLibrary} query={libraryQuery} setQuery={setLibraryQuery} onOpen={a=>openArtifact(a)} onNew={()=>{go('chat');setTimeout(()=>fileRef.current?.click(),50)}}/>}
-        {view==='projects'&&<ProjectsView projects={projects}/>}
+        {view==='projects'&&<ProjectsView projects={projects} conversations={conversations} chatProjects={chatProjects} artifacts={library} activeProjectId={activeProjectId} onOpenProject={openProject} onNewProject={()=>editProject()} onEditProject={editProject} onDeleteProject={deleteProject} onOpenChat={loadConversation} onOpenArtifact={openArtifact} onNewChat={newChat}/>}
         {view==='brain'&&<BrainView brain={brain}/>}
         {view==='plugins'&&<PluginsView skills={skills} connectors={connectors}/>}
         {view==='morning'&&<MorningView briefing={briefing}/>}
@@ -354,6 +414,7 @@ export default function Index(){
     </main>
 
     {settingsOpen&&<SettingsModal tab={settingsTab} setTab={setSettingsTab} connectors={connectors} onClose={()=>setSettingsOpen(false)}/>}
+    {projectEditor&&<ProjectEditorModal draft={projectEditor} onChange={setProjectEditor} saving={projectSaving} onSave={saveProject} onClose={()=>setProjectEditor(null)}/>}
     {globalSearchOpen&&<div className="overlay" onMouseDown={()=>setGlobalSearchOpen(false)}><div className="search-dialog" onMouseDown={e=>e.stopPropagation()}><div className="search-head"><Search size={18}/><input autoFocus value={globalQuery} onChange={e=>setGlobalQuery(e.target.value)} placeholder="Search chats..."/><button className="icon-btn" onClick={()=>setGlobalSearchOpen(false)}><X size={18}/></button></div><div className="search-results"><button onClick={()=>{newChat();setGlobalSearchOpen(false)}}><SquarePen size={18}/><span>New chat</span></button>{filteredChats.slice(0,30).map(c=><button key={c.id} onClick={()=>{loadConversation(c.id);setGlobalSearchOpen(false)}}><MessageSquare size={18}/><span>{safeText(c.title)}</span><small>{new Date(c.updated_at).toLocaleDateString('en-GB')}</small></button>)}{!filteredChats.length&&<div className="empty-state">No chats found.</div>}</div></div></div>}
   </div>
 }

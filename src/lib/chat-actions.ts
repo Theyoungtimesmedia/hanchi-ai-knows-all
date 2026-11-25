@@ -7,3 +7,10 @@ export function historyBeforeEdit<T extends { id: string }>(messages: T[], messa
   const index = messages.findIndex(message => message.id === messageId);
   return index < 0 ? null : messages.slice(0, index);
 }
+
+export function buildRegenerationPrompt(original: string, instruction: string) {
+  const refinement = instruction.trim();
+  return refinement
+    ? `${original}\n\nPlease revise your answer using these changes:\n${refinement}`
+    : original;
+}

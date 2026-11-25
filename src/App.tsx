@@ -11,7 +11,6 @@ const Prompts = lazy(() => import("./pages/Prompts"));
 const Help = lazy(() => import("./pages/Help"));
 const Discover = lazy(() => import("./pages/Discover"));
 const CustomGPT = lazy(() => import("./pages/CustomGPT"));
-const Projects = lazy(() => import("./pages/Projects"));
 const Apps = lazy(() => import("./pages/Apps"));
 const StickerStudio = lazy(() => import("./pages/StickerStudio"));
 const SharedChat = lazy(() => import("./pages/SharedChat"));
@@ -41,7 +40,7 @@ const App = () => (
       <Route path="/help" element={<Help />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/custom-gpt" element={<CustomGPT />} />
-      <Route path="/projects" element={<Projects />} />
+      <Route path="/projects" element={<Index />} />
       <Route path="/apps" element={<Apps />} />
       <Route path="/sticker-studio" element={<StickerStudio />} />
       <Route path="/shared" element={<SharedChat />} />
